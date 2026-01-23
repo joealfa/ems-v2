@@ -1,0 +1,144 @@
+using EmployeeManagementSystem.Application.DTOs;
+using EmployeeManagementSystem.Application.DTOs.SalaryGrade;
+using EmployeeManagementSystem.Application.Interfaces;
+using EmployeeManagementSystem.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace EmployeeManagementSystem.Application.Services;
+
+/// <summary>
+/// Service implementation for salary grade operations.
+/// </summary>
+public class SalaryGradeService : ISalaryGradeService
+{
+    private readonly IRepository<SalaryGrade> _salaryGradeRepository;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SalaryGradeService"/> class.
+    /// </summary>
+    public SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository)
+    {
+        _salaryGradeRepository = salaryGradeRepository;
+    }
+
+    /// <inheritdoc />
+    public async Task<SalaryGradeResponseDto?> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
+    {
+        var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
+        return salaryGrade == null ? null : MapToResponseDto(salaryGrade);
+    }
+
+    /// <inheritdoc />
+    public async Task<PagedResult<SalaryGradeResponseDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+    {
+        var queryable = _salaryGradeRepository.Query();
+
+        if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+        {
+            var searchTerm = query.SearchTerm.ToLower();
+            queryable = queryable.Where(sg =>
+                sg.SalaryGradeName.ToLower().Contains(searchTerm) ||
+                (sg.Description != null && sg.Description.ToLower().Contains(searchTerm)));
+        }
+
+        var totalCount = await queryable.CountAsync(cancellationToken);
+
+        queryable = query.SortDescending
+            ? queryable.OrderByDescending(sg => sg.SalaryGradeName)
+            : queryable.OrderBy(sg => sg.SalaryGradeName);
+
+        var items = await queryable
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .Select(sg => new SalaryGradeResponseDto
+            {
+                DisplayId = sg.DisplayId,
+                SalaryGradeName = sg.SalaryGradeName,
+                Description = sg.Description,
+                Step = sg.Step,
+                MonthlySalary = sg.MonthlySalary,
+                IsActive = sg.IsActive,
+                CreatedOn = sg.CreatedOn,
+                CreatedBy = sg.CreatedBy,
+                ModifiedOn = sg.ModifiedOn,
+                ModifiedBy = sg.ModifiedBy
+            })
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<SalaryGradeResponseDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = query.PageNumber,
+            PageSize = query.PageSize
+        };
+    }
+
+    /// <inheritdoc />
+    public async Task<SalaryGradeResponseDto> CreateAsync(CreateSalaryGradeDto dto, string createdBy, CancellationToken cancellationToken = default)
+    {
+        var salaryGrade = new SalaryGrade
+        {
+            SalaryGradeName = dto.SalaryGradeName,
+            Description = dto.Description,
+            Step = dto.Step,
+            MonthlySalary = dto.MonthlySalary,
+            CreatedBy = createdBy,
+            CreatedOn = DateTime.UtcNow
+        };
+
+        await _salaryGradeRepository.AddAsync(salaryGrade, cancellationToken);
+
+        return MapToResponseDto(salaryGrade);
+    }
+
+    /// <inheritdoc />
+    public async Task<SalaryGradeResponseDto?> UpdateAsync(long displayId, UpdateSalaryGradeDto dto, string modifiedBy, CancellationToken cancellationToken = default)
+    {
+        var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
+        if (salaryGrade == null)
+            return null;
+
+        salaryGrade.SalaryGradeName = dto.SalaryGradeName;
+        salaryGrade.Description = dto.Description;
+        salaryGrade.Step = dto.Step;
+        salaryGrade.MonthlySalary = dto.MonthlySalary;
+        salaryGrade.IsActive = dto.IsActive;
+        salaryGrade.ModifiedBy = modifiedBy;
+        salaryGrade.ModifiedOn = DateTime.UtcNow;
+
+        await _salaryGradeRepository.UpdateAsync(salaryGrade, cancellationToken);
+
+        return MapToResponseDto(salaryGrade);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
+    {
+        var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
+        if (salaryGrade == null)
+            return false;
+
+        salaryGrade.ModifiedBy = deletedBy;
+        salaryGrade.ModifiedOn = DateTime.UtcNow;
+        await _salaryGradeRepository.DeleteAsync(salaryGrade, cancellationToken);
+        return true;
+    }
+
+    private static SalaryGradeResponseDto MapToResponseDto(SalaryGrade salaryGrade)
+    {
+        return new SalaryGradeResponseDto
+        {
+            DisplayId = salaryGrade.DisplayId,
+            SalaryGradeName = salaryGrade.SalaryGradeName,
+            Description = salaryGrade.Description,
+            Step = salaryGrade.Step,
+            MonthlySalary = salaryGrade.MonthlySalary,
+            IsActive = salaryGrade.IsActive,
+            CreatedOn = salaryGrade.CreatedOn,
+            CreatedBy = salaryGrade.CreatedBy,
+            ModifiedOn = salaryGrade.ModifiedOn,
+            ModifiedBy = salaryGrade.ModifiedBy
+        };
+    }
+}

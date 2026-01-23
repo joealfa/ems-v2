@@ -1,0 +1,15 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+build
+coverage
+
+# OpenAPI Generated code
+src/api/generated
+
+# Other files
+*.min.js
+*.min.css
+package-lock.json

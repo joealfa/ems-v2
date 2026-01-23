@@ -1,0 +1,327 @@
+@EmployeeManagementSystem.Api_HostAddress = http://localhost:5062
+
+###############################################################################
+# PERSONS API
+###############################################################################
+
+### Get all persons (paginated)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons?page=1&pageSize=10
+Accept: application/json
+
+###
+
+### Get person by display ID
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1
+Accept: application/json
+
+###
+
+### Create a new person
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons
+Content-Type: application/json
+
+{
+  "firstName": "Juan",
+  "lastName": "Dela Cruz",
+  "middleName": "Santos",
+  "dateOfBirth": "1990-05-15",
+  "gender": 0,
+  "civilStatus": 0,
+  "addresses": [
+    {
+      "street": "123 Main St",
+      "barangay": "Barangay 1",
+      "city": "Manila",
+      "province": "Metro Manila",
+      "postalCode": "1000",
+      "country": "Philippines",
+      "addressType": 0
+    }
+  ],
+  "contacts": [
+    {
+      "contactType": 0,
+      "contactValue": "09123456789"
+    }
+  ]
+}
+
+###
+
+### Update a person
+PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1
+Content-Type: application/json
+
+{
+  "firstName": "Juan",
+  "lastName": "Dela Cruz",
+  "middleName": "Santos Jr.",
+  "dateOfBirth": "1990-05-15",
+  "gender": 0,
+  "civilStatus": 1
+}
+
+###
+
+### Delete a person
+DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1
+
+###############################################################################
+# SCHOOLS API
+###############################################################################
+
+### Get all schools (paginated)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/schools?page=1&pageSize=10
+Accept: application/json
+
+###
+
+### Get school by display ID
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/schools/1
+Accept: application/json
+
+###
+
+### Create a new school
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/schools
+Content-Type: application/json
+
+{
+  "schoolName": "Sample Elementary School",
+  "addresses": [
+    {
+      "street": "456 Education Blvd",
+      "barangay": "Barangay 2",
+      "city": "Quezon City",
+      "province": "Metro Manila",
+      "postalCode": "1100",
+      "country": "Philippines",
+      "addressType": 0
+    }
+  ],
+  "contacts": [
+    {
+      "contactType": 1,
+      "contactValue": "school@example.com"
+    }
+  ]
+}
+
+###
+
+### Update a school
+PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/schools/1
+Content-Type: application/json
+
+{
+  "schoolName": "Updated Elementary School",
+  "isActive": true
+}
+
+###
+
+### Delete a school
+DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/schools/1
+
+###############################################################################
+# ITEMS API
+###############################################################################
+
+### Get all items (paginated)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/items?page=1&pageSize=10
+Accept: application/json
+
+###
+
+### Get item by display ID
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/items/1
+Accept: application/json
+
+###
+
+### Create a new item
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/items
+Content-Type: application/json
+
+{
+  "itemName": "Teacher I",
+  "description": "Entry level teaching position"
+}
+
+###
+
+### Update an item
+PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/items/1
+Content-Type: application/json
+
+{
+  "itemName": "Teacher I (Updated)",
+  "description": "Entry level teaching position - updated",
+  "isActive": true
+}
+
+###
+
+### Delete an item
+DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/items/1
+
+###############################################################################
+# POSITIONS API
+###############################################################################
+
+### Get all positions (paginated)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/positions?page=1&pageSize=10
+Accept: application/json
+
+###
+
+### Get position by display ID
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/positions/1
+Accept: application/json
+
+###
+
+### Create a new position
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/positions
+Content-Type: application/json
+
+{
+  "titleName": "Teacher I",
+  "description": "Elementary school teacher position"
+}
+
+###
+
+### Update a position
+PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/positions/1
+Content-Type: application/json
+
+{
+  "titleName": "Teacher I (Updated)",
+  "description": "Updated position description",
+  "isActive": true
+}
+
+###
+
+### Delete a position
+DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/positions/1
+
+###############################################################################
+# SALARY GRADES API
+###############################################################################
+
+### Get all salary grades (paginated)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/salarygrades?page=1&pageSize=10
+Accept: application/json
+
+###
+
+### Get salary grade by display ID
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/salarygrades/1
+Accept: application/json
+
+###
+
+### Create a new salary grade
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/salarygrades
+Content-Type: application/json
+
+{
+  "salaryGradeName": "SG-11",
+  "description": "Salary Grade 11",
+  "step": 1,
+  "monthlySalary": 27000.00
+}
+
+###
+
+### Update a salary grade
+PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/salarygrades/1
+Content-Type: application/json
+
+{
+  "salaryGradeName": "SG-11",
+  "description": "Salary Grade 11 - Updated",
+  "step": 2,
+  "monthlySalary": 28000.00,
+  "isActive": true
+}
+
+###
+
+### Delete a salary grade
+DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/salarygrades/1
+
+###############################################################################
+# EMPLOYMENTS API
+###############################################################################
+
+### Get all employments (paginated)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments?page=1&pageSize=10
+Accept: application/json
+
+###
+
+### Get employment by display ID
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments/1
+Accept: application/json
+
+###
+
+### Create a new employment
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments
+Content-Type: application/json
+
+{
+  "depEdId": "DEP-001",
+  "psipopItemNumber": "ITEM-001",
+  "tinId": "123-456-789",
+  "gsisId": "GSIS-001",
+  "philHealthId": "PH-001",
+  "dateOfOriginalAppointment": "2024-01-15",
+  "appointmentStatus": 0,
+  "employmentStatus": 0,
+  "eligibility": 0,
+  "personDisplayId": 1,
+  "positionDisplayId": 1,
+  "salaryGradeDisplayId": 1,
+  "itemDisplayId": 1,
+  "schools": [
+    {
+      "schoolDisplayId": 1,
+      "startDate": "2024-01-15",
+      "endDate": null,
+      "isPrimary": true
+    }
+  ]
+}
+
+###
+
+### Update an employment
+PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments/1
+Content-Type: application/json
+
+{
+  "depEdId": "DEP-001-UPDATED",
+  "psipopItemNumber": "ITEM-001",
+  "tinId": "123-456-789",
+  "gsisId": "GSIS-001",
+  "philHealthId": "PH-001",
+  "dateOfOriginalAppointment": "2024-01-15",
+  "appointmentStatus": 0,
+  "employmentStatus": 0,
+  "eligibility": 0,
+  "positionDisplayId": 1,
+  "salaryGradeDisplayId": 1,
+  "itemDisplayId": 1,
+  "isActive": true
+}
+
+###
+
+### Delete an employment
+DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments/1
+
+###

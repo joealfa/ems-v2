@@ -1,0 +1,336 @@
+using EmployeeManagementSystem.Application.DTOs;
+using EmployeeManagementSystem.Application.DTOs.Person;
+using EmployeeManagementSystem.Application.Interfaces;
+using EmployeeManagementSystem.Application.Services;
+using EmployeeManagementSystem.Domain.Entities;
+using EmployeeManagementSystem.Domain.Enums;
+using EmployeeManagementSystem.Tests.Helpers;
+using Moq;
+
+namespace EmployeeManagementSystem.Tests.Services;
+
+public class PersonServiceTests
+{
+    private readonly Mock<IRepository<Person>> _personRepositoryMock;
+    private readonly Mock<IRepository<Address>> _addressRepositoryMock;
+    private readonly Mock<IRepository<Contact>> _contactRepositoryMock;
+    private readonly Mock<IRepository<Document>> _documentRepositoryMock;
+    private readonly PersonService _personService;
+
+    public PersonServiceTests()
+    {
+        _personRepositoryMock = new Mock<IRepository<Person>>();
+        _addressRepositoryMock = new Mock<IRepository<Address>>();
+        _contactRepositoryMock = new Mock<IRepository<Contact>>();
+        _documentRepositoryMock = new Mock<IRepository<Document>>();
+
+        _personService = new PersonService(
+            _personRepositoryMock.Object,
+            _addressRepositoryMock.Object,
+            _contactRepositoryMock.Object,
+            _documentRepositoryMock.Object);
+    }
+
+    #region GetByDisplayIdAsync Tests
+
+    [Fact]
+    public async Task GetByDisplayIdAsync_WhenPersonExists_ReturnsPersonResponseDto()
+    {
+        // Arrange
+        var displayId = 123456789012L;
+        var person = CreateTestPerson(displayId);
+
+        var persons = new List<Person> { person }.BuildMockQueryable();
+        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+
+        // Act
+        var result = await _personService.GetByDisplayIdAsync(displayId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(displayId, result.DisplayId);
+        Assert.Equal(person.FirstName, result.FirstName);
+        Assert.Equal(person.LastName, result.LastName);
+    }
+
+    [Fact]
+    public async Task GetByDisplayIdAsync_WhenPersonDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        var displayId = 999999999999L;
+        var persons = new List<Person>().BuildMockQueryable();
+        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+
+        // Act
+        var result = await _personService.GetByDisplayIdAsync(displayId);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    #endregion
+
+    #region GetPagedAsync Tests
+
+    [Fact]
+    public async Task GetPagedAsync_ReturnsPagedResult()
+    {
+        // Arrange
+        var query = new PaginationQuery { PageNumber = 1, PageSize = 10 };
+        var persons = new List<Person>
+        {
+            CreateTestPerson(100000000001L, "John", "Doe"),
+            CreateTestPerson(100000000002L, "Jane", "Smith"),
+            CreateTestPerson(100000000003L, "Bob", "Johnson")
+        }.BuildMockQueryable();
+
+        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+
+        // Act
+        var result = await _personService.GetPagedAsync(query);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(3, result.TotalCount);
+        Assert.Equal(3, result.Items.Count);
+        Assert.Equal(1, result.PageNumber);
+        Assert.Equal(10, result.PageSize);
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_WithSearchTerm_FiltersResults()
+    {
+        // Arrange
+        var query = new PaginationQuery { PageNumber = 1, PageSize = 10, SearchTerm = "John" };
+        var persons = new List<Person>
+        {
+            CreateTestPerson(100000000001L, "John", "Doe"),
+            CreateTestPerson(100000000002L, "Jane", "Smith"),
+            CreateTestPerson(100000000003L, "Bob", "Johnson")
+        }.BuildMockQueryable();
+
+        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+
+        // Act
+        var result = await _personService.GetPagedAsync(query);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.TotalCount); // John Doe and Bob Johnson
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_WithPagination_ReturnsCorrectPage()
+    {
+        // Arrange
+        var query = new PaginationQuery { PageNumber = 2, PageSize = 2 };
+        var persons = new List<Person>
+        {
+            CreateTestPerson(100000000001L, "Alice", "Anderson"),
+            CreateTestPerson(100000000002L, "Bob", "Brown"),
+            CreateTestPerson(100000000003L, "Charlie", "Clark"),
+            CreateTestPerson(100000000004L, "David", "Davis")
+        }.BuildMockQueryable();
+
+        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+
+        // Act
+        var result = await _personService.GetPagedAsync(query);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(4, result.TotalCount);
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal(2, result.PageNumber);
+    }
+
+    #endregion
+
+    #region CreateAsync Tests
+
+    [Fact]
+    public async Task CreateAsync_WithValidData_ReturnsCreatedPerson()
+    {
+        // Arrange
+        var createDto = new CreatePersonDto
+        {
+            FirstName = "Test",
+            LastName = "Person",
+            MiddleName = "Middle",
+            DateOfBirth = new DateOnly(1990, 1, 1),
+            Gender = Gender.Male,
+            CivilStatus = CivilStatus.Single
+        };
+
+        _personRepositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<Person>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Person p, CancellationToken _) => p);
+
+        // Act
+        var result = await _personService.CreateAsync(createDto, "TestUser");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(createDto.FirstName, result.FirstName);
+        Assert.Equal(createDto.LastName, result.LastName);
+        Assert.Equal(createDto.MiddleName, result.MiddleName);
+        Assert.Equal(createDto.DateOfBirth, result.DateOfBirth);
+        Assert.Equal(createDto.Gender, result.Gender);
+        Assert.Equal(createDto.CivilStatus, result.CivilStatus);
+
+        _personRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Person>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithAddresses_CreatesPersonWithAddresses()
+    {
+        // Arrange
+        var createDto = new CreatePersonDto
+        {
+            FirstName = "Test",
+            LastName = "Person",
+            DateOfBirth = new DateOnly(1990, 1, 1),
+            Gender = Gender.Male,
+            CivilStatus = CivilStatus.Single,
+            Addresses =
+            [
+                new CreateAddressDto
+                {
+                    Address1 = "123 Main St",
+                    City = "Manila",
+                    Province = "Metro Manila",
+                    Country = "Philippines"
+                }
+            ]
+        };
+
+        _personRepositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<Person>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Person p, CancellationToken _) => p);
+
+        _addressRepositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<Address>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Address a, CancellationToken _) => a);
+
+        // Act
+        var result = await _personService.CreateAsync(createDto, "TestUser");
+
+        // Assert
+        Assert.NotNull(result);
+        _addressRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Address>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithContacts_CreatesPersonWithContacts()
+    {
+        // Arrange
+        var createDto = new CreatePersonDto
+        {
+            FirstName = "Test",
+            LastName = "Person",
+            DateOfBirth = new DateOnly(1990, 1, 1),
+            Gender = Gender.Male,
+            CivilStatus = CivilStatus.Single,
+            Contacts =
+            [
+                new CreateContactDto
+                {
+                    Mobile = "09123456789",
+                    Email = "test@example.com"
+                }
+            ]
+        };
+
+        _personRepositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<Person>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Person p, CancellationToken _) => p);
+
+        _contactRepositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Contact c, CancellationToken _) => c);
+
+        // Act
+        var result = await _personService.CreateAsync(createDto, "TestUser");
+
+        // Assert
+        Assert.NotNull(result);
+        _contactRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
+
+    #region DeleteAsync Tests
+
+    [Fact]
+    public async Task DeleteAsync_WhenPersonExists_ReturnsTrue()
+    {
+        // Arrange
+        var displayId = 123456789012L;
+        var person = CreateTestPerson(displayId);
+        person.Addresses = new List<Address>();
+        person.Contacts = new List<Contact>();
+        person.Documents = new List<Document>();
+
+        var persons = new List<Person> { person }.BuildMockQueryable();
+        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+
+        _personRepositoryMock
+            .Setup(r => r.DeleteAsync(person, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _personService.DeleteAsync(displayId, "TestUser");
+
+        // Assert
+        Assert.True(result);
+        _personRepositoryMock.Verify(r => r.DeleteAsync(person, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WhenPersonDoesNotExist_ReturnsFalse()
+    {
+        // Arrange
+        var displayId = 999999999999L;
+
+        var persons = new List<Person>().BuildMockQueryable();
+        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+
+        // Act
+        var result = await _personService.DeleteAsync(displayId, "TestUser");
+
+        // Assert
+        Assert.False(result);
+        _personRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Person>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    private static Person CreateTestPerson(
+        long displayId,
+        string firstName = "Test",
+        string lastName = "Person",
+        string? middleName = null)
+    {
+        var person = new Person
+        {
+            FirstName = firstName,
+            LastName = lastName,
+            MiddleName = middleName,
+            DateOfBirth = new DateOnly(1990, 1, 1),
+            Gender = Gender.Male,
+            CivilStatus = CivilStatus.Single,
+            CreatedBy = "System",
+            CreatedOn = DateTime.UtcNow
+        };
+
+        // Use reflection to set DisplayId since it has a private setter
+        var displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
+        displayIdProperty?.SetValue(person, displayId);
+
+        return person;
+    }
+
+    #endregion
+}
