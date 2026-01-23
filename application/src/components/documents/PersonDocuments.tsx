@@ -5,12 +5,10 @@ import {
   Button,
   Flex,
   Card,
-  Stack,
   Text,
   Badge,
   Input,
   Spinner,
-  Textarea,
   Table,
 } from '@chakra-ui/react';
 import { documentsApi, type DocumentListDto, API_BASE_URL } from '../../api';
@@ -51,7 +49,7 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
   const [error, setError] = useState<string | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [description, setDescription] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   /* eslint-disable react-hooks/exhaustive-deps */
@@ -79,37 +77,54 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      setSelectedFiles(Array.from(files));
     }
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (selectedFiles.length === 0) return;
 
     setUploading(true);
     setError(null);
 
-    try {
-      await documentsApi.apiV1PersonsPersonDisplayIdDocumentsPost(
-        personDisplayId,
-        selectedFile,
-        description || undefined
-      );
-      setSelectedFile(null);
+    const errors: string[] = [];
+    let successCount = 0;
+
+    for (const file of selectedFiles) {
+      try {
+        await documentsApi.apiV1PersonsPersonDisplayIdDocumentsPost(
+          personDisplayId,
+          file,
+          description || undefined
+        );
+        successCount++;
+      } catch (err: unknown) {
+        console.error('Error uploading document:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        errors.push(`${file.name}: ${errorMessage}`);
+      }
+    }
+
+    if (errors.length > 0) {
+      setError(`Failed to upload ${errors.length} file(s). Check file types - only PDF, Word, Excel, PowerPoint, JPEG, PNG are allowed.`);
+    }
+
+    if (successCount > 0) {
+      setSelectedFiles([]);
       setDescription('');
-      setShowUploadForm(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
       await loadDocuments();
-    } catch (err) {
-      console.error('Error uploading document:', err);
-      setError('Failed to upload document');
-    } finally {
-      setUploading(false);
     }
+
+    if (errors.length === 0) {
+      setShowUploadForm(false);
+    }
+
+    setUploading(false);
   };
 
   const handleDownload = (
@@ -175,67 +190,71 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
         )}
 
         {showUploadForm && (
-          <Box mb={6} p={4} borderWidth={1} borderRadius="md" bg="bg.muted">
-            <Stack gap={4}>
-              <Box>
-                <Text fontWeight="medium" mb={2}>
-                  Select File
+          <Box mb={6} p={4} borderWidth={1} borderRadius="md" borderColor="border.muted">
+            <Text fontWeight="semibold" mb={4}>
+              Upload New Document
+            </Text>
+            <Flex gap={4} align="flex-end" wrap="wrap">
+              <Box flex="1" minW="200px">
+                <Text fontWeight="medium" mb={2} fontSize="sm">
+                  Select Files
                 </Text>
-                <Input
+                <input
                   ref={fileInputRef}
                   type="file"
+                  multiple
                   onChange={handleFileSelect}
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"
-                  p={1}
+                  style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: '0' }}
                 />
-                <Text fontSize="xs" color="fg.muted" mt={1}>
-                  Supported formats: PDF, Word, Excel, PowerPoint, JPEG, PNG
-                  (Max 50 MB)
-                </Text>
-              </Box>
-
-              {selectedFile && (
-                <Box>
-                  <Text fontSize="sm" color="fg.muted">
-                    Selected: {selectedFile.name} (
-                    {formatFileSize(selectedFile.size)})
-                  </Text>
-                </Box>
-              )}
-
-              <Box>
-                <Text fontWeight="medium" mb={2}>
-                  Description (Optional)
-                </Text>
-                <Textarea
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  placeholder="Enter a description for this document"
-                  rows={2}
-                />
-              </Box>
-
-              <Flex justify="flex-end" gap={2}>
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setShowUploadForm(false);
-                    setSelectedFile(null);
-                    setDescription('');
-                  }}
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  width="full"
                 >
-                  Cancel
+                  {selectedFiles.length > 0 
+                    ? `${selectedFiles.length} file(s) selected` 
+                    : 'Choose Files...'}
                 </Button>
+                {selectedFiles.length > 0 && (
+                  <Box mt={1}>
+                    {selectedFiles.map((file, index) => (
+                      <Text key={index} fontSize="xs" color="fg.muted">
+                        {file.name} ({formatFileSize(file.size)})
+                      </Text>
+                    ))}
+                  </Box>
+                )}
+              </Box>
+
+              <Box flex="1" minW="200px">
+                <Text fontWeight="medium" mb={2} fontSize="sm">
+                  Description (optional)
+                </Text>
+                <Input
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Enter description"
+                  size="sm"
+                />
+              </Box>
+
+              <Box>
                 <Button
                   colorPalette="blue"
+                  size="sm"
                   onClick={handleUpload}
-                  disabled={!selectedFile}
+                  disabled={selectedFiles.length === 0}
                   loading={uploading}
                 >
                   Upload
                 </Button>
-              </Flex>
-            </Stack>
+              </Box>
+            </Flex>
+            <Text fontSize="xs" color="fg.muted" mt={2}>
+              Supported formats: PDF, Word, Excel, PowerPoint, JPEG, PNG (Max 50 MB)
+            </Text>
           </Box>
         )}
 

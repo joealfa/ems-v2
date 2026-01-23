@@ -6,6 +6,7 @@ import {
   SalaryGradesApi,
   ItemsApi,
   DocumentsApi,
+  ReportsApi,
 } from './generated';
 import { apiConfiguration, axiosInstance } from './config';
 
@@ -41,6 +42,11 @@ export const itemsApi = new ItemsApi(
   axiosInstance
 );
 export const documentsApi = new DocumentsApi(
+  apiConfiguration,
+  undefined,
+  axiosInstance
+);
+export const reportsApi = new ReportsApi(
   apiConfiguration,
   undefined,
   axiosInstance

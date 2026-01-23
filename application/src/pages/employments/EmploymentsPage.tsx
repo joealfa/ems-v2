@@ -86,7 +86,7 @@ const EmploymentsPage = () => {
       {
         field: 'depEdId',
         headerName: 'DepEd ID',
-        width: 150,
+        width: 180,
         sortable: true,
       },
       {
@@ -134,7 +134,9 @@ const EmploymentsPage = () => {
               <Button
                 size="xs"
                 variant="outline"
-                onClick={() => navigate(`/employments/${params.data?.displayId}`)}
+                onClick={() =>
+                  navigate(`/employments/${params.data?.displayId}`)
+                }
               >
                 View
               </Button>
@@ -258,6 +260,7 @@ const EmploymentsPage = () => {
             paginationPageSizeSelector={[10, 20, 50, 100]}
             animateRows={false}
             suppressCellFocus={true}
+            alwaysShowVerticalScroll={true}
           />
         </Box>
       </Box>

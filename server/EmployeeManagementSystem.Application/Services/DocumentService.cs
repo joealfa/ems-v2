@@ -348,6 +348,37 @@ public class DocumentService : IDocumentService
         return true;
     }
 
+    /// <inheritdoc />
+    public async Task<BlobDownloadResultDto?> GetProfileImageAsync(
+        long personDisplayId,
+        CancellationToken cancellationToken = default)
+    {
+        var person = await _personRepository.Query()
+            .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
+
+        if (person == null || string.IsNullOrEmpty(person.ProfileImageUrl))
+            return null;
+
+        var extension = Path.GetExtension(person.ProfileImageUrl);
+        var blobName = $"{person.Id}/profile{extension}";
+
+        var content = await _blobStorageService.DownloadAsync(ProfileImagesContainer, blobName, cancellationToken);
+
+        var contentType = extension.ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            _ => "application/octet-stream"
+        };
+
+        return new BlobDownloadResultDto
+        {
+            Content = content,
+            ContentType = contentType,
+            FileName = $"profile{extension}"
+        };
+    }
+
     private static DocumentType GetDocumentType(string extension)
     {
         return ExtensionToDocumentType.TryGetValue(extension, out var type)

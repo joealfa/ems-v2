@@ -1,5 +1,14 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Box, Heading, Button, Flex, Input, Spinner, Center } from '@chakra-ui/react';
+import {
+  Box,
+  Heading,
+  Button,
+  Flex,
+  Input,
+  Spinner,
+  Center,
+  Image,
+} from '@chakra-ui/react';
 import { AgGridReact } from 'ag-grid-react';
 import { useDebounce } from '../../hooks';
 import {
@@ -11,7 +20,7 @@ import {
   type ICellRendererParams,
 } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
-import { personsApi, type PersonListDto } from '../../api';
+import { personsApi, type PersonListDto, API_BASE_URL } from '../../api';
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -66,6 +75,63 @@ const PersonsPage = () => {
         headerName: 'ID',
         width: 150,
         sortable: true,
+      },
+      {
+        field: 'profileImageUrl',
+        headerName: '',
+        width: 60,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: ICellRendererParams<PersonListDto>) => {
+          const fullName = params.data?.fullName || '';
+          const displayId = params.data?.displayId;
+          const nameParts = fullName.split(' ');
+          const initials =
+            nameParts.length >= 2
+              ? `${nameParts[0]?.[0] || ''}${nameParts[nameParts.length - 1]?.[0] || ''}`.toUpperCase()
+              : (fullName[0] || '?').toUpperCase();
+
+          if (params.value && displayId) {
+            // Use the streaming endpoint instead of the blob URL
+            const imageUrl = `${API_BASE_URL}/api/v1/persons/${displayId}/documents/profile-image`;
+            return (
+              <Flex align="center" justify="center" h="100%">
+                <Image
+                  src={imageUrl}
+                  alt="Profile"
+                  w="32px"
+                  h="32px"
+                  minW="32px"
+                  minH="32px"
+                  borderRadius="50%"
+                  objectFit="cover"
+                  onError={(e) => {
+                    // Hide the image on error, showing fallback initials
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </Flex>
+            );
+          }
+
+          return (
+            <Flex align="center" justify="center" h="100%">
+              <Center
+                w="32px"
+                h="32px"
+                minW="32px"
+                minH="32px"
+                borderRadius="50%"
+                bg="bg.muted"
+                color="fg.muted"
+                fontSize="xs"
+                fontWeight="bold"
+              >
+                {initials}
+              </Center>
+            </Flex>
+          );
+        },
       },
       {
         field: 'fullName',
@@ -180,14 +246,14 @@ const PersonsPage = () => {
 
   return (
     <Box h="100%">
-      <Flex justify="space-between" align="center" mb={6}>
+      <Flex justify="space-between" align="center" mb={4}>
         <Heading size="lg">Persons</Heading>
         <Button colorPalette="blue" onClick={() => navigate('/persons/new')}>
           Add Person
         </Button>
       </Flex>
 
-      <Flex gap={4} mb={6}>
+      <Flex gap={4} mb={4}>
         <Input
           placeholder="Search by name..."
           value={searchTerm}
@@ -196,14 +262,7 @@ const PersonsPage = () => {
         />
       </Flex>
 
-      <Box
-        h="calc(100% - 140px)"
-        borderRadius="md"
-        overflow="hidden"
-        borderWidth={1}
-        borderColor="border.muted"
-        position="relative"
-      >
+      <Box h="calc(100% - 140px)" position="relative">
         {isLoading && (
           <Center
             position="absolute"
@@ -235,6 +294,7 @@ const PersonsPage = () => {
             paginationPageSizeSelector={[10, 20, 50, 100]}
             animateRows={false}
             suppressCellFocus={true}
+            alwaysShowVerticalScroll={true}
           />
         </Box>
       </Box>

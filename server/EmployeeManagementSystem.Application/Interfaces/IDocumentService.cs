@@ -113,4 +113,14 @@ public interface IDocumentService
         long personDisplayId,
         string modifiedBy,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Downloads a person's profile image.
+    /// </summary>
+    /// <param name="personDisplayId">The person's display ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The download result or null if not found.</returns>
+    Task<BlobDownloadResultDto?> GetProfileImageAsync(
+        long personDisplayId,
+        CancellationToken cancellationToken = default);
 }

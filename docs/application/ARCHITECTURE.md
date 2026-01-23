@@ -1,0 +1,374 @@
+# Application Architecture
+
+## Overview
+
+The EMS frontend follows a feature-based architecture with clear separation of concerns. This document outlines the architectural decisions, patterns, and conventions used throughout the application.
+
+---
+
+## Core Architecture Principles
+
+### 1. Feature-Based Organization
+
+Each major feature (persons, schools, positions, etc.) has its own folder under `pages/` containing:
+- **List Page** - Displays paginated data with search and sorting
+- **Form Page** - Handles both create and edit operations
+- **Detail Page** - Shows read-only view with actions
+
+### 2. Component Composition
+
+- **Layout Components** - Structural components (MainLayout, Sidebar, Header)
+- **UI Components** - Reusable utilities (color mode, AG Grid theme)
+- **Feature Components** - Feature-specific components (documents, profile image)
+
+### 3. Centralized API Layer
+
+All API communication goes through the auto-generated OpenAPI client with a configured Axios instance.
+
+---
+
+## Provider Hierarchy
+
+```tsx
+<ChakraProvider>          // Chakra UI theming and component context
+  <ColorModeProvider>     // Light/dark mode state management
+    <BrowserRouter>       // React Router navigation
+      <Routes>            // Route definitions
+        <MainLayout />    // Shared layout wrapper
+          {/* Page Content */}
+```
+
+### Provider Responsibilities
+
+| Provider            | Responsibility                            |
+|---------------------|-------------------------------------------|
+| `ChakraProvider`    | Theme tokens, component styles, CSS reset |
+| `ColorModeProvider` | Dark/light mode state, persistence        |
+| `BrowserRouter`     | URL-based navigation, history API         |
+| `MainLayout`        | Sidebar, header, content area structure   |
+
+---
+
+## Routing Architecture
+
+### Route Structure
+
+```
+/                           → Dashboard
+/persons                    → Person List
+/persons/new                → Create Person
+/persons/:displayId         → Person Detail
+/persons/:displayId/edit    → Edit Person
+```
+
+This pattern is repeated for all entities (schools, positions, salary-grades, items, employments).
+
+### Route Parameters
+
+- **`:displayId`** - The 12-digit public identifier (not the internal GUID)
+- Used for URL-friendly references that are safe to share
+
+### Navigation Patterns
+
+```tsx
+// Programmatic navigation
+const navigate = useNavigate();
+navigate('/persons');
+navigate(`/persons/${displayId}`);
+navigate(`/persons/${displayId}/edit`);
+
+// Link component
+<Link to="/persons/new">Add New Person</Link>
+
+// Row click in AG Grid
+onRowClicked: (event) => navigate(`/persons/${event.data.displayId}`)
+```
+
+---
+
+## State Management
+
+### Local Component State
+
+The application primarily uses local component state with React hooks:
+
+```tsx
+// Form state
+const [formData, setFormData] = useState<CreatePersonDto>({...});
+
+// Loading state
+const [isLoading, setIsLoading] = useState(false);
+
+// Error state
+const [error, setError] = useState<string | null>(null);
+```
+
+### Server State
+
+Data from the API is fetched and managed within each component:
+
+```tsx
+useEffect(() => {
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await personsApi.apiV1PersonsDisplayIdGet(displayId);
+      setData(response.data);
+    } catch (err) {
+      setError('Failed to load data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  loadData();
+}, [displayId]);
+```
+
+### Global State
+
+- **Color Mode** - Managed by Chakra UI's ColorModeProvider
+- **No Redux/Zustand** - Application complexity doesn't require global state management
+
+---
+
+## Data Flow Patterns
+
+### List Page Data Flow
+
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│   User      │────▶│  AG Grid     │────▶│  API Call   │
+│   Action    │     │  Datasource  │     │  (Server)   │
+└─────────────┘     └──────────────┘     └─────────────┘
+                           │                    │
+                           ▼                    ▼
+                    ┌──────────────┐     ┌─────────────┐
+                    │  Update      │◀────│  Response   │
+                    │  Grid Rows   │     │  Data       │
+                    └──────────────┘     └─────────────┘
+```
+
+### Form Page Data Flow
+
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│  Form       │────▶│  Validate    │────▶│  API Call   │
+│  Submit     │     │  Data        │     │  (Create/   │
+└─────────────┘     └──────────────┘     │   Update)   │
+                                         └─────────────┘
+                                               │
+                           ┌───────────────────┘
+                           ▼
+                    ┌──────────────┐
+                    │  Navigate    │
+                    │  to Detail   │
+                    └──────────────┘
+```
+
+---
+
+## Error Handling Strategy
+
+### API Errors
+
+```tsx
+try {
+  await apiCall();
+} catch (error) {
+  if (axios.isAxiosError(error)) {
+    if (error.response?.status === 404) {
+      setError('Resource not found');
+    } else if (error.response?.status === 400) {
+      setError('Invalid data provided');
+    } else {
+      setError('An unexpected error occurred');
+    }
+  }
+}
+```
+
+### Error Display
+
+- **Inline Errors** - Form validation messages
+- **Toast Notifications** - Success/error feedback (via Chakra UI)
+- **Error States** - Full-page error displays for critical failures
+
+### Loading States
+
+```tsx
+if (isLoading) {
+  return (
+    <Box p={8}>
+      <VStack gap={4}>
+        <Spinner size="xl" />
+        <Text>Loading...</Text>
+      </VStack>
+    </Box>
+  );
+}
+```
+
+---
+
+## Code Organization Patterns
+
+### Feature Folder Structure
+
+```
+pages/persons/
+├── index.ts              # Barrel exports
+├── PersonsPage.tsx       # List page
+├── PersonFormPage.tsx    # Create/Edit page
+└── PersonDetailPage.tsx  # Detail page
+```
+
+### Barrel Exports
+
+Each feature folder has an `index.ts` for clean imports:
+
+```tsx
+// pages/persons/index.ts
+export { default as PersonsPage } from './PersonsPage';
+export { default as PersonFormPage } from './PersonFormPage';
+export { default as PersonDetailPage } from './PersonDetailPage';
+
+// Usage
+import { PersonsPage, PersonFormPage, PersonDetailPage } from './pages/persons';
+```
+
+### Component File Structure
+
+```tsx
+// 1. Imports
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Box, Heading } from '@chakra-ui/react';
+import { personsApi, type PersonResponseDto } from '../../api';
+
+// 2. Type definitions (if needed)
+interface FormData {
+  // ...
+}
+
+// 3. Component definition
+const PersonDetailPage = () => {
+  // 3a. Hooks
+  const { displayId } = useParams();
+  const navigate = useNavigate();
+  
+  // 3b. State
+  const [data, setData] = useState<PersonResponseDto | null>(null);
+  
+  // 3c. Effects
+  useEffect(() => {
+    // Load data
+  }, [displayId]);
+  
+  // 3d. Handlers
+  const handleEdit = () => {
+    navigate(`/persons/${displayId}/edit`);
+  };
+  
+  // 3e. Render
+  return (
+    <Box>
+      {/* Component JSX */}
+    </Box>
+  );
+};
+
+// 4. Export
+export default PersonDetailPage;
+```
+
+---
+
+## Performance Considerations
+
+### AG Grid Optimization
+
+- **Infinite Row Model** - Only loads visible data
+- **Server-Side Pagination** - API handles data chunking
+- **Debounced Search** - Reduces API calls during typing
+
+### React Optimization
+
+- **Memoization** - Use `useMemo` and `useCallback` for expensive operations
+- **Lazy Loading** - Consider for route-based code splitting
+- **Key Props** - Proper keys for list rendering
+
+### Bundle Optimization
+
+- **Tree Shaking** - Vite automatically removes unused code
+- **Code Splitting** - Automatic per-route chunking
+- **Dependency Optimization** - Vite pre-bundles dependencies
+
+---
+
+## TypeScript Patterns
+
+### Strict Typing
+
+```typescript
+// API response typing
+const [person, setPerson] = useState<PersonResponseDto | null>(null);
+
+// Form data typing
+interface CreatePersonFormData extends CreatePersonDto {
+  // Additional UI-only fields if needed
+}
+
+// Event handler typing
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target;
+  setFormData(prev => ({ ...prev, [name]: value }));
+};
+```
+
+### Type Guards
+
+```typescript
+// Check if in edit mode
+const isEditMode = displayId !== undefined;
+
+// Type narrowing
+if (person) {
+  // person is PersonResponseDto here
+}
+```
+
+### Enum Usage
+
+```tsx
+import { Gender, CivilStatus } from '../../api';
+
+// Enum in select options
+<option value={Gender.Male}>Male</option>
+<option value={Gender.Female}>Female</option>
+```
+
+---
+
+## Testing Strategy
+
+### Recommended Testing Approach
+
+| Layer      | Testing Tool               | Focus                          |
+|------------|----------------------------|--------------------------------|
+| Components | Vitest + Testing Library   | UI behavior, user interactions |
+| Hooks      | Vitest                     | Custom hook logic              |
+| API Layer  | MSW (Mock Service Worker)  | API mocking, integration       |
+| E2E        | Playwright/Cypress         | Full user flows                |
+
+### Test File Organization
+
+```
+src/
+├── components/
+│   ├── layout/
+│   │   ├── Sidebar.tsx
+│   │   └── Sidebar.test.tsx     # Co-located tests
+├── hooks/
+│   ├── useDebounce.ts
+│   └── useDebounce.test.ts
+```

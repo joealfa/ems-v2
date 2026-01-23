@@ -103,8 +103,9 @@ const SalaryGradesPage = () => {
         headerName: 'Monthly Salary',
         width: 180,
         sortable: true,
-        valueFormatter: (params: ValueFormatterParams<SalaryGradeResponseDto>) =>
-          formatCurrency(params.value),
+        valueFormatter: (
+          params: ValueFormatterParams<SalaryGradeResponseDto>
+        ) => formatCurrency(params.value),
       },
       {
         field: 'description',
@@ -263,6 +264,7 @@ const SalaryGradesPage = () => {
             paginationPageSizeSelector={[10, 20, 50, 100]}
             animateRows={false}
             suppressCellFocus={true}
+            alwaysShowVerticalScroll={true}
           />
         </Box>
       </Box>

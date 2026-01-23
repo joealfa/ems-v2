@@ -270,6 +270,26 @@ public class DocumentsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets a person's profile image.
+    /// </summary>
+    /// <param name="personDisplayId">The person's display ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The profile image file.</returns>
+    [HttpGet("profile-image")]
+    [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetProfileImage(
+        long personDisplayId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _documentService.GetProfileImageAsync(personDisplayId, cancellationToken);
+        if (result == null)
+            return NotFound();
+
+        return File(result.Content, result.ContentType);
+    }
+
+    /// <summary>
     /// Deletes a person's profile image.
     /// </summary>
     /// <param name="personDisplayId">The person's display ID.</param>

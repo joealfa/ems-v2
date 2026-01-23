@@ -238,6 +238,7 @@ const SchoolsPage = () => {
             paginationPageSizeSelector={[10, 20, 50, 100]}
             animateRows={false}
             suppressCellFocus={true}
+            alwaysShowVerticalScroll={true}
           />
         </Box>
       </Box>

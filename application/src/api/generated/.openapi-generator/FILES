@@ -6,6 +6,7 @@ api/employments-api.ts
 api/items-api.ts
 api/persons-api.ts
 api/positions-api.ts
+api/reports-api.ts
 api/salary-grades-api.ts
 api/schools-api.ts
 base.ts
@@ -24,6 +25,7 @@ models/create-person-dto.ts
 models/create-position-dto.ts
 models/create-salary-grade-dto.ts
 models/create-school-dto.ts
+models/dashboard-stats-dto.ts
 models/document-list-dto-paged-result.ts
 models/document-list-dto.ts
 models/document-response-dto.ts

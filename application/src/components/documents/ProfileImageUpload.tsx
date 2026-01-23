@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Box, Button, Flex, Text, Image, Spinner } from '@chakra-ui/react';
-import { documentsApi } from '../../api';
+import { documentsApi, API_BASE_URL } from '../../api';
 
 interface ProfileImageUploadProps {
   personDisplayId: number;
@@ -16,6 +16,7 @@ const ProfileImageUpload = ({
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageVersion, setImageVersion] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,6 +43,7 @@ const ProfileImageUpload = ({
         personDisplayId,
         file
       );
+      setImageVersion(v => v + 1);
       onImageUpdated();
     } catch (err) {
       console.error('Error uploading profile image:', err);
@@ -93,7 +95,7 @@ const ProfileImageUpload = ({
             <Spinner size="lg" />
           ) : currentImageUrl ? (
             <Image
-              src={currentImageUrl}
+              src={`${API_BASE_URL}/api/v1/persons/${personDisplayId}/documents/profile-image?v=${imageVersion}`}
               alt="Profile"
               w="100%"
               h="100%"

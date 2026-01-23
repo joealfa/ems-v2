@@ -122,7 +122,9 @@ const ItemsPage = () => {
                 size="xs"
                 variant="outline"
                 colorPalette="blue"
-                onClick={() => navigate(`/items/${params.data?.displayId}/edit`)}
+                onClick={() =>
+                  navigate(`/items/${params.data?.displayId}/edit`)
+                }
               >
                 Edit
               </Button>
@@ -233,6 +235,7 @@ const ItemsPage = () => {
             paginationPageSizeSelector={[10, 20, 50, 100]}
             animateRows={false}
             suppressCellFocus={true}
+            alwaysShowVerticalScroll={true}
           />
         </Box>
       </Box>

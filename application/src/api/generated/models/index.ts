@@ -9,6 +9,7 @@ export * from './create-person-dto';
 export * from './create-position-dto';
 export * from './create-salary-grade-dto';
 export * from './create-school-dto';
+export * from './dashboard-stats-dto';
 export * from './document-list-dto';
 export * from './document-list-dto-paged-result';
 export * from './document-response-dto';
