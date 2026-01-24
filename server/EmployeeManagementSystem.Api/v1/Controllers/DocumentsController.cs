@@ -230,6 +230,7 @@ public class DocumentsController : ApiControllerBase
     /// <param name="personDisplayId">The person's display ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The profile image file.</returns>
+    [AllowAnonymous]
     [HttpGet("profile-image")]
     [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

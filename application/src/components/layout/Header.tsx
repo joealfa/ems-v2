@@ -1,8 +1,14 @@
-import { Box, Flex, Text, IconButton } from '@chakra-ui/react';
+import { Box, Flex, Text, IconButton, Image, Button } from '@chakra-ui/react';
 import { useColorMode } from '../ui/color-mode';
+import { useAuth } from '../../hooks/useAuth';
 
 const Header = () => {
   const { colorMode, toggleColorMode } = useColorMode();
+  const { user, logout, isAuthenticated } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <Box
@@ -26,6 +32,47 @@ const Header = () => {
           >
             {colorMode === 'light' ? '🌙' : '☀️'}
           </IconButton>
+
+          {isAuthenticated && user && (
+            <Flex align="center" gap={3}>
+              <Flex align="center" gap={2}>
+                {user.profilePictureUrl ? (
+                  <Image
+                    src={user.profilePictureUrl}
+                    alt={`${user.firstName} ${user.lastName}`}
+                    boxSize="32px"
+                    borderRadius="full"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <Box
+                    boxSize="32px"
+                    borderRadius="full"
+                    bg="blue.500"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    color="white"
+                    fontWeight="bold"
+                    fontSize="sm"
+                  >
+                    {user.firstName?.charAt(0)}
+                    {user.lastName?.charAt(0)}
+                  </Box>
+                )}
+                <Text
+                  fontSize="sm"
+                  color="fg"
+                  display={{ base: 'none', md: 'block' }}
+                >
+                  {user.firstName} {user.lastName}
+                </Text>
+              </Flex>
+              <Button size="sm" variant="ghost" onClick={handleLogout}>
+                Logout
+              </Button>
+            </Flex>
+          )}
         </Flex>
       </Flex>
     </Box>

@@ -165,8 +165,9 @@ if (app.Environment.IsDevelopment())
     await DataSeeder.SeedAsync(dbContext);
 }
 
-app.UseHttpsRedirection();
+// CORS must be before HttpsRedirection to handle preflight requests
 app.UseCors("AllowedHosts");
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

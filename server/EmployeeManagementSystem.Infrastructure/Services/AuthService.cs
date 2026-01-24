@@ -39,9 +39,10 @@ public class AuthService : IAuthService
         // Validate the Google ID token
         var payload = await ValidateGoogleTokenAsync(idToken);
 
-        // Find or create the user
+        // Find or create the user - use IgnoreQueryFilters to find soft-deleted users too
         var user = await _context.Users
-            .Include(u => u.RefreshTokens)
+            .IgnoreQueryFilters()
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.GoogleId == payload.Subject);
 
         if (user == null)
@@ -61,33 +62,47 @@ public class AuthService : IAuthService
             };
 
             _context.Users.Add(user);
+            await _context.SaveChangesAsync();
         }
         else
         {
-            // Update user info from Google
+            // Update user directly in database using ExecuteUpdateAsync to bypass change tracking issues
+            await _context.Users
+                .IgnoreQueryFilters()
+                .Where(u => u.Id == user.Id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(u => u.Email, payload.Email)
+                    .SetProperty(u => u.FirstName, payload.GivenName ?? user.FirstName)
+                    .SetProperty(u => u.LastName, payload.FamilyName ?? user.LastName)
+                    .SetProperty(u => u.ProfilePictureUrl, payload.Picture ?? user.ProfilePictureUrl)
+                    .SetProperty(u => u.LastLoginOn, DateTime.UtcNow)
+                    .SetProperty(u => u.ModifiedOn, DateTime.UtcNow)
+                    .SetProperty(u => u.IsDeleted, false));
+
+            // Revoke all active refresh tokens for this user directly in database
+            await _context.RefreshTokens
+                .IgnoreQueryFilters()
+                .Where(rt => rt.UserId == user.Id && rt.RevokedOn == null && rt.ExpiresOn > DateTime.UtcNow)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(rt => rt.RevokedOn, DateTime.UtcNow)
+                    .SetProperty(rt => rt.RevokedByIp, ipAddress)
+                    .SetProperty(rt => rt.ReasonRevoked, "Replaced by new token on login"));
+
+            // Refresh user data after update
             user.Email = payload.Email;
             user.FirstName = payload.GivenName ?? user.FirstName;
             user.LastName = payload.FamilyName ?? user.LastName;
             user.ProfilePictureUrl = payload.Picture ?? user.ProfilePictureUrl;
-            user.LastLoginOn = DateTime.UtcNow;
-            user.ModifiedOn = DateTime.UtcNow;
+            user.IsDeleted = false;
         }
 
         // Generate JWT and refresh token
         var accessToken = GenerateJwtToken(user);
         var refreshToken = GenerateRefreshToken(ipAddress);
+        refreshToken.UserId = user.Id;
 
-        // Revoke old refresh tokens
-        foreach (var token in user.RefreshTokens.Where(t => t.IsActive))
-        {
-            token.RevokedOn = DateTime.UtcNow;
-            token.RevokedByIp = ipAddress;
-            token.ReasonRevoked = "Replaced by new token on login";
-        }
-
-        // Add new refresh token
-        user.RefreshTokens.Add(refreshToken);
-
+        // Add new refresh token directly
+        _context.RefreshTokens.Add(refreshToken);
         await _context.SaveChangesAsync();
 
         return new AuthResponseDto
@@ -105,9 +120,10 @@ public class AuthService : IAuthService
         // Fetch user info from Google using the access token
         var userInfo = await GetGoogleUserInfoAsync(accessToken);
 
-        // Find or create the user
+        // Find or create the user - use IgnoreQueryFilters to find soft-deleted users too
         var user = await _context.Users
-            .Include(u => u.RefreshTokens)
+            .IgnoreQueryFilters()
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.GoogleId == userInfo.Sub);
 
         if (user == null)
@@ -127,33 +143,47 @@ public class AuthService : IAuthService
             };
 
             _context.Users.Add(user);
+            await _context.SaveChangesAsync();
         }
         else
         {
-            // Update user info from Google
+            // Update user directly in database using ExecuteUpdateAsync to bypass change tracking issues
+            await _context.Users
+                .IgnoreQueryFilters()
+                .Where(u => u.Id == user.Id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(u => u.Email, userInfo.Email)
+                    .SetProperty(u => u.FirstName, userInfo.GivenName ?? user.FirstName)
+                    .SetProperty(u => u.LastName, userInfo.FamilyName ?? user.LastName)
+                    .SetProperty(u => u.ProfilePictureUrl, userInfo.Picture ?? user.ProfilePictureUrl)
+                    .SetProperty(u => u.LastLoginOn, DateTime.UtcNow)
+                    .SetProperty(u => u.ModifiedOn, DateTime.UtcNow)
+                    .SetProperty(u => u.IsDeleted, false));
+
+            // Revoke all active refresh tokens for this user directly in database
+            await _context.RefreshTokens
+                .IgnoreQueryFilters()
+                .Where(rt => rt.UserId == user.Id && rt.RevokedOn == null && rt.ExpiresOn > DateTime.UtcNow)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(rt => rt.RevokedOn, DateTime.UtcNow)
+                    .SetProperty(rt => rt.RevokedByIp, ipAddress)
+                    .SetProperty(rt => rt.ReasonRevoked, "Replaced by new token on login"));
+
+            // Refresh user data after update
             user.Email = userInfo.Email;
             user.FirstName = userInfo.GivenName ?? user.FirstName;
             user.LastName = userInfo.FamilyName ?? user.LastName;
             user.ProfilePictureUrl = userInfo.Picture ?? user.ProfilePictureUrl;
-            user.LastLoginOn = DateTime.UtcNow;
-            user.ModifiedOn = DateTime.UtcNow;
+            user.IsDeleted = false;
         }
 
         // Generate JWT and refresh token
         var jwtToken = GenerateJwtToken(user);
         var refreshToken = GenerateRefreshToken(ipAddress);
+        refreshToken.UserId = user.Id;
 
-        // Revoke old refresh tokens
-        foreach (var token in user.RefreshTokens.Where(t => t.IsActive))
-        {
-            token.RevokedOn = DateTime.UtcNow;
-            token.RevokedByIp = ipAddress;
-            token.ReasonRevoked = "Replaced by new token on login";
-        }
-
-        // Add new refresh token
-        user.RefreshTokens.Add(refreshToken);
-
+        // Add new refresh token directly
+        _context.RefreshTokens.Add(refreshToken);
         await _context.SaveChangesAsync();
 
         return new AuthResponseDto

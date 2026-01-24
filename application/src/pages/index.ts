@@ -1,4 +1,5 @@
 export { default as Dashboard } from './Dashboard';
+export { default as LoginPage } from './LoginPage';
 export * from './persons';
 export * from './schools';
 export * from './positions';
