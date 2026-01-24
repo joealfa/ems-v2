@@ -16,6 +16,7 @@ The Employee Management System (EMS) frontend is a modern React-based single-pag
 
 ### Key Features
 
+- **Google OAuth2 Authentication** with JWT access and refresh tokens
 - **Dashboard** with real-time statistics
 - **Person Management** with addresses, contacts, documents, and profile images
 - **Employment Management** with school assignments
@@ -24,6 +25,7 @@ The Employee Management System (EMS) frontend is a modern React-based single-pag
 - **Dark/Light Mode** theming support
 - **AG Grid** integration for powerful data tables with infinite scrolling
 - **Auto-generated API Client** from OpenAPI specification
+- **Protected Routes** with automatic token refresh
 
 ---
 
@@ -33,7 +35,8 @@ The Employee Management System (EMS) frontend is a modern React-based single-pag
 
 - Node.js 18+ 
 - npm 9+
-- Backend API running on `http://localhost:5062`
+- Backend API running on `http://localhost:5031`
+- Google OAuth2 Client ID (for authentication)
 
 ### Installation
 
@@ -44,11 +47,22 @@ cd application
 # Install dependencies
 npm install
 
+# Create .env file with required environment variables
+echo "VITE_API_BASE_URL=http://localhost:5031" > .env
+echo "VITE_GOOGLE_CLIENT_ID=your-google-client-id" >> .env
+
 # Start development server
 npm run dev
 ```
 
 The application will be available at `http://localhost:5173`.
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|--------|
+| `VITE_API_BASE_URL` | Backend API URL | `http://localhost:5031` |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth2 Client ID | Required |
 
 ### Available Scripts
 
@@ -78,15 +92,16 @@ This fetches the OpenAPI specification from `http://localhost:5062/swagger/v1/sw
 
 ### Production Dependencies
 
-| Package            | Version  | Purpose                                                          |
-|--------------------|----------|------------------------------------------------------------------|
-| `@chakra-ui/react` | ^3.31.0  | Component library for UI elements                                |
-| `@emotion/react`   | ^11.14.0 | CSS-in-JS styling (Chakra UI dependency)                         |
-| `ag-grid-react`    | ^35.0.1  | Enterprise data grid with sorting, filtering, infinite scrolling |
-| `axios`            | ^1.13.2  | HTTP client for API communication                                |
-| `react`            | ^19.2.0  | Core UI framework                                                |
-| `react-dom`        | ^19.2.0  | React DOM rendering                                              |
-| `react-router-dom` | ^7.12.0  | Client-side routing                                              |
+| Package              | Version  | Purpose                                                          |
+|----------------------|----------|------------------------------------------------------------------|
+| `@chakra-ui/react`   | ^3.31.0  | Component library for UI elements                                |
+| `@emotion/react`     | ^11.14.0 | CSS-in-JS styling (Chakra UI dependency)                         |
+| `@react-oauth/google`| ^0.13.4  | Google OAuth2 authentication for React                           |
+| `ag-grid-react`      | ^35.0.1  | Enterprise data grid with sorting, filtering, infinite scrolling |
+| `axios`              | ^1.13.2  | HTTP client for API communication                                |
+| `react`              | ^19.2.0  | Core UI framework                                                |
+| `react-dom`          | ^19.2.0  | React DOM rendering                                              |
+| `react-router-dom`   | ^7.12.0  | Client-side routing                                              |
 
 ### Development Dependencies
 

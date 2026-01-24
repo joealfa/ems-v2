@@ -62,6 +62,55 @@ public interface IRepository<T> where T : BaseEntity
 
 ---
 
+## Authentication Service
+
+### IAuthService
+
+Handles Google OAuth2 authentication and JWT token management.
+
+```csharp
+public interface IAuthService
+{
+    /// <summary>
+    /// Authenticates a user using a Google OAuth2 ID token.
+    /// Creates a new user if one doesn't exist.
+    /// </summary>
+    Task<AuthResponseDto> AuthenticateWithGoogleAsync(string idToken, string ipAddress);
+
+    /// <summary>
+    /// Authenticates a user using a Google OAuth2 access token.
+    /// Used for Swagger UI OAuth2 flow.
+    /// </summary>
+    Task<AuthResponseDto> AuthenticateWithGoogleAccessTokenAsync(string accessToken, string ipAddress);
+
+    /// <summary>
+    /// Refreshes an access token using a valid refresh token.
+    /// Implements token rotation for security.
+    /// </summary>
+    Task<AuthResponseDto?> RefreshTokenAsync(string refreshToken, string ipAddress);
+
+    /// <summary>
+    /// Revokes a refresh token (logout).
+    /// </summary>
+    Task<bool> RevokeTokenAsync(string refreshToken, string ipAddress);
+
+    /// <summary>
+    /// Gets a user by their ID.
+    /// </summary>
+    Task<UserDto?> GetUserByIdAsync(Guid userId);
+}
+```
+
+**Implementation Details:**
+
+- Validates Google ID tokens using Google's public keys
+- Creates new users on first authentication
+- Generates JWT access tokens with configurable expiration
+- Implements refresh token rotation (old token revoked when new one issued)
+- Tracks token creation/revocation IP addresses for security
+
+---
+
 ## Entity Services
 
 ### IPersonService

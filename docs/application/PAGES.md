@@ -57,6 +57,62 @@ useEffect(() => {
 
 ---
 
+## Login Page
+
+**File:** `src/pages/LoginPage.tsx`
+**Route:** `/login`
+
+The authentication page for Google OAuth2 sign-in.
+
+### Features
+
+- Google Sign-In button using `@react-oauth/google`
+- Background preview of the application layout
+- Dark/light mode toggle
+- Automatic redirect to original destination after login
+- Error handling for authentication failures
+
+### Layout
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│  Background (blurred app preview)                              │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  Login Card (centered)                                  │   │
+│  │  ┌─────────────────────────────────────────────────────┐│   │
+│  │  │  EMS Logo/Title                                     ││   │
+│  │  │  "Sign in to continue"                              ││   │
+│  │  │                                                     ││   │
+│  │  │  [Google Sign-In Button]                            ││   │
+│  │  │                                                     ││   │
+│  │  │  Error message (if any)                             ││   │
+│  │  └─────────────────────────────────────────────────────┘│   │
+│  └─────────────────────────────────────────────────────────┘   │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Authentication Flow
+
+```tsx
+const handleGoogleSuccess = async (response: CredentialResponse) => {
+  if (response.credential) {
+    await login(response.credential);
+    const destination = location.state?.from?.pathname || '/';
+    navigate(destination, { replace: true });
+  }
+};
+```
+
+### Error States
+
+| Error                | Message                            |
+|----------------------|------------------------------------|
+| Invalid token        | "Authentication failed"            |
+| Network error        | "Unable to connect to server"      |
+| Google config missing| Warning logged to console          |
+
+---
+
 ## Persons Module
 
 **Location:** `src/pages/persons/`

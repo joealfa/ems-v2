@@ -55,33 +55,71 @@ The EMS frontend uses **OpenAPI Generator** to automatically generate TypeScript
 
 ```typescript
 import axios from 'axios';
+import { Configuration } from './generated';
 
 // Base URL for all API requests
-export const API_BASE_URL = 'http://localhost:5062';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5031';
 
 // Configured Axios instance
 export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// Request interceptor (for auth tokens, etc.)
+// API configuration for generated clients
+export const apiConfiguration = new Configuration({
+  basePath: API_BASE_URL,
+});
+
+const ACCESS_TOKEN_KEY = 'accessToken';
+const REFRESH_TOKEN_KEY = 'refreshToken';
+
+// Request interceptor for adding auth tokens
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Add authorization header when available
-    // const token = getAuthToken();
-    // config.headers.Authorization = `Bearer ${token}`;
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor (for error handling)
+// Response interceptor for handling errors and token refresh
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized
-      console.error('Unauthorized access');
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Handle 401 Unauthorized with automatic token refresh
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // Skip refresh for auth endpoints
+      if (originalRequest.url?.includes('/Auth/')) {
+        return Promise.reject(error);
+      }
+
+      originalRequest._retry = true;
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+
+      if (refreshToken) {
+        try {
+          const response = await axiosInstance.post('/api/v1/Auth/refresh', {
+            refreshToken,
+          });
+          const { accessToken } = response.data;
+          localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return axiosInstance(originalRequest);
+        } catch {
+          // Refresh failed, redirect to login
+          localStorage.clear();
+          window.location.href = '/login';
+        }
+      }
     }
     return Promise.reject(error);
   }
@@ -137,6 +175,7 @@ This command:
 
 |       Class       |             Base Path            |           Purpose            |
 |-------------------|----------------------------------|------------------------------|
+| `AuthApi`         | `/api/v1/auth`                   | Authentication operations    |
 | `PersonsApi`      | `/api/v1/persons`                | Person CRUD operations       |
 | `EmploymentsApi`  | `/api/v1/employments`            | Employment CRUD operations   |
 | `SchoolsApi`      | `/api/v1/schools`                | School CRUD operations       |
@@ -151,44 +190,123 @@ This command:
 **File:** `src/api/index.ts`
 
 ```typescript
-import { Configuration } from './generated';
 import {
   PersonsApi,
-  EmploymentsApi,
   SchoolsApi,
+  EmploymentsApi,
   PositionsApi,
   SalaryGradesApi,
   ItemsApi,
   DocumentsApi,
   ReportsApi,
-} from './generated/api';
-import { axiosInstance, API_BASE_URL } from './config';
-
-// Configuration for generated APIs
-const config = new Configuration({
-  basePath: API_BASE_URL,
-});
+} from './generated';
+import { apiConfiguration, axiosInstance } from './config';
 
 // Pre-configured API instances
-export const personsApi = new PersonsApi(config, API_BASE_URL, axiosInstance);
-export const employmentsApi = new EmploymentsApi(config, API_BASE_URL, axiosInstance);
-export const schoolsApi = new SchoolsApi(config, API_BASE_URL, axiosInstance);
-export const positionsApi = new PositionsApi(config, API_BASE_URL, axiosInstance);
-export const salaryGradesApi = new SalaryGradesApi(config, API_BASE_URL, axiosInstance);
-export const itemsApi = new ItemsApi(config, API_BASE_URL, axiosInstance);
-export const documentsApi = new DocumentsApi(config, API_BASE_URL, axiosInstance);
-export const reportsApi = new ReportsApi(config, API_BASE_URL, axiosInstance);
+export const personsApi = new PersonsApi(apiConfiguration, undefined, axiosInstance);
+export const schoolsApi = new SchoolsApi(apiConfiguration, undefined, axiosInstance);
+export const employmentsApi = new EmploymentsApi(apiConfiguration, undefined, axiosInstance);
+export const positionsApi = new PositionsApi(apiConfiguration, undefined, axiosInstance);
+export const salaryGradesApi = new SalaryGradesApi(apiConfiguration, undefined, axiosInstance);
+export const itemsApi = new ItemsApi(apiConfiguration, undefined, axiosInstance);
+export const documentsApi = new DocumentsApi(apiConfiguration, undefined, axiosInstance);
+export const reportsApi = new ReportsApi(apiConfiguration, undefined, axiosInstance);
 
 // Re-export models and BASE_URL
 export * from './generated/models';
-export { API_BASE_URL };
+export { API_BASE_URL } from './config';
 ```
+
+> **Note:** The `AuthApi` is not exported as a pre-configured instance because it's used directly in the `AuthContext` with special handling for token management.
+
+---
+
+## Authentication Integration
+
+### AuthContext
+
+The authentication context manages user authentication state and token lifecycle.
+
+**File:** `src/contexts/AuthContext.tsx`
+
+**Key Features:**
+- Google OAuth2 authentication
+- JWT access token management
+- Refresh token rotation
+- Automatic token refresh on API calls
+- User session persistence
+
+**Context Interface:**
+```typescript
+interface AuthContextType {
+  user: UserDto | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (googleIdToken: string) => Promise<void>;
+  logout: () => Promise<void>;
+}
+```
+
+**Usage:**
+```tsx
+import { useAuth } from '../hooks/useAuth';
+
+const MyComponent = () => {
+  const { user, isAuthenticated, logout } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  return (
+    <div>
+      <p>Welcome, {user?.firstName}</p>
+      <button onClick={logout}>Logout</button>
+    </div>
+  );
+};
+```
+
+### Authentication Flow
+
+1. User clicks Google Sign-In button on Login page
+2. Google returns an ID token via `@react-oauth/google`
+3. Frontend sends ID token to backend `/api/v1/auth/google`
+4. Backend validates token with Google and creates/retrieves user
+5. Backend returns JWT access token, refresh token, and user info
+6. Frontend stores tokens in localStorage and user in context
+7. Subsequent API calls include Bearer token in Authorization header
+8. When access token expires, interceptor automatically refreshes using refresh token
 
 ---
 
 ## TypeScript Models
 
 ### Model Categories
+
+#### Authentication DTOs
+
+```typescript
+interface GoogleAuthRequestDto {
+  idToken: string;
+}
+
+interface AuthResponseDto {
+  accessToken: string;
+  refreshToken: string;
+  expiresOn: string;
+  user: UserDto;
+}
+
+interface UserDto {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  profilePictureUrl?: string | null;
+  role: string;
+}
+```
 
 #### Entity Response DTOs
 

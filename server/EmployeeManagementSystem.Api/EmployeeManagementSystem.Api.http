@@ -1,4 +1,55 @@
-@EmployeeManagementSystem.Api_HostAddress = http://localhost:5062
+@EmployeeManagementSystem.Api_HostAddress = http://localhost:5031
+
+###############################################################################
+# AUTHENTICATION API
+###############################################################################
+
+### Google OAuth2 Login (ID Token)
+# Use this endpoint with a Google ID token from the frontend
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/auth/google
+Content-Type: application/json
+
+{
+  "idToken": "YOUR_GOOGLE_ID_TOKEN_HERE"
+}
+
+###
+
+### Google OAuth2 Login (Access Token - for Swagger UI)
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/auth/google/token
+Content-Type: application/json
+
+{
+  "accessToken": "YOUR_GOOGLE_ACCESS_TOKEN_HERE"
+}
+
+###
+
+### Refresh Access Token
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "YOUR_REFRESH_TOKEN_HERE"
+}
+
+###
+
+### Get Current User (requires authentication)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/auth/me
+Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### Revoke Token (logout - requires authentication)
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/auth/revoke
+Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+{
+  "refreshToken": "YOUR_REFRESH_TOKEN_HERE"
+}
 
 ###############################################################################
 # PERSONS API

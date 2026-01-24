@@ -9,7 +9,8 @@ This document provides guidelines for developing and contributing to the EMS fro
 - **Node.js** 18.x or higher
 - **npm** 9.x or higher
 - **VS Code** (recommended IDE)
-- **Backend API** running on `http://localhost:5062`
+- **Backend API** running on `http://localhost:5031`
+- **Google Cloud Console** project with OAuth2 credentials
 
 ---
 
@@ -25,9 +26,29 @@ cd ems-v2/application
 # Install dependencies
 npm install
 
-# Start development server
-npm run dev
+# Create environment file
+cp .env.example .env
+# Edit .env with your configuration
 ```
+
+### Environment Configuration
+
+Create a `.env` file in the `application` directory:
+
+```env
+VITE_API_BASE_URL=http://localhost:5031
+VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+```
+
+### Google OAuth2 Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Navigate to **APIs & Services** > **Credentials**
+4. Create **OAuth 2.0 Client ID** (Web application)
+5. Add authorized JavaScript origins:
+   - `http://localhost:5173` (development)
+6. Copy the Client ID to your `.env` file
 
 ### VS Code Extensions (Recommended)
 
@@ -51,7 +72,7 @@ The app will be available at `http://localhost:5173` with hot module replacement
 
 ### 2. Ensure Backend is Running
 
-The backend API must be running at `http://localhost:5062`. If not:
+The backend API must be running at `http://localhost:5031`. If not:
 
 ```bash
 cd ../server

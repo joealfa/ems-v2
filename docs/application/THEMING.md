@@ -32,41 +32,41 @@ const config = defineConfig({
       colors: {
         brand: {
           50: { value: '#e6f2ff' },
-          100: { value: '#bdd9ff' },
-          200: { value: '#94bfff' },
-          300: { value: '#6ba6ff' },
-          400: { value: '#428cff' },
-          500: { value: '#1973e8' },  // Primary brand color
-          600: { value: '#145cb8' },
-          700: { value: '#0f4589' },
-          800: { value: '#0a2e5a' },
-          900: { value: '#05172b' },
+          100: { value: '#b3d9ff' },
+          200: { value: '#80bfff' },
+          300: { value: '#4da6ff' },
+          400: { value: '#1a8cff' },
+          500: { value: '#0073e6' },  // Primary brand color
+          600: { value: '#005bb3' },
+          700: { value: '#004280' },
+          800: { value: '#002a4d' },
+          900: { value: '#00111a' },
         },
       },
     },
     semanticTokens: {
       colors: {
-        // Sidebar colors
-        'sidebar.bg': {
-          value: { base: '{colors.gray.100}', _dark: '{colors.gray.800}' },
+        bg: {
+          DEFAULT: {
+            value: { _light: '{colors.gray.100}', _dark: '{colors.gray.800}' },
+          },
+          muted: {
+            value: { _light: '{colors.gray.200}', _dark: '{colors.gray.700}' },
+          },
+          subtle: {
+            value: { _light: '{colors.gray.50}', _dark: '{colors.gray.900}' },
+          },
+          panel: {
+            value: { _light: '{colors.white}', _dark: '{colors.gray.800}' },
+          },
         },
-        'sidebar.border': {
-          value: { base: '{colors.gray.200}', _dark: '{colors.gray.700}' },
-        },
-        // Content area
-        'content.bg': {
-          value: { base: '{colors.gray.50}', _dark: '{colors.gray.900}' },
-        },
-        // Card colors
-        'card.bg': {
-          value: { base: '{colors.white}', _dark: '{colors.gray.800}' },
-        },
-        // Border colors
-        'border.default': {
-          value: { base: '{colors.gray.300}', _dark: '{colors.gray.600}' },
-        },
-        'border.subtle': {
-          value: { base: '{colors.gray.200}', _dark: '{colors.gray.700}' },
+        border: {
+          DEFAULT: {
+            value: { _light: '{colors.gray.300}', _dark: '{colors.gray.600}' },
+          },
+          muted: {
+            value: { _light: '{colors.gray.200}', _dark: '{colors.gray.700}' },
+          },
         },
       },
     },
@@ -89,7 +89,7 @@ export const system = createSystem(defaultConfig, config);
 ### Storage Key
 
 ```typescript
-const COLOR_MODE_KEY = 'ems-color-mode';
+const COLOR_MODE_KEY = 'chakra-ui-color-mode';
 ```
 
 ### Color Mode Provider
@@ -134,35 +134,40 @@ const MyComponent = () => {
 
 ## Semantic Tokens
 
-Semantic tokens provide consistent styling across light and dark modes.
+Semantic tokens provide consistent styling across light and dark modes using the Chakra UI v3 syntax.
 
 ### Available Tokens
 
-| Token           | Light Mode | Dark Mode  | Usage                   |
-|-----------------|------------|------------|-------------------------|
-| `sidebar.bg`    | `gray.100` | `gray.800` | Sidebar background      |
-| `sidebar.border`| `gray.200` | `gray.700` | Sidebar border          |
-| `content.bg`    | `gray.50`  | `gray.900` | Main content background |
-| `card.bg`       | `white`    | `gray.800` | Card backgrounds        |
-| `border.default`| `gray.300` | `gray.600` | Default borders         |
-| `border.subtle` | `gray.200` | `gray.700` | Subtle borders          |
+| Token         | Light Mode | Dark Mode  | Usage                   |
+|---------------|------------|------------|-------------------------|
+| `bg`          | `gray.100` | `gray.800` | Default background      |
+| `bg.muted`    | `gray.200` | `gray.700` | Muted background        |
+| `bg.subtle`   | `gray.50`  | `gray.900` | Subtle background       |
+| `bg.panel`    | `white`    | `gray.800` | Panel/card backgrounds  |
+| `border`      | `gray.300` | `gray.600` | Default borders         |
+| `border.muted`| `gray.200` | `gray.700` | Muted borders           |
 
 ### Using Semantic Tokens
 
 ```tsx
 // Direct usage with semantic token
-<Box bg="sidebar.bg" borderColor="border.default">
+<Box bg="bg" borderColor="border">
   Content
 </Box>
 
 // In style props
 <Card.Root 
-  bg="card.bg" 
+  bg="bg.panel" 
   borderWidth="1px" 
-  borderColor="border.subtle"
+  borderColor="border.muted"
 >
   Card Content
 </Card.Root>
+
+// For panels and cards
+<Box bg="bg.panel" borderColor="border.muted">
+  Panel Content
+</Box>
 ```
 
 ---
@@ -174,15 +179,15 @@ The brand color palette is based on blue tones:
 | Token       | Hex Value | Usage                          |
 |-------------|-----------|--------------------------------|
 | `brand.50`  | `#e6f2ff` | Lightest backgrounds           |
-| `brand.100` | `#bdd9ff` | Light backgrounds              |
-| `brand.200` | `#94bfff` | Hover states (light)           |
-| `brand.300` | `#6ba6ff` | Active states (light)          |
-| `brand.400` | `#428cff` | Borders                        |
-| `brand.500` | `#1973e8` | **Primary** (buttons, links)   |
-| `brand.600` | `#145cb8` | Hover states (dark)            |
-| `brand.700` | `#0f4589` | Active states (dark)           |
-| `brand.800` | `#0a2e5a` | Dark text on light bg          |
-| `brand.900` | `#05172b` | Darkest text                   |
+| `brand.100` | `#b3d9ff` | Light backgrounds              |
+| `brand.200` | `#80bfff` | Hover states (light)           |
+| `brand.300` | `#4da6ff` | Active states (light)          |
+| `brand.400` | `#1a8cff` | Borders                        |
+| `brand.500` | `#0073e6` | **Primary** (buttons, links)   |
+| `brand.600` | `#005bb3` | Hover states (dark)            |
+| `brand.700` | `#004280` | Active states (dark)           |
+| `brand.800` | `#002a4d` | Dark text on light bg          |
+| `brand.900` | `#00111a` | Darkest text                   |
 
 ### Using Brand Colors
 

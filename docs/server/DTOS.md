@@ -4,6 +4,73 @@ This document describes all DTOs used in the EMS backend API.
 
 ---
 
+## Authentication DTOs
+
+### GoogleAuthRequestDto
+
+Request DTO for Google OAuth2 authentication using ID token.
+
+```csharp
+public class GoogleAuthRequestDto
+{
+    public string IdToken { get; set; } = string.Empty;
+}
+```
+
+### GoogleAccessTokenRequestDto
+
+Request DTO for Google OAuth2 authentication using access token (Swagger flow).
+
+```csharp
+public class GoogleAccessTokenRequestDto
+{
+    public string AccessToken { get; set; } = string.Empty;
+}
+```
+
+### RefreshTokenRequestDto
+
+Request DTO for refreshing an access token.
+
+```csharp
+public class RefreshTokenRequestDto
+{
+    public string RefreshToken { get; set; } = string.Empty;
+}
+```
+
+### AuthResponseDto
+
+Response DTO containing authentication tokens and user information.
+
+```csharp
+public class AuthResponseDto
+{
+    public string AccessToken { get; set; } = string.Empty;
+    public string RefreshToken { get; set; } = string.Empty;
+    public DateTime ExpiresOn { get; set; }
+    public UserDto User { get; set; } = null!;
+}
+```
+
+### UserDto
+
+DTO representing user information.
+
+```csharp
+public class UserDto
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string? ProfilePictureUrl { get; set; }
+    public string Role { get; set; } = string.Empty;
+}
+```
+
+---
+
 ## Common DTOs
 
 ### BaseResponseDto

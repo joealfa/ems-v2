@@ -7,7 +7,14 @@ This document describes the domain entities, enums, and relationships in the EMS
 ## Entity Hierarchy
 
 ```
-BaseEntity (abstract)
+AuditableEntity (abstract)
+├── CreatedOn: DateTime
+├── ModifiedOn: DateTime?
+│
+├── User (authentication)
+└── RefreshToken
+
+BaseEntity (abstract) : AuditableEntity
 ├── Id: Guid
 ├── DisplayId: long
 ├── CreatedBy: string
@@ -27,6 +34,57 @@ BaseEntity (abstract)
     ├── Contact
     └── EmploymentSchool
 ```
+
+---
+
+## Authentication Entities
+
+### User
+
+Represents an authenticated user from Google OAuth2.
+
+| Property           | Type               | Constraints           | Description                     |
+|--------------------|--------------------|-----------------------|---------------------------------|
+| `Id`               | `Guid`             | PK                    | Internal identifier             |
+| `GoogleId`         | `string`           | Required, Unique      | Google OAuth2 subject ID        |
+| `Email`            | `string`           | Required              | User's email from Google        |
+| `FirstName`        | `string`           | Required              | First name from Google profile  |
+| `LastName`         | `string`           | Required              | Last name from Google profile   |
+| `ProfilePictureUrl`| `string?`          | max 2048              | Google profile picture URL      |
+| `IsActive`         | `bool`             | Default: true         | Account active status           |
+| `Role`             | `string`           | Default: "User"       | User role (User, Admin)         |
+| `CreatedOn`        | `DateTime`         | Required              | Account creation date           |
+| `LastLoginOn`      | `DateTime?`        | -                     | Last login timestamp            |
+
+**Relationships:**
+- One-to-Many → `RefreshTokens`
+
+---
+
+### RefreshToken
+
+Represents a refresh token for JWT authentication with rotation support.
+
+| Property         | Type       | Constraints           | Description                    |
+|------------------|------------|-----------------------|--------------------------------|
+| `Id`             | `Guid`     | PK                    | Internal identifier            |
+| `Token`          | `string`   | Required              | Refresh token value            |
+| `ExpiresOn`      | `DateTime` | Required              | Token expiration date          |
+| `CreatedOn`      | `DateTime` | Required              | Token creation date            |
+| `CreatedByIp`    | `string?`  | -                     | IP address at creation         |
+| `RevokedOn`      | `DateTime?`| -                     | Revocation timestamp           |
+| `RevokedByIp`    | `string?`  | -                     | IP address at revocation       |
+| `ReplacedByToken`| `string?`  | -                     | Token that replaced this one   |
+| `ReasonRevoked`  | `string?`  | -                     | Revocation reason              |
+| `UserId`         | `Guid`     | FK, Required          | Reference to User              |
+
+**Computed Properties:**
+- `IsExpired` → `DateTime.UtcNow >= ExpiresOn`
+- `IsRevoked` → `RevokedOn != null`
+- `IsActive` → `!IsRevoked && !IsExpired`
+
+**Relationships:**
+- Many-to-One → `User`
 
 ---
 

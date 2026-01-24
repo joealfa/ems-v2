@@ -46,6 +46,11 @@ The main database context class.
 ```csharp
 public class ApplicationDbContext : DbContext
 {
+    // Authentication
+    public DbSet<User> Users { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+    
+    // Core entities
     public DbSet<Person> Persons { get; set; }
     public DbSet<Employment> Employments { get; set; }
     public DbSet<School> Schools { get; set; }

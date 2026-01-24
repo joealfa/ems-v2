@@ -6,7 +6,7 @@ This document provides complete API endpoint documentation for the EMS backend.
 
 ## Base URL
 
-- **Development**: `http://localhost:5062/api/v1`
+- **Development**: `http://localhost:5031/api/v1`
 - **HTTPS Development**: `https://localhost:7009/api/v1`
 
 ## API Versioning
@@ -14,6 +14,18 @@ This document provides complete API endpoint documentation for the EMS backend.
 The API uses URL-based versioning:
 - Current version: `v1`
 - Base path: `/api/v1/{resource}`
+
+---
+
+## Authentication
+
+All API endpoints (except `/api/v1/auth/*`) require JWT Bearer authentication.
+
+### Authorization Header
+
+```
+Authorization: Bearer <jwt_access_token>
+```
 
 ---
 
@@ -25,6 +37,8 @@ The API uses URL-based versioning:
 | `201 Created`               | Successful POST request       |
 | `204 No Content`            | Successful DELETE request     |
 | `400 Bad Request`           | Invalid request data          |
+| `401 Unauthorized`          | Missing or invalid JWT token  |
+| `403 Forbidden`             | Insufficient permissions      |
 | `404 Not Found`             | Resource not found            |
 | `500 Internal Server Error` | Server error                  |
 
@@ -54,6 +68,116 @@ All list endpoints support pagination:
   "hasPreviousPage": false
 }
 ```
+
+---
+
+## Authentication API
+
+**Base Path**: `/api/v1/auth`
+
+### Google OAuth2 Login (ID Token)
+
+Authenticates a user using a Google OAuth2 ID token from the frontend.
+
+```http
+POST /api/v1/auth/google
+Content-Type: application/json
+```
+
+**Request Body**:
+```json
+{
+  "idToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response**: `AuthResponseDto`
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4=",
+  "expiresOn": "2026-01-25T12:00:00Z",
+  "user": {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "profilePictureUrl": "https://...",
+    "role": "User"
+  }
+}
+```
+
+### Google OAuth2 Login (Access Token)
+
+For Swagger UI OAuth2 flow - authenticates using Google access token.
+
+```http
+POST /api/v1/auth/google/token
+Content-Type: application/json
+```
+
+**Request Body**:
+```json
+{
+  "accessToken": "ya29.a0AfB_byC..."
+}
+```
+
+**Response**: `AuthResponseDto`
+
+### Refresh Token
+
+Exchanges a valid refresh token for a new access token.
+
+```http
+POST /api/v1/auth/refresh
+Content-Type: application/json
+```
+
+**Request Body**:
+```json
+{
+  "refreshToken": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4="
+}
+```
+
+**Response**: `AuthResponseDto`
+
+### Revoke Token
+
+Revokes a refresh token (logout).
+
+```http
+POST /api/v1/auth/revoke
+Content-Type: application/json
+Authorization: Bearer <access_token>
+```
+
+**Request Body**:
+```json
+{
+  "refreshToken": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4="
+}
+```
+
+**Response**: `200 OK`
+```json
+{
+  "message": "Token revoked"
+}
+```
+
+### Get Current User
+
+Gets the currently authenticated user's information.
+
+```http
+GET /api/v1/auth/me
+Authorization: Bearer <access_token>
+```
+
+**Response**: `UserDto`
 
 ---
 

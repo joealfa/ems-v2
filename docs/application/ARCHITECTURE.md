@@ -30,22 +30,28 @@ All API communication goes through the auto-generated OpenAPI client with a conf
 ## Provider Hierarchy
 
 ```tsx
-<ChakraProvider>          // Chakra UI theming and component context
-  <ColorModeProvider>     // Light/dark mode state management
-    <BrowserRouter>       // React Router navigation
-      <Routes>            // Route definitions
-        <MainLayout />    // Shared layout wrapper
-          {/* Page Content */}
+<GoogleOAuthProvider>   // Google OAuth2 client context
+  <ChakraProvider>      // Chakra UI theming and component context
+    <ColorModeProvider> // Light/dark mode state management
+      <BrowserRouter>   // React Router navigation
+        <AuthProvider>  // Authentication state and token management
+          <Routes>      // Route definitions
+            <ProtectedRoute>  // Route guard for authenticated routes
+              <MainLayout />  // Shared layout wrapper
+              {/* Page Content */}
 ```
 
 ### Provider Responsibilities
 
-| Provider            | Responsibility                            |
-|---------------------|-------------------------------------------|
-| `ChakraProvider`    | Theme tokens, component styles, CSS reset |
-| `ColorModeProvider` | Dark/light mode state, persistence        |
-| `BrowserRouter`     | URL-based navigation, history API         |
-| `MainLayout`        | Sidebar, header, content area structure   |
+| Provider              | Responsibility                                      |
+|-----------------------|-----------------------------------------------------|
+| `GoogleOAuthProvider` | Google OAuth2 client configuration                  |
+| `ChakraProvider`      | Theme tokens, component styles, CSS reset           |
+| `ColorModeProvider`   | Dark/light mode state, persistence                  |
+| `BrowserRouter`       | URL-based navigation, history API                   |
+| `AuthProvider`        | JWT tokens, user state, token refresh, logout       |
+| `ProtectedRoute`      | Route guard, redirects unauthenticated users        |
+| `MainLayout`          | Sidebar, header, content area structure             |
 
 ---
 
@@ -54,7 +60,8 @@ All API communication goes through the auto-generated OpenAPI client with a conf
 ### Route Structure
 
 ```
-/                           → Dashboard
+/login                      → Login Page (public)
+/                           → Dashboard (protected)
 /persons                    → Person List
 /persons/new                → Create Person
 /persons/:displayId         → Person Detail
@@ -62,6 +69,21 @@ All API communication goes through the auto-generated OpenAPI client with a conf
 ```
 
 This pattern is repeated for all entities (schools, positions, salary-grades, items, employments).
+
+### Authentication Flow
+
+```
+┌─────────────────┐     ┌──────────────┐     ┌─────────────┐
+│   Login Page    │────▶│  Google      │────▶│  Backend    │
+│   (Google Btn)  │     │  OAuth2      │     │  /auth/google
+└─────────────────┘     └──────────────┘     └─────────────┘
+                               │                    │
+                               ▼                    ▼
+                        ┌──────────────┐     ┌─────────────┐
+                        │  ID Token    │────▶│  JWT Tokens │
+                        │  from Google │     │  & User Info│
+                        └──────────────┘     └─────────────┘
+```
 
 ### Route Parameters
 

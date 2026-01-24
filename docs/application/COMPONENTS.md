@@ -56,12 +56,12 @@ Navigation menu with links to all major sections.
 | Label         | Path             | Icon |
 |---------------|------------------|------|
 | Dashboard     | `/`              | 📊   |
-| Persons       | `/persons`       | 👥   |
+| Employments   | `/employments`   | 💼   |
 | Schools       | `/schools`       | 🏫   |
-| Positions     | `/positions`     | 💼   |
+| Positions     | `/positions`     | 📋   |
 | Salary Grades | `/salary-grades` | 💰   |
 | Items         | `/items`         | 📦   |
-| Employments   | `/employments`   | 📋   |
+| Persons       | `/persons`       | 👤   |
 
 **Features:**
 - Active link highlighting using `useLocation()`
@@ -96,6 +96,63 @@ Top navigation bar with title and theme toggle.
 <Button onClick={toggleColorMode} size="sm">
   {colorMode === 'light' ? '🌙' : '☀️'}
 </Button>
+```
+
+---
+
+## Authentication Components
+
+Located in `src/components/auth/`
+
+### ProtectedRoute
+
+Route guard component that protects routes from unauthenticated access.
+
+**File:** `ProtectedRoute.tsx`
+
+**Props:**
+```typescript
+interface ProtectedRouteProps {
+  children: React.ReactNode;  // The protected content to render
+}
+```
+
+**Behavior:**
+1. Shows loading spinner while checking authentication
+2. Redirects to `/login` if user is not authenticated
+3. Preserves the original destination in location state
+4. Renders children if authenticated
+
+**Usage:**
+```tsx
+<Route
+  path="/"
+  element={
+    <ProtectedRoute>
+      <MainLayout />
+    </ProtectedRoute>
+  }
+>
+  {/* Protected child routes */}
+</Route>
+```
+
+**Implementation:**
+```tsx
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return <Spinner size="xl" />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
 ```
 
 ---

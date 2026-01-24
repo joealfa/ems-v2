@@ -10,6 +10,7 @@ This document provides guidelines for developing and contributing to the EMS bac
 - **SQL Server** (LocalDB, SQL Server, or Azure SQL)
 - **Azure Storage Account** (for blob storage)
 - **Visual Studio 2022** or **VS Code** with C# extension
+- **Google Cloud Console** project with OAuth2 credentials
 
 ---
 
@@ -22,37 +23,60 @@ git clone <repository-url>
 cd ems-v2/server
 ```
 
-### 2. Configure Connection Strings
+### 2. Configure Application Settings
 
-Copy `appsettings.Development.json.example` to `appsettings.Development.json` and update:
+Create or update `appsettings.json` with the required configuration:
 
 ```json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=EmployeeManagementSystem;Trusted_Connection=True;",
     "BlobStorage": "UseDevelopmentStorage=true"
+  },
+  "Authentication": {
+    "Jwt": {
+      "Secret": "your-super-secret-key-at-least-32-characters-long",
+      "Issuer": "EmployeeManagementSystem",
+      "Audience": "EmployeeManagementSystem",
+      "AccessTokenExpirationMinutes": 15,
+      "RefreshTokenExpirationDays": 7
+    },
+    "Google": {
+      "ClientId": "your-google-client-id.apps.googleusercontent.com",
+      "ClientSecret": "your-google-client-secret"
+    }
   }
 }
 ```
 
 For local blob storage, install [Azurite](https://docs.microsoft.com/en-us/azure/storage/common/storage-use-azurite).
 
-### 3. Apply Migrations
+### 3. Google OAuth2 Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Navigate to **APIs & Services** > **Credentials**
+4. Create **OAuth 2.0 Client ID** (Web application)
+5. Add authorized redirect URIs:
+   - `http://localhost:5031/swagger/oauth2-redirect.html` (Swagger)
+6. Copy Client ID and Client Secret to `appsettings.json`
+
+### 4. Apply Migrations
 
 ```bash
 dotnet ef database update --project EmployeeManagementSystem.Infrastructure --startup-project EmployeeManagementSystem.Api
 ```
 
-### 4. Run the Application
+### 5. Run the Application
 
 ```bash
 dotnet run --project EmployeeManagementSystem.Api
 ```
 
 The API will be available at:
-- HTTP: `http://localhost:5062`
+- HTTP: `http://localhost:5031`
 - HTTPS: `https://localhost:7009`
-- Swagger: `http://localhost:5062/swagger`
+- Swagger: `http://localhost:5031/swagger`
 
 ---
 
@@ -64,10 +88,12 @@ server/
 ├── EmployeeManagementSystem.Api/          # Presentation layer
 │   ├── Program.cs                         # Application entry point
 │   ├── appsettings.json                   # Configuration
-│   ├── v1/Controllers/                    # API controllers
+│   ├── v1/Controllers/                    # API v1 controllers
+│   ├── v2/Controllers/                    # API v2 controllers
 │   └── Properties/launchSettings.json     # Launch profiles
 ├── EmployeeManagementSystem.Application/  # Application layer
 │   ├── DTOs/                              # Data transfer objects
+│   │   └── Auth/                          # Authentication DTOs
 │   ├── Interfaces/                        # Service interfaces
 │   └── Services/                          # Service implementations
 ├── EmployeeManagementSystem.Domain/       # Domain layer

@@ -17,10 +17,11 @@ The Employee Management System (EMS) backend is a comprehensive ASP.NET Core Web
 ### Key Features
 
 - **Clean Architecture** with strict separation of concerns
+- **Google OAuth2 Authentication** with JWT access and refresh tokens
 - **RESTful API** with versioning support (v1, v2)
 - **Entity Framework Core** for data access
 - **Azure Blob Storage** for document and image storage
-- **OpenAPI/Swagger** documentation
+- **OpenAPI/Swagger** documentation with OAuth2 integration
 - **Soft Delete** pattern for data integrity
 - **Audit Trail** with created/modified tracking
 
@@ -37,13 +38,26 @@ The Employee Management System (EMS) backend is a comprehensive ASP.NET Core Web
 
 ### Configuration
 
-1. **Update connection strings** in `appsettings.Development.json`:
+1. **Update connection strings and authentication** in `appsettings.json`:
 
 ```json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=EmployeeManagementSystem;Trusted_Connection=True;",
     "BlobStorage": "DefaultEndpointsProtocol=https;AccountName=...;AccountKey=..."
+  },
+  "Authentication": {
+    "Jwt": {
+      "Secret": "your-super-secret-key-at-least-32-characters",
+      "Issuer": "EmployeeManagementSystem",
+      "Audience": "EmployeeManagementSystem",
+      "AccessTokenExpirationMinutes": 15,
+      "RefreshTokenExpirationDays": 7
+    },
+    "Google": {
+      "ClientId": "your-google-client-id.apps.googleusercontent.com",
+      "ClientSecret": "your-google-client-secret"
+    }
   }
 }
 ```
@@ -62,12 +76,14 @@ dotnet run --project EmployeeManagementSystem.Api
 ```
 
 The API will be available at:
-- HTTP: `http://localhost:5062`
+- HTTP: `http://localhost:5031`
 - HTTPS: `https://localhost:7009`
 
 ### Swagger UI
 
-Access API documentation at: `http://localhost:5062/swagger`
+Access API documentation at: `http://localhost:5031/swagger`
+
+Swagger UI includes OAuth2 integration for testing authenticated endpoints.
 
 ---
 
