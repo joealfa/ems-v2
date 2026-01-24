@@ -35,12 +35,12 @@ const NavItem = ({ to, label, icon }: NavItemProps) => {
 const Sidebar = () => {
   const navItems: NavItemProps[] = [
     { to: '/', label: 'Dashboard', icon: '📊' },
-    { to: '/persons', label: 'Persons', icon: '👤' },
     { to: '/employments', label: 'Employments', icon: '💼' },
     { to: '/schools', label: 'Schools', icon: '🏫' },
     { to: '/positions', label: 'Positions', icon: '📋' },
     { to: '/salary-grades', label: 'Salary Grades', icon: '💰' },
     { to: '/items', label: 'Items', icon: '📦' },
+    { to: '/persons', label: 'Persons', icon: '👤' },
   ];
 
   return (
