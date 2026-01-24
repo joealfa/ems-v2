@@ -5,7 +5,7 @@ import {
   useMemo,
   type ReactNode,
 } from 'react';
-import type { AuthResponseDto } from '../api/generated/models';
+import type { AuthResponseDto, UserDto } from '../api/generated/models';
 import { AuthApi } from '../api/generated/api';
 import { axiosInstance, API_BASE_URL } from '../api/config';
 import { AuthContext, type AuthContextType } from './AuthContextType';

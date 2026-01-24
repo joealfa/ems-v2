@@ -19,7 +19,6 @@ export const useAgGridTheme = () => {
       rowHeight: 44,
       headerHeight: 44,
       cellHorizontalPadding: 16,
-      cellVerticalPadding: 12,
       inputBorderRadius: 6,
       wrapperBorderRadius: 8,
       spacing: 8,
