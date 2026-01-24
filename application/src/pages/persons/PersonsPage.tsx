@@ -105,7 +105,7 @@ const PersonsPage = () => {
                   minH="32px"
                   borderRadius="50%"
                   objectFit="cover"
-                  onError={(e) => {
+                  onError={e => {
                     // Hide the image on error, showing fallback initials
                     (e.target as HTMLImageElement).style.display = 'none';
                   }}

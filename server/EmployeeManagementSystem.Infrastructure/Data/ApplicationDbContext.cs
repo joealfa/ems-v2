@@ -68,6 +68,16 @@ public class ApplicationDbContext : DbContext
     public DbSet<Document> Documents => Set<Document>();
 
     /// <summary>
+    /// Gets or sets the Users DbSet.
+    /// </summary>
+    public DbSet<User> Users => Set<User>();
+
+    /// <summary>
+    /// Gets or sets the RefreshTokens DbSet.
+    /// </summary>
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    /// <summary>
     /// Configures the model using Fluent API.
     /// </summary>
     /// <param name="modelBuilder">The model builder.</param>
@@ -75,9 +85,15 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Apply global query filter for soft delete
+        // Apply global query filter for soft delete (RefreshToken has its own filter configured separately)
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
+            // Skip RefreshToken as it has a custom query filter based on User.IsDeleted
+            if (entityType.ClrType == typeof(RefreshToken))
+            {
+                continue;
+            }
+
             if (typeof(AuditableEntity).IsAssignableFrom(entityType.ClrType))
             {
                 modelBuilder.Entity(entityType.ClrType)
@@ -266,6 +282,41 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
             entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+        });
+
+        // Configure User
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.GoogleId).IsUnique();
+            entity.HasIndex(e => e.Email).IsUnique();
+            entity.Property(e => e.GoogleId).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ProfilePictureUrl).HasMaxLength(2048);
+            entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+
+            entity.HasMany(e => e.RefreshTokens)
+                .WithOne(rt => rt.User)
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure RefreshToken
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Token).IsUnique();
+            entity.Property(e => e.Token).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.CreatedByIp).HasMaxLength(50);
+            entity.Property(e => e.RevokedByIp).HasMaxLength(50);
+            entity.Property(e => e.ReplacedByToken).HasMaxLength(500);
+            entity.Property(e => e.ReasonRevoked).HasMaxLength(256);
+
+            // Add matching query filter for RefreshToken to filter when User is soft deleted
+            entity.HasQueryFilter(rt => !rt.User.IsDeleted);
         });
     }
 

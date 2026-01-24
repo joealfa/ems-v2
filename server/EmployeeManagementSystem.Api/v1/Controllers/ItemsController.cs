@@ -1,6 +1,8 @@
+using EmployeeManagementSystem.Api.Controllers;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Item;
 using EmployeeManagementSystem.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeManagementSystem.Api.v1.Controllers;
@@ -8,10 +10,9 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// <summary>
 /// API controller for managing items.
 /// </summary>
-[ApiController]
 [Route("api/v1/[controller]")]
-[Produces("application/json")]
-public class ItemsController : ControllerBase
+[Authorize]
+public class ItemsController : ApiControllerBase
 {
     private readonly IItemService _itemService;
 
@@ -53,10 +54,7 @@ public class ItemsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _itemService.GetByDisplayIdAsync(displayId, cancellationToken);
-        if (result == null)
-            return NotFound();
-
-        return Ok(result);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -72,14 +70,8 @@ public class ItemsController : ControllerBase
         [FromBody] CreateItemDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        // TODO: Get actual user from authentication
-        var createdBy = "System";
-
-        var result = await _itemService.CreateAsync(dto, createdBy, cancellationToken);
-        return CreatedAtAction(nameof(GetByDisplayId), new { displayId = result.DisplayId }, result);
+        var result = await _itemService.CreateAsync(dto, CurrentUser, cancellationToken);
+        return ToCreatedResult(result, nameof(GetByDisplayId), new { displayId = result.Value?.DisplayId });
     }
 
     /// <summary>
@@ -98,17 +90,8 @@ public class ItemsController : ControllerBase
         [FromBody] UpdateItemDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        // TODO: Get actual user from authentication
-        var modifiedBy = "System";
-
-        var result = await _itemService.UpdateAsync(displayId, dto, modifiedBy, cancellationToken);
-        if (result == null)
-            return NotFound();
-
-        return Ok(result);
+        var result = await _itemService.UpdateAsync(displayId, dto, CurrentUser, cancellationToken);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -124,13 +107,7 @@ public class ItemsController : ControllerBase
         long displayId,
         CancellationToken cancellationToken)
     {
-        // TODO: Get actual user from authentication
-        var deletedBy = "System";
-
-        var result = await _itemService.DeleteAsync(displayId, deletedBy, cancellationToken);
-        if (!result)
-            return NotFound();
-
-        return NoContent();
+        var result = await _itemService.DeleteAsync(displayId, CurrentUser, cancellationToken);
+        return ToNoContentResult(result);
     }
 }

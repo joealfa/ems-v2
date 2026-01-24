@@ -140,7 +140,9 @@ const PersonFormPage = () => {
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const [documentDescription, setDocumentDescription] = useState('');
-  const [selectedDocumentFiles, setSelectedDocumentFiles] = useState<File[]>([]);
+  const [selectedDocumentFiles, setSelectedDocumentFiles] = useState<File[]>(
+    []
+  );
   const documentInputRef = useRef<HTMLInputElement>(null);
 
   /* eslint-disable react-hooks/exhaustive-deps */
@@ -212,11 +214,12 @@ const PersonFormPage = () => {
     if (!displayId) return;
     setLoadingDocuments(true);
     try {
-      const response = await documentsApi.apiV1PersonsPersonDisplayIdDocumentsGet(
-        Number(displayId),
-        1,
-        100
-      );
+      const response =
+        await documentsApi.apiV1PersonsPersonDisplayIdDocumentsGet(
+          Number(displayId),
+          1,
+          100
+        );
       setDocuments(response.data.items || []);
     } catch (err) {
       console.error('Error loading documents:', err);
@@ -238,7 +241,11 @@ const PersonFormPage = () => {
     setAddresses(prev => prev.filter((_, i) => i !== index));
   };
 
-  const updateAddress = (index: number, field: keyof AddressFormData, value: string | boolean) => {
+  const updateAddress = (
+    index: number,
+    field: keyof AddressFormData,
+    value: string | boolean
+  ) => {
     setAddresses(prev =>
       prev.map((addr, i) => (i === index ? { ...addr, [field]: value } : addr))
     );
@@ -253,14 +260,22 @@ const PersonFormPage = () => {
     setContacts(prev => prev.filter((_, i) => i !== index));
   };
 
-  const updateContact = (index: number, field: keyof ContactFormData, value: string) => {
+  const updateContact = (
+    index: number,
+    field: keyof ContactFormData,
+    value: string
+  ) => {
     setContacts(prev =>
-      prev.map((contact, i) => (i === index ? { ...contact, [field]: value } : contact))
+      prev.map((contact, i) =>
+        i === index ? { ...contact, [field]: value } : contact
+      )
     );
   };
 
   // Profile image handlers
-  const handleProfileImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageSelect = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (!file || !displayId) return;
 
@@ -296,7 +311,11 @@ const PersonFormPage = () => {
   };
 
   const handleDeleteProfileImage = async () => {
-    if (!displayId || !window.confirm('Are you sure you want to delete the profile image?')) return;
+    if (
+      !displayId ||
+      !window.confirm('Are you sure you want to delete the profile image?')
+    )
+      return;
 
     setUploadingImage(true);
     try {
@@ -344,7 +363,9 @@ const PersonFormPage = () => {
     }
 
     if (errors.length > 0) {
-      setError(`Failed to upload ${errors.length} file(s). Check file types - only PDF, Word, Excel, PowerPoint, JPEG, PNG are allowed.`);
+      setError(
+        `Failed to upload ${errors.length} file(s). Check file types - only PDF, Word, Excel, PowerPoint, JPEG, PNG are allowed.`
+      );
     }
 
     if (successCount > 0) {
@@ -359,7 +380,10 @@ const PersonFormPage = () => {
     setUploadingDocument(false);
   };
 
-  const handleDocumentDownload = (documentDisplayId: number, fileName: string | null | undefined) => {
+  const handleDocumentDownload = (
+    documentDisplayId: number,
+    fileName: string | null | undefined
+  ) => {
     const url = `${API_BASE_URL}/api/v1/persons/${displayId}/documents/${documentDisplayId}/download`;
     const link = document.createElement('a');
     link.href = url;
@@ -370,7 +394,11 @@ const PersonFormPage = () => {
   };
 
   const handleDocumentDelete = async (documentDisplayId: number) => {
-    if (!displayId || !window.confirm('Are you sure you want to delete this document?')) return;
+    if (
+      !displayId ||
+      !window.confirm('Are you sure you want to delete this document?')
+    )
+      return;
 
     try {
       await documentsApi.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete(
@@ -573,7 +601,9 @@ const PersonFormPage = () => {
                         <Field.Label>First Name</Field.Label>
                         <Input
                           value={formData.firstName}
-                          onChange={e => handleChange('firstName', e.target.value)}
+                          onChange={e =>
+                            handleChange('firstName', e.target.value)
+                          }
                           placeholder="Enter first name"
                         />
                       </Field.Root>
@@ -582,7 +612,9 @@ const PersonFormPage = () => {
                         <Field.Label>Last Name</Field.Label>
                         <Input
                           value={formData.lastName}
-                          onChange={e => handleChange('lastName', e.target.value)}
+                          onChange={e =>
+                            handleChange('lastName', e.target.value)
+                          }
                           placeholder="Enter last name"
                         />
                       </Field.Root>
@@ -592,7 +624,9 @@ const PersonFormPage = () => {
                       <Field.Label>Middle Name</Field.Label>
                       <Input
                         value={formData.middleName}
-                        onChange={e => handleChange('middleName', e.target.value)}
+                        onChange={e =>
+                          handleChange('middleName', e.target.value)
+                        }
                         placeholder="Enter middle name (optional)"
                       />
                     </Field.Root>
@@ -603,7 +637,9 @@ const PersonFormPage = () => {
                         <Input
                           type="date"
                           value={formData.dateOfBirth}
-                          onChange={e => handleChange('dateOfBirth', e.target.value)}
+                          onChange={e =>
+                            handleChange('dateOfBirth', e.target.value)
+                          }
                         />
                       </Field.Root>
 
@@ -612,13 +648,17 @@ const PersonFormPage = () => {
                         <NativeSelect.Root>
                           <NativeSelect.Field
                             value={formData.gender}
-                            onChange={e => handleChange('gender', e.target.value)}
+                            onChange={e =>
+                              handleChange('gender', e.target.value)
+                            }
                           >
-                            {Object.values(CreatePersonDtoGenderEnum).map(gender => (
-                              <option key={gender} value={gender}>
-                                {gender}
-                              </option>
-                            ))}
+                            {Object.values(CreatePersonDtoGenderEnum).map(
+                              gender => (
+                                <option key={gender} value={gender}>
+                                  {gender}
+                                </option>
+                              )
+                            )}
                           </NativeSelect.Field>
                           <NativeSelect.Indicator />
                         </NativeSelect.Root>
@@ -629,13 +669,19 @@ const PersonFormPage = () => {
                         <NativeSelect.Root>
                           <NativeSelect.Field
                             value={formData.civilStatus}
-                            onChange={e => handleChange('civilStatus', e.target.value)}
+                            onChange={e =>
+                              handleChange('civilStatus', e.target.value)
+                            }
                           >
-                            {Object.values(CreatePersonDtoCivilStatusEnum).map(status => (
-                              <option key={status} value={status}>
-                                {status === 'SoloParent' ? 'Solo Parent' : status}
-                              </option>
-                            ))}
+                            {Object.values(CreatePersonDtoCivilStatusEnum).map(
+                              status => (
+                                <option key={status} value={status}>
+                                  {status === 'SoloParent'
+                                    ? 'Solo Parent'
+                                    : status}
+                                </option>
+                              )
+                            )}
                           </NativeSelect.Field>
                           <NativeSelect.Indicator />
                         </NativeSelect.Root>
@@ -665,7 +711,13 @@ const PersonFormPage = () => {
               ) : (
                 <Stack gap={6}>
                   {addresses.map((address, index) => (
-                    <Box key={index} p={4} borderWidth={1} borderRadius="md" position="relative">
+                    <Box
+                      key={index}
+                      p={4}
+                      borderWidth={1}
+                      borderRadius="md"
+                      position="relative"
+                    >
                       <Button
                         size="xs"
                         variant="outline"
@@ -685,9 +737,17 @@ const PersonFormPage = () => {
                             <NativeSelect.Root>
                               <NativeSelect.Field
                                 value={address.addressType}
-                                onChange={e => updateAddress(index, 'addressType', e.target.value)}
+                                onChange={e =>
+                                  updateAddress(
+                                    index,
+                                    'addressType',
+                                    e.target.value
+                                  )
+                                }
                               >
-                                {Object.values(CreateAddressDtoAddressTypeEnum).map(type => (
+                                {Object.values(
+                                  CreateAddressDtoAddressTypeEnum
+                                ).map(type => (
                                   <option key={type} value={type}>
                                     {type}
                                   </option>
@@ -700,7 +760,9 @@ const PersonFormPage = () => {
                           <Flex gap={4} align="flex-end">
                             <Checkbox.Root
                               checked={address.isCurrent}
-                              onCheckedChange={(e) => updateAddress(index, 'isCurrent', !!e.checked)}
+                              onCheckedChange={e =>
+                                updateAddress(index, 'isCurrent', !!e.checked)
+                              }
                             >
                               <Checkbox.HiddenInput />
                               <Checkbox.Control />
@@ -709,7 +771,9 @@ const PersonFormPage = () => {
 
                             <Checkbox.Root
                               checked={address.isPermanent}
-                              onCheckedChange={(e) => updateAddress(index, 'isPermanent', !!e.checked)}
+                              onCheckedChange={e =>
+                                updateAddress(index, 'isPermanent', !!e.checked)
+                              }
                             >
                               <Checkbox.HiddenInput />
                               <Checkbox.Control />
@@ -722,7 +786,9 @@ const PersonFormPage = () => {
                           <Field.Label>Street Address</Field.Label>
                           <Input
                             value={address.address1}
-                            onChange={e => updateAddress(index, 'address1', e.target.value)}
+                            onChange={e =>
+                              updateAddress(index, 'address1', e.target.value)
+                            }
                             placeholder="House/Unit/Building number, Street name"
                           />
                         </Field.Root>
@@ -731,7 +797,9 @@ const PersonFormPage = () => {
                           <Field.Label>Address Line 2</Field.Label>
                           <Input
                             value={address.address2}
-                            onChange={e => updateAddress(index, 'address2', e.target.value)}
+                            onChange={e =>
+                              updateAddress(index, 'address2', e.target.value)
+                            }
                             placeholder="Subdivision, Village, etc. (optional)"
                           />
                         </Field.Root>
@@ -741,7 +809,9 @@ const PersonFormPage = () => {
                             <Field.Label>Barangay</Field.Label>
                             <Input
                               value={address.barangay}
-                              onChange={e => updateAddress(index, 'barangay', e.target.value)}
+                              onChange={e =>
+                                updateAddress(index, 'barangay', e.target.value)
+                              }
                               placeholder="Barangay"
                             />
                           </Field.Root>
@@ -750,7 +820,9 @@ const PersonFormPage = () => {
                             <Field.Label>City/Municipality</Field.Label>
                             <Input
                               value={address.city}
-                              onChange={e => updateAddress(index, 'city', e.target.value)}
+                              onChange={e =>
+                                updateAddress(index, 'city', e.target.value)
+                              }
                               placeholder="City or Municipality"
                             />
                           </Field.Root>
@@ -761,7 +833,9 @@ const PersonFormPage = () => {
                             <Field.Label>Province</Field.Label>
                             <Input
                               value={address.province}
-                              onChange={e => updateAddress(index, 'province', e.target.value)}
+                              onChange={e =>
+                                updateAddress(index, 'province', e.target.value)
+                              }
                               placeholder="Province"
                             />
                           </Field.Root>
@@ -770,7 +844,9 @@ const PersonFormPage = () => {
                             <Field.Label>Zip Code</Field.Label>
                             <Input
                               value={address.zipCode}
-                              onChange={e => updateAddress(index, 'zipCode', e.target.value)}
+                              onChange={e =>
+                                updateAddress(index, 'zipCode', e.target.value)
+                              }
                               placeholder="Zip Code"
                             />
                           </Field.Root>
@@ -779,7 +855,9 @@ const PersonFormPage = () => {
                             <Field.Label>Country</Field.Label>
                             <Input
                               value={address.country}
-                              onChange={e => updateAddress(index, 'country', e.target.value)}
+                              onChange={e =>
+                                updateAddress(index, 'country', e.target.value)
+                              }
                               placeholder="Country"
                             />
                           </Field.Root>
@@ -810,7 +888,13 @@ const PersonFormPage = () => {
               ) : (
                 <Stack gap={6}>
                   {contacts.map((contact, index) => (
-                    <Box key={index} p={4} borderWidth={1} borderRadius="md" position="relative">
+                    <Box
+                      key={index}
+                      p={4}
+                      borderWidth={1}
+                      borderRadius="md"
+                      position="relative"
+                    >
                       <Button
                         size="xs"
                         variant="outline"
@@ -829,9 +913,17 @@ const PersonFormPage = () => {
                           <NativeSelect.Root>
                             <NativeSelect.Field
                               value={contact.contactType}
-                              onChange={e => updateContact(index, 'contactType', e.target.value)}
+                              onChange={e =>
+                                updateContact(
+                                  index,
+                                  'contactType',
+                                  e.target.value
+                                )
+                              }
                             >
-                              {Object.values(CreateContactDtoContactTypeEnum).map(type => (
+                              {Object.values(
+                                CreateContactDtoContactTypeEnum
+                              ).map(type => (
                                 <option key={type} value={type}>
                                   {type}
                                 </option>
@@ -846,7 +938,9 @@ const PersonFormPage = () => {
                             <Field.Label>Mobile</Field.Label>
                             <Input
                               value={contact.mobile}
-                              onChange={e => updateContact(index, 'mobile', e.target.value)}
+                              onChange={e =>
+                                updateContact(index, 'mobile', e.target.value)
+                              }
                               placeholder="e.g., +63 912 345 6789"
                             />
                           </Field.Root>
@@ -856,7 +950,9 @@ const PersonFormPage = () => {
                             <Input
                               type="email"
                               value={contact.email}
-                              onChange={e => updateContact(index, 'email', e.target.value)}
+                              onChange={e =>
+                                updateContact(index, 'email', e.target.value)
+                              }
                               placeholder="e.g., email@example.com"
                             />
                           </Field.Root>
@@ -867,7 +963,9 @@ const PersonFormPage = () => {
                             <Field.Label>Landline</Field.Label>
                             <Input
                               value={contact.landLine}
-                              onChange={e => updateContact(index, 'landLine', e.target.value)}
+                              onChange={e =>
+                                updateContact(index, 'landLine', e.target.value)
+                              }
                               placeholder="e.g., (02) 1234 5678"
                             />
                           </Field.Root>
@@ -876,7 +974,9 @@ const PersonFormPage = () => {
                             <Field.Label>Fax</Field.Label>
                             <Input
                               value={contact.fax}
-                              onChange={e => updateContact(index, 'fax', e.target.value)}
+                              onChange={e =>
+                                updateContact(index, 'fax', e.target.value)
+                              }
                               placeholder="Fax number (optional)"
                             />
                           </Field.Root>
@@ -898,18 +998,36 @@ const PersonFormPage = () => {
               <Card.Body>
                 <Stack gap={4}>
                   {/* Upload Form */}
-                  <Box p={4} borderWidth={1} borderRadius="md" borderColor="border.muted">
-                    <Heading size="sm" mb={4}>Upload New Document</Heading>
+                  <Box
+                    p={4}
+                    borderWidth={1}
+                    borderRadius="md"
+                    borderColor="border.muted"
+                  >
+                    <Heading size="sm" mb={4}>
+                      Upload New Document
+                    </Heading>
                     <Flex gap={4} align="flex-end" wrap="wrap">
                       <Box flex={1} minW="200px">
-                        <Text fontWeight="medium" mb={2} fontSize="sm">Select Files</Text>
+                        <Text fontWeight="medium" mb={2} fontSize="sm">
+                          Select Files
+                        </Text>
                         <input
                           ref={documentInputRef}
                           type="file"
                           multiple
                           onChange={handleDocumentFileSelect}
                           accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"
-                          style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: '0' }}
+                          style={{
+                            position: 'absolute',
+                            width: '1px',
+                            height: '1px',
+                            padding: '0',
+                            margin: '-1px',
+                            overflow: 'hidden',
+                            clip: 'rect(0,0,0,0)',
+                            border: '0',
+                          }}
                         />
                         <Button
                           variant="outline"
@@ -917,8 +1035,8 @@ const PersonFormPage = () => {
                           onClick={() => documentInputRef.current?.click()}
                           width="full"
                         >
-                          {selectedDocumentFiles.length > 0 
-                            ? `${selectedDocumentFiles.length} file(s) selected` 
+                          {selectedDocumentFiles.length > 0
+                            ? `${selectedDocumentFiles.length} file(s) selected`
                             : 'Choose Files...'}
                         </Button>
                         {selectedDocumentFiles.length > 0 && (
@@ -932,7 +1050,9 @@ const PersonFormPage = () => {
                         )}
                       </Box>
                       <Box flex={1} minW="200px">
-                        <Text fontWeight="medium" mb={2} fontSize="sm">Description (optional)</Text>
+                        <Text fontWeight="medium" mb={2} fontSize="sm">
+                          Description (optional)
+                        </Text>
                         <Input
                           value={documentDescription}
                           onChange={e => setDocumentDescription(e.target.value)}
@@ -951,7 +1071,8 @@ const PersonFormPage = () => {
                       </Button>
                     </Flex>
                     <Text fontSize="xs" color="fg.muted" mt={2}>
-                      Supported formats: PDF, Word, Excel, PowerPoint, JPEG, PNG (Max 50 MB)
+                      Supported formats: PDF, Word, Excel, PowerPoint, JPEG, PNG
+                      (Max 50 MB)
                     </Text>
                   </Box>
 
@@ -980,18 +1101,29 @@ const PersonFormPage = () => {
                           <Table.Row key={doc.displayId}>
                             <Table.Cell>{doc.fileName}</Table.Cell>
                             <Table.Cell>
-                              <Badge colorPalette={getDocumentTypeColor(doc.documentType)}>
+                              <Badge
+                                colorPalette={getDocumentTypeColor(
+                                  doc.documentType
+                                )}
+                              >
                                 {doc.documentType}
                               </Badge>
                             </Table.Cell>
-                            <Table.Cell>{formatFileSize(doc.fileSizeBytes)}</Table.Cell>
+                            <Table.Cell>
+                              {formatFileSize(doc.fileSizeBytes)}
+                            </Table.Cell>
                             <Table.Cell>{doc.description || '-'}</Table.Cell>
                             <Table.Cell>
                               <Flex gap={2}>
                                 <Button
                                   size="xs"
                                   variant="outline"
-                                  onClick={() => handleDocumentDownload(doc.displayId!, doc.fileName)}
+                                  onClick={() =>
+                                    handleDocumentDownload(
+                                      doc.displayId!,
+                                      doc.fileName
+                                    )
+                                  }
                                 >
                                   Download
                                 </Button>
@@ -999,7 +1131,9 @@ const PersonFormPage = () => {
                                   size="xs"
                                   variant="outline"
                                   colorPalette="red"
-                                  onClick={() => handleDocumentDelete(doc.displayId!)}
+                                  onClick={() =>
+                                    handleDocumentDelete(doc.displayId!)
+                                  }
                                 >
                                   Delete
                                 </Button>

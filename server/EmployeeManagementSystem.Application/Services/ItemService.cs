@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Item;
 using EmployeeManagementSystem.Application.Interfaces;
@@ -22,10 +23,13 @@ public class ItemService : IItemService
     }
 
     /// <inheritdoc />
-    public async Task<ItemResponseDto?> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
+    public async Task<Result<ItemResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
         var item = await _itemRepository.GetByDisplayIdAsync(displayId, cancellationToken);
-        return item == null ? null : MapToResponseDto(item);
+        if (item == null)
+            return Result<ItemResponseDto>.NotFound($"Item with ID {displayId} not found.");
+
+        return Result<ItemResponseDto>.Success(MapToResponseDto(item));
     }
 
     /// <inheritdoc />
@@ -73,7 +77,7 @@ public class ItemService : IItemService
     }
 
     /// <inheritdoc />
-    public async Task<ItemResponseDto> CreateAsync(CreateItemDto dto, string createdBy, CancellationToken cancellationToken = default)
+    public async Task<Result<ItemResponseDto>> CreateAsync(CreateItemDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
         var item = new Item
         {
@@ -85,15 +89,15 @@ public class ItemService : IItemService
 
         await _itemRepository.AddAsync(item, cancellationToken);
 
-        return MapToResponseDto(item);
+        return Result<ItemResponseDto>.Success(MapToResponseDto(item));
     }
 
     /// <inheritdoc />
-    public async Task<ItemResponseDto?> UpdateAsync(long displayId, UpdateItemDto dto, string modifiedBy, CancellationToken cancellationToken = default)
+    public async Task<Result<ItemResponseDto>> UpdateAsync(long displayId, UpdateItemDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
         var item = await _itemRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         if (item == null)
-            return null;
+            return Result<ItemResponseDto>.NotFound($"Item with ID {displayId} not found.");
 
         item.ItemName = dto.ItemName;
         item.Description = dto.Description;
@@ -103,20 +107,21 @@ public class ItemService : IItemService
 
         await _itemRepository.UpdateAsync(item, cancellationToken);
 
-        return MapToResponseDto(item);
+        return Result<ItemResponseDto>.Success(MapToResponseDto(item));
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
         var item = await _itemRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         if (item == null)
-            return false;
+            return Result.NotFound($"Item with ID {displayId} not found.");
 
         item.ModifiedBy = deletedBy;
         item.ModifiedOn = DateTime.UtcNow;
         await _itemRepository.DeleteAsync(item, cancellationToken);
-        return true;
+        
+        return Result.Success();
     }
 
     private static ItemResponseDto MapToResponseDto(Item item)

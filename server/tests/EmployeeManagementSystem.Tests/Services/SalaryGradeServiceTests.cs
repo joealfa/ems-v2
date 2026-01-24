@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.SalaryGrade;
 using EmployeeManagementSystem.Application.Interfaces;
@@ -36,15 +37,16 @@ public class SalaryGradeServiceTests
         var result = await _salaryGradeService.GetByDisplayIdAsync(displayId);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(displayId, result.DisplayId);
-        Assert.Equal(salaryGrade.SalaryGradeName, result.SalaryGradeName);
-        Assert.Equal(salaryGrade.Step, result.Step);
-        Assert.Equal(salaryGrade.MonthlySalary, result.MonthlySalary);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(displayId, result.Value.DisplayId);
+        Assert.Equal(salaryGrade.SalaryGradeName, result.Value.SalaryGradeName);
+        Assert.Equal(salaryGrade.Step, result.Value.Step);
+        Assert.Equal(salaryGrade.MonthlySalary, result.Value.MonthlySalary);
     }
 
     [Fact]
-    public async Task GetByDisplayIdAsync_WhenSalaryGradeDoesNotExist_ReturnsNull()
+    public async Task GetByDisplayIdAsync_WhenSalaryGradeDoesNotExist_ReturnsNotFound()
     {
         // Arrange
         var displayId = 999999999999L;
@@ -57,7 +59,8 @@ public class SalaryGradeServiceTests
         var result = await _salaryGradeService.GetByDisplayIdAsync(displayId);
 
         // Assert
-        Assert.Null(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(FailureType.NotFound, result.FailureType);
     }
 
     #endregion
@@ -159,12 +162,13 @@ public class SalaryGradeServiceTests
         var result = await _salaryGradeService.CreateAsync(createDto, "TestUser");
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(createDto.SalaryGradeName, result.SalaryGradeName);
-        Assert.Equal(createDto.Description, result.Description);
-        Assert.Equal(createDto.Step, result.Step);
-        Assert.Equal(createDto.MonthlySalary, result.MonthlySalary);
-        Assert.True(result.IsActive);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(createDto.SalaryGradeName, result.Value.SalaryGradeName);
+        Assert.Equal(createDto.Description, result.Value.Description);
+        Assert.Equal(createDto.Step, result.Value.Step);
+        Assert.Equal(createDto.MonthlySalary, result.Value.MonthlySalary);
+        Assert.True(result.Value.IsActive);
 
         _salaryGradeRepositoryMock.Verify(r => r.AddAsync(It.IsAny<SalaryGrade>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -188,9 +192,10 @@ public class SalaryGradeServiceTests
         var result = await _salaryGradeService.CreateAsync(createDto, "TestUser");
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(5, result.Step);
-        Assert.Equal(40000m, result.MonthlySalary);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(5, result.Value.Step);
+        Assert.Equal(40000m, result.Value.MonthlySalary);
     }
 
     #endregion
@@ -224,15 +229,16 @@ public class SalaryGradeServiceTests
         var result = await _salaryGradeService.UpdateAsync(displayId, updateDto, "TestUser");
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(updateDto.Step, result.Step);
-        Assert.Equal(updateDto.MonthlySalary, result.MonthlySalary);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(updateDto.Step, result.Value.Step);
+        Assert.Equal(updateDto.MonthlySalary, result.Value.MonthlySalary);
 
         _salaryGradeRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<SalaryGrade>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task UpdateAsync_WhenSalaryGradeDoesNotExist_ReturnsNull()
+    public async Task UpdateAsync_WhenSalaryGradeDoesNotExist_ReturnsNotFound()
     {
         // Arrange
         var displayId = 999999999999L;
@@ -251,7 +257,8 @@ public class SalaryGradeServiceTests
         var result = await _salaryGradeService.UpdateAsync(displayId, updateDto, "TestUser");
 
         // Assert
-        Assert.Null(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(FailureType.NotFound, result.FailureType);
         _salaryGradeRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<SalaryGrade>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -278,12 +285,12 @@ public class SalaryGradeServiceTests
         var result = await _salaryGradeService.DeleteAsync(displayId, "TestUser");
 
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
         _salaryGradeRepositoryMock.Verify(r => r.DeleteAsync(salaryGrade, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task DeleteAsync_WhenSalaryGradeDoesNotExist_ReturnsFalse()
+    public async Task DeleteAsync_WhenSalaryGradeDoesNotExist_ReturnsNotFound()
     {
         // Arrange
         var displayId = 999999999999L;
@@ -296,7 +303,8 @@ public class SalaryGradeServiceTests
         var result = await _salaryGradeService.DeleteAsync(displayId, "TestUser");
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(FailureType.NotFound, result.FailureType);
         _salaryGradeRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<SalaryGrade>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

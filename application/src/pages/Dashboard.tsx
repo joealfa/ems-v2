@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Box, Heading, Text, SimpleGrid, Card, Spinner } from '@chakra-ui/react';
+import {
+  Box,
+  Heading,
+  Text,
+  SimpleGrid,
+  Card,
+  Spinner,
+} from '@chakra-ui/react';
 import { reportsApi, type DashboardStatsDto } from '../api';
 
 interface StatCardProps {

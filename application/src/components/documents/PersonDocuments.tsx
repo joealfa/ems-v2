@@ -102,13 +102,16 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
         successCount++;
       } catch (err: unknown) {
         console.error('Error uploading document:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        const errorMessage =
+          err instanceof Error ? err.message : 'Unknown error';
         errors.push(`${file.name}: ${errorMessage}`);
       }
     }
 
     if (errors.length > 0) {
-      setError(`Failed to upload ${errors.length} file(s). Check file types - only PDF, Word, Excel, PowerPoint, JPEG, PNG are allowed.`);
+      setError(
+        `Failed to upload ${errors.length} file(s). Check file types - only PDF, Word, Excel, PowerPoint, JPEG, PNG are allowed.`
+      );
     }
 
     if (successCount > 0) {
@@ -190,7 +193,13 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
         )}
 
         {showUploadForm && (
-          <Box mb={6} p={4} borderWidth={1} borderRadius="md" borderColor="border.muted">
+          <Box
+            mb={6}
+            p={4}
+            borderWidth={1}
+            borderRadius="md"
+            borderColor="border.muted"
+          >
             <Text fontWeight="semibold" mb={4}>
               Upload New Document
             </Text>
@@ -205,7 +214,16 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
                   multiple
                   onChange={handleFileSelect}
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"
-                  style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: '0' }}
+                  style={{
+                    position: 'absolute',
+                    width: '1px',
+                    height: '1px',
+                    padding: '0',
+                    margin: '-1px',
+                    overflow: 'hidden',
+                    clip: 'rect(0,0,0,0)',
+                    border: '0',
+                  }}
                 />
                 <Button
                   variant="outline"
@@ -213,8 +231,8 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
                   onClick={() => fileInputRef.current?.click()}
                   width="full"
                 >
-                  {selectedFiles.length > 0 
-                    ? `${selectedFiles.length} file(s) selected` 
+                  {selectedFiles.length > 0
+                    ? `${selectedFiles.length} file(s) selected`
                     : 'Choose Files...'}
                 </Button>
                 {selectedFiles.length > 0 && (
@@ -253,7 +271,8 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
               </Box>
             </Flex>
             <Text fontSize="xs" color="fg.muted" mt={2}>
-              Supported formats: PDF, Word, Excel, PowerPoint, JPEG, PNG (Max 50 MB)
+              Supported formats: PDF, Word, Excel, PowerPoint, JPEG, PNG (Max 50
+              MB)
             </Text>
           </Box>
         )}

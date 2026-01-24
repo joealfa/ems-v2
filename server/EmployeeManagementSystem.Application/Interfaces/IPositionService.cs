@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Position;
 
@@ -11,7 +12,7 @@ public interface IPositionService
     /// <summary>
     /// Gets a position by display ID.
     /// </summary>
-    Task<PositionResponseDto?> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default);
+    Task<Result<PositionResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a paginated list of positions.
@@ -21,15 +22,15 @@ public interface IPositionService
     /// <summary>
     /// Creates a new position.
     /// </summary>
-    Task<PositionResponseDto> CreateAsync(CreatePositionDto dto, string createdBy, CancellationToken cancellationToken = default);
+    Task<Result<PositionResponseDto>> CreateAsync(CreatePositionDto dto, string createdBy, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates an existing position.
     /// </summary>
-    Task<PositionResponseDto?> UpdateAsync(long displayId, UpdatePositionDto dto, string modifiedBy, CancellationToken cancellationToken = default);
+    Task<Result<PositionResponseDto>> UpdateAsync(long displayId, UpdatePositionDto dto, string modifiedBy, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a position by display ID.
     /// </summary>
-    Task<bool> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default);
+    Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default);
 }

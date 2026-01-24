@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Position;
 using EmployeeManagementSystem.Application.Interfaces;
@@ -36,14 +37,15 @@ public class PositionServiceTests
         var result = await _positionService.GetByDisplayIdAsync(displayId);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(displayId, result.DisplayId);
-        Assert.Equal(position.TitleName, result.TitleName);
-        Assert.Equal(position.Description, result.Description);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(displayId, result.Value.DisplayId);
+        Assert.Equal(position.TitleName, result.Value.TitleName);
+        Assert.Equal(position.Description, result.Value.Description);
     }
 
     [Fact]
-    public async Task GetByDisplayIdAsync_WhenPositionDoesNotExist_ReturnsNull()
+    public async Task GetByDisplayIdAsync_WhenPositionDoesNotExist_ReturnsNotFound()
     {
         // Arrange
         var displayId = 999999999999L;
@@ -56,7 +58,8 @@ public class PositionServiceTests
         var result = await _positionService.GetByDisplayIdAsync(displayId);
 
         // Assert
-        Assert.Null(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(FailureType.NotFound, result.FailureType);
     }
 
     #endregion
@@ -148,10 +151,11 @@ public class PositionServiceTests
         var result = await _positionService.CreateAsync(createDto, "TestUser");
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(createDto.TitleName, result.TitleName);
-        Assert.Equal(createDto.Description, result.Description);
-        Assert.True(result.IsActive);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(createDto.TitleName, result.Value.TitleName);
+        Assert.Equal(createDto.Description, result.Value.Description);
+        Assert.True(result.Value.IsActive);
 
         _positionRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Position>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -173,9 +177,10 @@ public class PositionServiceTests
         var result = await _positionService.CreateAsync(createDto, "TestUser");
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(createDto.TitleName, result.TitleName);
-        Assert.Null(result.Description);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(createDto.TitleName, result.Value.TitleName);
+        Assert.Null(result.Value.Description);
     }
 
     #endregion
@@ -207,15 +212,16 @@ public class PositionServiceTests
         var result = await _positionService.UpdateAsync(displayId, updateDto, "TestUser");
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(updateDto.TitleName, result.TitleName);
-        Assert.Equal(updateDto.Description, result.Description);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(updateDto.TitleName, result.Value.TitleName);
+        Assert.Equal(updateDto.Description, result.Value.Description);
 
         _positionRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Position>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task UpdateAsync_WhenPositionDoesNotExist_ReturnsNull()
+    public async Task UpdateAsync_WhenPositionDoesNotExist_ReturnsNotFound()
     {
         // Arrange
         var displayId = 999999999999L;
@@ -232,7 +238,8 @@ public class PositionServiceTests
         var result = await _positionService.UpdateAsync(displayId, updateDto, "TestUser");
 
         // Assert
-        Assert.Null(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(FailureType.NotFound, result.FailureType);
         _positionRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Position>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -259,12 +266,12 @@ public class PositionServiceTests
         var result = await _positionService.DeleteAsync(displayId, "TestUser");
 
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
         _positionRepositoryMock.Verify(r => r.DeleteAsync(position, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task DeleteAsync_WhenPositionDoesNotExist_ReturnsFalse()
+    public async Task DeleteAsync_WhenPositionDoesNotExist_ReturnsNotFound()
     {
         // Arrange
         var displayId = 999999999999L;
@@ -277,7 +284,8 @@ public class PositionServiceTests
         var result = await _positionService.DeleteAsync(displayId, "TestUser");
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(FailureType.NotFound, result.FailureType);
         _positionRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Position>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

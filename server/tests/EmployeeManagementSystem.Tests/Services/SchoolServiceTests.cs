@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.School;
 using EmployeeManagementSystem.Application.Interfaces;
@@ -46,13 +47,14 @@ public class SchoolServiceTests
         var result = await _schoolService.GetByDisplayIdAsync(displayId);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(displayId, result.DisplayId);
-        Assert.Equal(school.SchoolName, result.SchoolName);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(displayId, result.Value.DisplayId);
+        Assert.Equal(school.SchoolName, result.Value.SchoolName);
     }
 
     [Fact]
-    public async Task GetByDisplayIdAsync_WhenSchoolDoesNotExist_ReturnsNull()
+    public async Task GetByDisplayIdAsync_WhenSchoolDoesNotExist_ReturnsNotFound()
     {
         // Arrange
         var displayId = 999999999999L;
@@ -63,7 +65,8 @@ public class SchoolServiceTests
         var result = await _schoolService.GetByDisplayIdAsync(displayId);
 
         // Assert
-        Assert.Null(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(FailureType.NotFound, result.FailureType);
     }
 
     #endregion
@@ -159,9 +162,10 @@ public class SchoolServiceTests
         var result = await _schoolService.CreateAsync(createDto, "TestUser");
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(createDto.SchoolName, result.SchoolName);
-        Assert.True(result.IsActive);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(createDto.SchoolName, result.Value.SchoolName);
+        Assert.True(result.Value.IsActive);
 
         _schoolRepositoryMock.Verify(r => r.AddAsync(It.IsAny<School>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -259,12 +263,12 @@ public class SchoolServiceTests
         var result = await _schoolService.DeleteAsync(displayId, "TestUser");
 
         // Assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
         _schoolRepositoryMock.Verify(r => r.DeleteAsync(school, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task DeleteAsync_WhenSchoolDoesNotExist_ReturnsFalse()
+    public async Task DeleteAsync_WhenSchoolDoesNotExist_ReturnsNotFound()
     {
         // Arrange
         var displayId = 999999999999L;
@@ -276,7 +280,8 @@ public class SchoolServiceTests
         var result = await _schoolService.DeleteAsync(displayId, "TestUser");
 
         // Assert
-        Assert.False(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(FailureType.NotFound, result.FailureType);
         _schoolRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<School>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

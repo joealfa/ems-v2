@@ -1,6 +1,9 @@
+using EmployeeManagementSystem.Api.Controllers;
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Document;
 using EmployeeManagementSystem.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeManagementSystem.Api.v1.Controllers;
@@ -8,10 +11,9 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// <summary>
 /// API controller for managing person documents.
 /// </summary>
-[ApiController]
+[Authorize]
 [Route("api/v1/persons/{personDisplayId:long}/documents")]
-[Produces("application/json")]
-public class DocumentsController : ControllerBase
+public class DocumentsController : ApiControllerBase
 {
     private readonly IDocumentService _documentService;
 
@@ -79,10 +81,7 @@ public class DocumentsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _documentService.GetByDisplayIdAsync(personDisplayId, documentDisplayId, cancellationToken);
-        if (result == null)
-            return NotFound();
-
-        return Ok(result);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -114,33 +113,17 @@ public class DocumentsController : ControllerBase
         if (!AllowedContentTypes.Contains(file.ContentType))
             return BadRequest($"File type '{file.ContentType}' is not allowed.");
 
-        // TODO: Get actual user from authentication
-        var createdBy = "System";
-
-        try
+        var dto = new UploadDocumentDto
         {
-            var dto = new UploadDocumentDto
-            {
-                FileStream = file.OpenReadStream(),
-                FileName = file.FileName,
-                ContentType = file.ContentType,
-                FileSizeBytes = file.Length,
-                Description = description
-            };
+            FileStream = file.OpenReadStream(),
+            FileName = file.FileName,
+            ContentType = file.ContentType,
+            FileSizeBytes = file.Length,
+            Description = description
+        };
 
-            var result = await _documentService.UploadAsync(personDisplayId, dto, createdBy, cancellationToken);
-            if (result == null)
-                return NotFound("Person not found.");
-
-            return CreatedAtAction(
-                nameof(GetByDisplayId),
-                new { personDisplayId, documentDisplayId = result.DisplayId },
-                result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        var result = await _documentService.UploadAsync(personDisplayId, dto, CurrentUserEmail, cancellationToken);
+        return ToCreatedResult(result, nameof(GetByDisplayId), new { personDisplayId, documentDisplayId = result.Value?.DisplayId ?? 0 });
     }
 
     /// <summary>
@@ -160,14 +143,8 @@ public class DocumentsController : ControllerBase
         [FromBody] UpdateDocumentDto dto,
         CancellationToken cancellationToken)
     {
-        // TODO: Get actual user from authentication
-        var modifiedBy = "System";
-
-        var result = await _documentService.UpdateAsync(personDisplayId, documentDisplayId, dto, modifiedBy, cancellationToken);
-        if (result == null)
-            return NotFound();
-
-        return Ok(result);
+        var result = await _documentService.UpdateAsync(personDisplayId, documentDisplayId, dto, CurrentUserEmail, cancellationToken);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -186,10 +163,7 @@ public class DocumentsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _documentService.DownloadAsync(personDisplayId, documentDisplayId, cancellationToken);
-        if (result == null)
-            return NotFound();
-
-        return File(result.Content, result.ContentType, result.FileName);
+        return ToFileResult(result);
     }
 
     /// <summary>
@@ -207,14 +181,8 @@ public class DocumentsController : ControllerBase
         long documentDisplayId,
         CancellationToken cancellationToken)
     {
-        // TODO: Get actual user from authentication
-        var deletedBy = "System";
-
-        var result = await _documentService.DeleteAsync(personDisplayId, documentDisplayId, deletedBy, cancellationToken);
-        if (!result)
-            return NotFound();
-
-        return NoContent();
+        var result = await _documentService.DeleteAsync(personDisplayId, documentDisplayId, CurrentUserEmail, cancellationToken);
+        return ToNoContentResult(result);
     }
 
     /// <summary>
@@ -226,11 +194,11 @@ public class DocumentsController : ControllerBase
     /// <returns>The URL of the uploaded profile image.</returns>
     [HttpPost("profile-image")]
     [Consumes("multipart/form-data")]
-    [ProducesResponseType(typeof(ProfileImageResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [RequestSizeLimit(MaxImageSizeBytes)]
-    public async Task<ActionResult<ProfileImageResponseDto>> UploadProfileImage(
+    public async Task<ActionResult<string>> UploadProfileImage(
         long personDisplayId,
         IFormFile file,
         CancellationToken cancellationToken)
@@ -244,29 +212,16 @@ public class DocumentsController : ControllerBase
         if (!AllowedImageContentTypes.Contains(file.ContentType))
             return BadRequest($"File type '{file.ContentType}' is not allowed for profile images. Only JPEG and PNG are allowed.");
 
-        // TODO: Get actual user from authentication
-        var modifiedBy = "System";
-
-        try
+        var dto = new UploadDocumentDto
         {
-            var dto = new UploadDocumentDto
-            {
-                FileStream = file.OpenReadStream(),
-                FileName = file.FileName,
-                ContentType = file.ContentType,
-                FileSizeBytes = file.Length
-            };
+            FileStream = file.OpenReadStream(),
+            FileName = file.FileName,
+            ContentType = file.ContentType,
+            FileSizeBytes = file.Length
+        };
 
-            var result = await _documentService.UploadProfileImageAsync(personDisplayId, dto, modifiedBy, cancellationToken);
-            if (result == null)
-                return NotFound("Person not found.");
-
-            return Ok(new ProfileImageResponseDto { ProfileImageUrl = result });
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        var result = await _documentService.UploadProfileImageAsync(personDisplayId, dto, CurrentUserEmail, cancellationToken);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -283,10 +238,7 @@ public class DocumentsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _documentService.GetProfileImageAsync(personDisplayId, cancellationToken);
-        if (result == null)
-            return NotFound();
-
-        return File(result.Content, result.ContentType);
+        return ToFileResult(result);
     }
 
     /// <summary>
@@ -302,24 +254,7 @@ public class DocumentsController : ControllerBase
         long personDisplayId,
         CancellationToken cancellationToken)
     {
-        // TODO: Get actual user from authentication
-        var modifiedBy = "System";
-
-        var result = await _documentService.DeleteProfileImageAsync(personDisplayId, modifiedBy, cancellationToken);
-        if (!result)
-            return NotFound();
-
-        return NoContent();
+        var result = await _documentService.DeleteProfileImageAsync(personDisplayId, CurrentUserEmail, cancellationToken);
+        return ToNoContentResult(result);
     }
-}
-
-/// <summary>
-/// Response DTO for profile image upload.
-/// </summary>
-public class ProfileImageResponseDto
-{
-    /// <summary>
-    /// Gets or sets the URL of the uploaded profile image.
-    /// </summary>
-    public string ProfileImageUrl { get; set; } = string.Empty;
 }

@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Employment;
 using EmployeeManagementSystem.Application.Interfaces;
@@ -41,7 +42,7 @@ public class EmploymentService : IEmploymentService
     }
 
     /// <inheritdoc />
-    public async Task<EmploymentResponseDto?> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
+    public async Task<Result<EmploymentResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
         var employment = await _employmentRepository.Query()
             .Include(e => e.Person)
@@ -52,7 +53,9 @@ public class EmploymentService : IEmploymentService
                 .ThenInclude(es => es.School)
             .FirstOrDefaultAsync(e => e.DisplayId == displayId, cancellationToken);
 
-        return employment == null ? null : MapToResponseDto(employment);
+        return employment == null
+            ? Result<EmploymentResponseDto>.NotFound("Employment not found.")
+            : Result<EmploymentResponseDto>.Success(MapToResponseDto(employment));
     }
 
     /// <inheritdoc />
@@ -107,20 +110,24 @@ public class EmploymentService : IEmploymentService
     }
 
     /// <inheritdoc />
-    public async Task<EmploymentResponseDto> CreateAsync(CreateEmploymentDto dto, string createdBy, CancellationToken cancellationToken = default)
+    public async Task<Result<EmploymentResponseDto>> CreateAsync(CreateEmploymentDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
         // Resolve foreign key references by display ID
-        var person = await _personRepository.GetByDisplayIdAsync(dto.PersonDisplayId, cancellationToken)
-            ?? throw new ArgumentException($"Person with DisplayId {dto.PersonDisplayId} not found.");
+        var person = await _personRepository.GetByDisplayIdAsync(dto.PersonDisplayId, cancellationToken);
+        if (person == null)
+            return Result<EmploymentResponseDto>.BadRequest($"Person with DisplayId {dto.PersonDisplayId} not found.");
 
-        var position = await _positionRepository.GetByDisplayIdAsync(dto.PositionDisplayId, cancellationToken)
-            ?? throw new ArgumentException($"Position with DisplayId {dto.PositionDisplayId} not found.");
+        var position = await _positionRepository.GetByDisplayIdAsync(dto.PositionDisplayId, cancellationToken);
+        if (position == null)
+            return Result<EmploymentResponseDto>.BadRequest($"Position with DisplayId {dto.PositionDisplayId} not found.");
 
-        var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(dto.SalaryGradeDisplayId, cancellationToken)
-            ?? throw new ArgumentException($"SalaryGrade with DisplayId {dto.SalaryGradeDisplayId} not found.");
+        var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(dto.SalaryGradeDisplayId, cancellationToken);
+        if (salaryGrade == null)
+            return Result<EmploymentResponseDto>.BadRequest($"SalaryGrade with DisplayId {dto.SalaryGradeDisplayId} not found.");
 
-        var item = await _itemRepository.GetByDisplayIdAsync(dto.ItemDisplayId, cancellationToken)
-            ?? throw new ArgumentException($"Item with DisplayId {dto.ItemDisplayId} not found.");
+        var item = await _itemRepository.GetByDisplayIdAsync(dto.ItemDisplayId, cancellationToken);
+        if (item == null)
+            return Result<EmploymentResponseDto>.BadRequest($"Item with DisplayId {dto.ItemDisplayId} not found.");
 
         var employment = new Employment
         {
@@ -148,8 +155,9 @@ public class EmploymentService : IEmploymentService
         {
             foreach (var schoolDto in dto.Schools)
             {
-                var school = await _schoolRepository.GetByDisplayIdAsync(schoolDto.SchoolDisplayId, cancellationToken)
-                    ?? throw new ArgumentException($"School with DisplayId {schoolDto.SchoolDisplayId} not found.");
+                var school = await _schoolRepository.GetByDisplayIdAsync(schoolDto.SchoolDisplayId, cancellationToken);
+                if (school == null)
+                    return Result<EmploymentResponseDto>.BadRequest($"School with DisplayId {schoolDto.SchoolDisplayId} not found.");
 
                 var employmentSchool = new EmploymentSchool
                 {
@@ -172,11 +180,11 @@ public class EmploymentService : IEmploymentService
         employment.SalaryGrade = salaryGrade;
         employment.Item = item;
 
-        return MapToResponseDto(employment);
+        return Result<EmploymentResponseDto>.Success(MapToResponseDto(employment));
     }
 
     /// <inheritdoc />
-    public async Task<EmploymentResponseDto?> UpdateAsync(long displayId, UpdateEmploymentDto dto, string modifiedBy, CancellationToken cancellationToken = default)
+    public async Task<Result<EmploymentResponseDto>> UpdateAsync(long displayId, UpdateEmploymentDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
         var employment = await _employmentRepository.Query()
             .Include(e => e.Person)
@@ -188,17 +196,20 @@ public class EmploymentService : IEmploymentService
             .FirstOrDefaultAsync(e => e.DisplayId == displayId, cancellationToken);
 
         if (employment == null)
-            return null;
+            return Result<EmploymentResponseDto>.NotFound("Employment not found.");
 
         // Resolve foreign key references by display ID
-        var position = await _positionRepository.GetByDisplayIdAsync(dto.PositionDisplayId, cancellationToken)
-            ?? throw new ArgumentException($"Position with DisplayId {dto.PositionDisplayId} not found.");
+        var position = await _positionRepository.GetByDisplayIdAsync(dto.PositionDisplayId, cancellationToken);
+        if (position == null)
+            return Result<EmploymentResponseDto>.BadRequest($"Position with DisplayId {dto.PositionDisplayId} not found.");
 
-        var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(dto.SalaryGradeDisplayId, cancellationToken)
-            ?? throw new ArgumentException($"SalaryGrade with DisplayId {dto.SalaryGradeDisplayId} not found.");
+        var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(dto.SalaryGradeDisplayId, cancellationToken);
+        if (salaryGrade == null)
+            return Result<EmploymentResponseDto>.BadRequest($"SalaryGrade with DisplayId {dto.SalaryGradeDisplayId} not found.");
 
-        var item = await _itemRepository.GetByDisplayIdAsync(dto.ItemDisplayId, cancellationToken)
-            ?? throw new ArgumentException($"Item with DisplayId {dto.ItemDisplayId} not found.");
+        var item = await _itemRepository.GetByDisplayIdAsync(dto.ItemDisplayId, cancellationToken);
+        if (item == null)
+            return Result<EmploymentResponseDto>.BadRequest($"Item with DisplayId {dto.ItemDisplayId} not found.");
 
         employment.DepEdId = dto.DepEdId;
         employment.PSIPOPItemNumber = dto.PSIPOPItemNumber;
@@ -223,18 +234,18 @@ public class EmploymentService : IEmploymentService
         employment.SalaryGrade = salaryGrade;
         employment.Item = item;
 
-        return MapToResponseDto(employment);
+        return Result<EmploymentResponseDto>.Success(MapToResponseDto(employment));
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
         var employment = await _employmentRepository.Query()
             .Include(e => e.EmploymentSchools.Where(es => !es.IsDeleted))
             .FirstOrDefaultAsync(e => e.DisplayId == displayId, cancellationToken);
 
         if (employment == null)
-            return false;
+            return Result.NotFound("Employment not found.");
 
         // Cascade soft delete to related employment schools
         foreach (var employmentSchool in employment.EmploymentSchools)
@@ -248,18 +259,19 @@ public class EmploymentService : IEmploymentService
         employment.ModifiedBy = deletedBy;
         employment.ModifiedOn = DateTime.UtcNow;
         await _employmentRepository.DeleteAsync(employment, cancellationToken);
-        return true;
+        return Result.Success();
     }
 
     /// <inheritdoc />
-    public async Task<EmploymentSchoolResponseDto?> AddSchoolAssignmentAsync(long employmentDisplayId, CreateEmploymentSchoolDto dto, string createdBy, CancellationToken cancellationToken = default)
+    public async Task<Result<EmploymentSchoolResponseDto>> AddSchoolAssignmentAsync(long employmentDisplayId, CreateEmploymentSchoolDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
         var employment = await _employmentRepository.GetByDisplayIdAsync(employmentDisplayId, cancellationToken);
         if (employment == null)
-            return null;
+            return Result<EmploymentSchoolResponseDto>.NotFound("Employment not found.");
 
-        var school = await _schoolRepository.GetByDisplayIdAsync(dto.SchoolDisplayId, cancellationToken)
-            ?? throw new ArgumentException($"School with DisplayId {dto.SchoolDisplayId} not found.");
+        var school = await _schoolRepository.GetByDisplayIdAsync(dto.SchoolDisplayId, cancellationToken);
+        if (school == null)
+            return Result<EmploymentSchoolResponseDto>.NotFound($"School with DisplayId {dto.SchoolDisplayId} not found.");
 
         var employmentSchool = new EmploymentSchool
         {
@@ -274,7 +286,7 @@ public class EmploymentService : IEmploymentService
 
         await _employmentSchoolRepository.AddAsync(employmentSchool, cancellationToken);
 
-        return new EmploymentSchoolResponseDto
+        return Result<EmploymentSchoolResponseDto>.Success(new EmploymentSchoolResponseDto
         {
             DisplayId = employmentSchool.DisplayId,
             SchoolDisplayId = school.DisplayId,
@@ -285,20 +297,20 @@ public class EmploymentService : IEmploymentService
             IsActive = employmentSchool.IsActive,
             CreatedOn = employmentSchool.CreatedOn,
             CreatedBy = employmentSchool.CreatedBy
-        };
+        });
     }
 
     /// <inheritdoc />
-    public async Task<bool> RemoveSchoolAssignmentAsync(long employmentSchoolDisplayId, string deletedBy, CancellationToken cancellationToken = default)
+    public async Task<Result> RemoveSchoolAssignmentAsync(long employmentSchoolDisplayId, string deletedBy, CancellationToken cancellationToken = default)
     {
         var employmentSchool = await _employmentSchoolRepository.GetByDisplayIdAsync(employmentSchoolDisplayId, cancellationToken);
         if (employmentSchool == null)
-            return false;
+            return Result.NotFound("Employment school assignment not found.");
 
         employmentSchool.ModifiedBy = deletedBy;
         employmentSchool.ModifiedOn = DateTime.UtcNow;
         await _employmentSchoolRepository.DeleteAsync(employmentSchool, cancellationToken);
-        return true;
+        return Result.Success();
     }
 
     private static EmploymentResponseDto MapToResponseDto(Employment employment)

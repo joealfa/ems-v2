@@ -1,6 +1,9 @@
+using EmployeeManagementSystem.Api.Controllers;
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Employment;
 using EmployeeManagementSystem.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeManagementSystem.Api.v1.Controllers;
@@ -11,7 +14,8 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
-public class EmploymentsController : ControllerBase
+[Authorize]
+public class EmploymentsController : ApiControllerBase
 {
     private readonly IEmploymentService _employmentService;
 
@@ -53,10 +57,7 @@ public class EmploymentsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _employmentService.GetByDisplayIdAsync(displayId, cancellationToken);
-        if (result == null)
-            return NotFound();
-
-        return Ok(result);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -75,18 +76,8 @@ public class EmploymentsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            // TODO: Get actual user from authentication
-            var createdBy = "System";
-
-            var result = await _employmentService.CreateAsync(dto, createdBy, cancellationToken);
-            return CreatedAtAction(nameof(GetByDisplayId), new { displayId = result.DisplayId }, result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        var result = await _employmentService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
+        return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
 
     /// <summary>
@@ -108,21 +99,8 @@ public class EmploymentsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            // TODO: Get actual user from authentication
-            var modifiedBy = "System";
-
-            var result = await _employmentService.UpdateAsync(displayId, dto, modifiedBy, cancellationToken);
-            if (result == null)
-                return NotFound();
-
-            return Ok(result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        var result = await _employmentService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -138,14 +116,8 @@ public class EmploymentsController : ControllerBase
         long displayId,
         CancellationToken cancellationToken)
     {
-        // TODO: Get actual user from authentication
-        var deletedBy = "System";
-
-        var result = await _employmentService.DeleteAsync(displayId, deletedBy, cancellationToken);
-        if (!result)
-            return NotFound();
-
-        return NoContent();
+        var result = await _employmentService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
+        return ToNoContentResult(result);
     }
 
     /// <summary>
@@ -167,21 +139,8 @@ public class EmploymentsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        try
-        {
-            // TODO: Get actual user from authentication
-            var createdBy = "System";
-
-            var result = await _employmentService.AddSchoolAssignmentAsync(displayId, dto, createdBy, cancellationToken);
-            if (result == null)
-                return NotFound();
-
-            return Created($"api/v1/employments/{displayId}/schools/{result.DisplayId}", result);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        var result = await _employmentService.AddSchoolAssignmentAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
 
     /// <summary>
@@ -199,13 +158,7 @@ public class EmploymentsController : ControllerBase
         long schoolAssignmentDisplayId,
         CancellationToken cancellationToken)
     {
-        // TODO: Get actual user from authentication
-        var deletedBy = "System";
-
-        var result = await _employmentService.RemoveSchoolAssignmentAsync(schoolAssignmentDisplayId, deletedBy, cancellationToken);
-        if (!result)
-            return NotFound();
-
-        return NoContent();
+        var result = await _employmentService.RemoveSchoolAssignmentAsync(schoolAssignmentDisplayId, CurrentUserEmail, cancellationToken);
+        return ToNoContentResult(result);
     }
 }

@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.School;
 using EmployeeManagementSystem.Application.Interfaces;
@@ -32,14 +33,14 @@ public class SchoolService : ISchoolService
     }
 
     /// <inheritdoc />
-    public async Task<SchoolResponseDto?> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
+    public async Task<Result<SchoolResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
         var school = await _schoolRepository.Query()
             .Include(s => s.Addresses.Where(a => !a.IsDeleted))
             .Include(s => s.Contacts.Where(c => !c.IsDeleted))
             .FirstOrDefaultAsync(s => s.DisplayId == displayId, cancellationToken);
 
-        return school == null ? null : MapToResponseDto(school);
+        return school == null ? Result<SchoolResponseDto>.NotFound("School not found.") : Result<SchoolResponseDto>.Success(MapToResponseDto(school));
     }
 
     /// <inheritdoc />
@@ -84,7 +85,7 @@ public class SchoolService : ISchoolService
     }
 
     /// <inheritdoc />
-    public async Task<SchoolResponseDto> CreateAsync(CreateSchoolDto dto, string createdBy, CancellationToken cancellationToken = default)
+    public async Task<Result<SchoolResponseDto>> CreateAsync(CreateSchoolDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
         var school = new School
         {
@@ -142,11 +143,11 @@ public class SchoolService : ISchoolService
             }
         }
 
-        return MapToResponseDto(school);
+        return Result<SchoolResponseDto>.Success(MapToResponseDto(school));
     }
 
     /// <inheritdoc />
-    public async Task<SchoolResponseDto?> UpdateAsync(long displayId, UpdateSchoolDto dto, string modifiedBy, CancellationToken cancellationToken = default)
+    public async Task<Result<SchoolResponseDto>> UpdateAsync(long displayId, UpdateSchoolDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
         var school = await _schoolRepository.Query()
             .Include(s => s.Addresses.Where(a => !a.IsDeleted))
@@ -154,7 +155,7 @@ public class SchoolService : ISchoolService
             .FirstOrDefaultAsync(s => s.DisplayId == displayId, cancellationToken);
 
         if (school == null)
-            return null;
+            return Result<SchoolResponseDto>.NotFound("School not found.");
 
         school.SchoolName = dto.SchoolName;
         school.IsActive = dto.IsActive;
@@ -163,11 +164,11 @@ public class SchoolService : ISchoolService
 
         await _schoolRepository.UpdateAsync(school, cancellationToken);
 
-        return MapToResponseDto(school);
+        return Result<SchoolResponseDto>.Success(MapToResponseDto(school));
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
         var school = await _schoolRepository.Query()
             .Include(s => s.Addresses.Where(a => !a.IsDeleted))
@@ -176,7 +177,7 @@ public class SchoolService : ISchoolService
             .FirstOrDefaultAsync(s => s.DisplayId == displayId, cancellationToken);
 
         if (school == null)
-            return false;
+            return Result.NotFound("School not found.");
 
         // Cascade soft delete to related addresses
         foreach (var address in school.Addresses)
@@ -206,7 +207,7 @@ public class SchoolService : ISchoolService
         school.ModifiedBy = deletedBy;
         school.ModifiedOn = DateTime.UtcNow;
         await _schoolRepository.DeleteAsync(school, cancellationToken);
-        return true;
+        return Result.Success();
     }
 
     private static SchoolResponseDto MapToResponseDto(School school)

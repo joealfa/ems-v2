@@ -1,6 +1,9 @@
+using EmployeeManagementSystem.Api.Controllers;
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.SalaryGrade;
 using EmployeeManagementSystem.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeManagementSystem.Api.v1.Controllers;
@@ -9,9 +12,10 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// API controller for managing salary grades.
 /// </summary>
 [ApiController]
+[Authorize]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
-public class SalaryGradesController : ControllerBase
+public class SalaryGradesController : ApiControllerBase
 {
     private readonly ISalaryGradeService _salaryGradeService;
 
@@ -53,10 +57,7 @@ public class SalaryGradesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _salaryGradeService.GetByDisplayIdAsync(displayId, cancellationToken);
-        if (result == null)
-            return NotFound();
-
-        return Ok(result);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -75,11 +76,8 @@ public class SalaryGradesController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // TODO: Get actual user from authentication
-        var createdBy = "System";
-
-        var result = await _salaryGradeService.CreateAsync(dto, createdBy, cancellationToken);
-        return CreatedAtAction(nameof(GetByDisplayId), new { displayId = result.DisplayId }, result);
+        var result = await _salaryGradeService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
+        return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
 
     /// <summary>
@@ -101,14 +99,8 @@ public class SalaryGradesController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // TODO: Get actual user from authentication
-        var modifiedBy = "System";
-
-        var result = await _salaryGradeService.UpdateAsync(displayId, dto, modifiedBy, cancellationToken);
-        if (result == null)
-            return NotFound();
-
-        return Ok(result);
+        var result = await _salaryGradeService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -124,13 +116,7 @@ public class SalaryGradesController : ControllerBase
         long displayId,
         CancellationToken cancellationToken)
     {
-        // TODO: Get actual user from authentication
-        var deletedBy = "System";
-
-        var result = await _salaryGradeService.DeleteAsync(displayId, deletedBy, cancellationToken);
-        if (!result)
-            return NotFound();
-
-        return NoContent();
+        var result = await _salaryGradeService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
+        return ToNoContentResult(result);
     }
 }

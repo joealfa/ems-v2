@@ -28,8 +28,6 @@ import type { DocumentResponseDto } from '../models';
 // @ts-ignore
 import type { ProblemDetails } from '../models';
 // @ts-ignore
-import type { ProfileImageResponseDto } from '../models';
-// @ts-ignore
 import type { UpdateDocumentDto } from '../models';
 /**
  * DocumentsApi - axios parameter creator
@@ -62,6 +60,10 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
             const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -100,6 +102,10 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -136,6 +142,10 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -174,6 +184,10 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
             const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -215,6 +229,10 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
             if (pageNumber !== undefined) {
                 localVarQueryParameter['PageNumber'] = pageNumber;
@@ -272,6 +290,10 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
             const localVarQueryParameter = {} as any;
             const localVarFormParams = new ((configuration && configuration.formDataCtor) || FormData)();
 
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
             if (file !== undefined) { 
                 localVarFormParams.append('file', file as any);
@@ -316,6 +338,47 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {number} personDisplayId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1PersonsPersonDisplayIdDocumentsProfileImageGet: async (personDisplayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'personDisplayId' is not null or undefined
+            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsProfileImageGet', 'personDisplayId', personDisplayId)
+            const localVarPath = `/api/v1/persons/{personDisplayId}/documents/profile-image`
+                .replace(`{${"personDisplayId"}}`, encodeURIComponent(String(personDisplayId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -350,6 +413,10 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
             const localVarFormParams = new ((configuration && configuration.formDataCtor) || FormData)();
+
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
             if (file !== undefined) { 
@@ -478,11 +545,23 @@ export const DocumentsApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @param {number} personDisplayId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1PersonsPersonDisplayIdDocumentsProfileImageGet(personDisplayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<File>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsPersonDisplayIdDocumentsProfileImageGet(personDisplayId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsPersonDisplayIdDocumentsProfileImageGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {number} personDisplayId 
          * @param {File} [file] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(personDisplayId: number, file?: File, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProfileImageResponseDto>> {
+        async apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(personDisplayId: number, file?: File, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(personDisplayId, file, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsPersonDisplayIdDocumentsProfileImagePost']?.[localVarOperationServerIndex]?.url;
@@ -576,11 +655,20 @@ export const DocumentsApiFactory = function (configuration?: Configuration, base
         /**
          * 
          * @param {number} personDisplayId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1PersonsPersonDisplayIdDocumentsProfileImageGet(personDisplayId: number, options?: RawAxiosRequestConfig): AxiosPromise<File> {
+            return localVarFp.apiV1PersonsPersonDisplayIdDocumentsProfileImageGet(personDisplayId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {number} personDisplayId 
          * @param {File} [file] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(personDisplayId: number, file?: File, options?: RawAxiosRequestConfig): AxiosPromise<ProfileImageResponseDto> {
+        apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(personDisplayId: number, file?: File, options?: RawAxiosRequestConfig): AxiosPromise<string> {
             return localVarFp.apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(personDisplayId, file, options).then((request) => request(axios, basePath));
         },
     };
@@ -680,6 +768,17 @@ export class DocumentsApi extends BaseAPI {
      */
     public apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete(personDisplayId: number, options?: RawAxiosRequestConfig) {
         return DocumentsApiFp(this.configuration).apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete(personDisplayId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {number} personDisplayId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DocumentsApi
+     */
+    public apiV1PersonsPersonDisplayIdDocumentsProfileImageGet(personDisplayId: number, options?: RawAxiosRequestConfig) {
+        return DocumentsApiFp(this.configuration).apiV1PersonsPersonDisplayIdDocumentsProfileImageGet(personDisplayId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

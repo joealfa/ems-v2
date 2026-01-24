@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.SalaryGrade;
 
@@ -11,7 +12,7 @@ public interface ISalaryGradeService
     /// <summary>
     /// Gets a salary grade by display ID.
     /// </summary>
-    Task<SalaryGradeResponseDto?> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default);
+    Task<Result<SalaryGradeResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a paginated list of salary grades.
@@ -21,15 +22,15 @@ public interface ISalaryGradeService
     /// <summary>
     /// Creates a new salary grade.
     /// </summary>
-    Task<SalaryGradeResponseDto> CreateAsync(CreateSalaryGradeDto dto, string createdBy, CancellationToken cancellationToken = default);
+    Task<Result<SalaryGradeResponseDto>> CreateAsync(CreateSalaryGradeDto dto, string createdBy, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates an existing salary grade.
     /// </summary>
-    Task<SalaryGradeResponseDto?> UpdateAsync(long displayId, UpdateSalaryGradeDto dto, string modifiedBy, CancellationToken cancellationToken = default);
+    Task<Result<SalaryGradeResponseDto>> UpdateAsync(long displayId, UpdateSalaryGradeDto dto, string modifiedBy, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a salary grade by display ID.
     /// </summary>
-    Task<bool> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default);
+    Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default);
 }

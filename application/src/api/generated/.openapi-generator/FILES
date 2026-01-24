@@ -1,6 +1,7 @@
 .gitignore
 .npmignore
 api.ts
+api/auth-api.ts
 api/documents-api.ts
 api/employments-api.ts
 api/items-api.ts
@@ -15,6 +16,7 @@ configuration.ts
 git_push.sh
 index.ts
 models/address-response-dto.ts
+models/auth-response-dto.ts
 models/contact-response-dto.ts
 models/create-address-dto.ts
 models/create-contact-dto.ts
@@ -37,6 +39,8 @@ models/employment-position-dto.ts
 models/employment-response-dto.ts
 models/employment-salary-grade-dto.ts
 models/employment-school-response-dto.ts
+models/google-access-token-request-dto.ts
+models/google-auth-request-dto.ts
 models/index.ts
 models/item-response-dto-paged-result.ts
 models/item-response-dto.ts
@@ -46,7 +50,8 @@ models/person-response-dto.ts
 models/position-response-dto-paged-result.ts
 models/position-response-dto.ts
 models/problem-details.ts
-models/profile-image-response-dto.ts
+models/refresh-token-request-dto.ts
+models/revoke-token-request-dto.ts
 models/salary-grade-response-dto-paged-result.ts
 models/salary-grade-response-dto.ts
 models/school-list-dto-paged-result.ts
@@ -59,3 +64,4 @@ models/update-person-dto.ts
 models/update-position-dto.ts
 models/update-salary-grade-dto.ts
 models/update-school-dto.ts
+models/user-dto.ts

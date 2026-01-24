@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.School;
 
@@ -11,7 +12,7 @@ public interface ISchoolService
     /// <summary>
     /// Gets a school by display ID.
     /// </summary>
-    Task<SchoolResponseDto?> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default);
+    Task<Result<SchoolResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a paginated list of schools.
@@ -21,15 +22,15 @@ public interface ISchoolService
     /// <summary>
     /// Creates a new school.
     /// </summary>
-    Task<SchoolResponseDto> CreateAsync(CreateSchoolDto dto, string createdBy, CancellationToken cancellationToken = default);
+    Task<Result<SchoolResponseDto>> CreateAsync(CreateSchoolDto dto, string createdBy, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates an existing school.
     /// </summary>
-    Task<SchoolResponseDto?> UpdateAsync(long displayId, UpdateSchoolDto dto, string modifiedBy, CancellationToken cancellationToken = default);
+    Task<Result<SchoolResponseDto>> UpdateAsync(long displayId, UpdateSchoolDto dto, string modifiedBy, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a school by display ID.
     /// </summary>
-    Task<bool> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default);
+    Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default);
 }

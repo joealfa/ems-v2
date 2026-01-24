@@ -14,13 +14,17 @@
 
 
 
-export * from './api/auth-api';
-export * from './api/documents-api';
-export * from './api/employments-api';
-export * from './api/items-api';
-export * from './api/persons-api';
-export * from './api/positions-api';
-export * from './api/reports-api';
-export * from './api/salary-grades-api';
-export * from './api/schools-api';
+/**
+ * 
+ * @export
+ * @interface GoogleAuthRequestDto
+ */
+export interface GoogleAuthRequestDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof GoogleAuthRequestDto
+     */
+    'idToken'?: string | null;
+}
 

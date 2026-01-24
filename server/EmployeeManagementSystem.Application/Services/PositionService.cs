@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Position;
 using EmployeeManagementSystem.Application.Interfaces;
@@ -22,10 +23,10 @@ public class PositionService : IPositionService
     }
 
     /// <inheritdoc />
-    public async Task<PositionResponseDto?> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
+    public async Task<Result<PositionResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
         var position = await _positionRepository.GetByDisplayIdAsync(displayId, cancellationToken);
-        return position == null ? null : MapToResponseDto(position);
+        return position == null ? Result<PositionResponseDto>.NotFound("Position not found.") : Result<PositionResponseDto>.Success(MapToResponseDto(position));
     }
 
     /// <inheritdoc />
@@ -73,7 +74,7 @@ public class PositionService : IPositionService
     }
 
     /// <inheritdoc />
-    public async Task<PositionResponseDto> CreateAsync(CreatePositionDto dto, string createdBy, CancellationToken cancellationToken = default)
+    public async Task<Result<PositionResponseDto>> CreateAsync(CreatePositionDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
         var position = new Position
         {
@@ -85,15 +86,15 @@ public class PositionService : IPositionService
 
         await _positionRepository.AddAsync(position, cancellationToken);
 
-        return MapToResponseDto(position);
+        return Result<PositionResponseDto>.Success(MapToResponseDto(position));
     }
 
     /// <inheritdoc />
-    public async Task<PositionResponseDto?> UpdateAsync(long displayId, UpdatePositionDto dto, string modifiedBy, CancellationToken cancellationToken = default)
+    public async Task<Result<PositionResponseDto>> UpdateAsync(long displayId, UpdatePositionDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
         var position = await _positionRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         if (position == null)
-            return null;
+            return Result<PositionResponseDto>.NotFound("Position not found.");
 
         position.TitleName = dto.TitleName;
         position.Description = dto.Description;
@@ -103,20 +104,20 @@ public class PositionService : IPositionService
 
         await _positionRepository.UpdateAsync(position, cancellationToken);
 
-        return MapToResponseDto(position);
+        return Result<PositionResponseDto>.Success(MapToResponseDto(position));
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
         var position = await _positionRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         if (position == null)
-            return false;
+            return Result.NotFound("Position not found.");
 
         position.ModifiedBy = deletedBy;
         position.ModifiedOn = DateTime.UtcNow;
         await _positionRepository.DeleteAsync(position, cancellationToken);
-        return true;
+        return Result.Success();
     }
 
     private static PositionResponseDto MapToResponseDto(Position position)

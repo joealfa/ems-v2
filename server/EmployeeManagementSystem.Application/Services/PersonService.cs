@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Person;
 using EmployeeManagementSystem.Application.Interfaces;
@@ -32,14 +33,14 @@ public class PersonService : IPersonService
     }
 
     /// <inheritdoc />
-    public async Task<PersonResponseDto?> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
+    public async Task<Result<PersonResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
         var person = await _personRepository.Query()
             .Include(p => p.Addresses.Where(a => !a.IsDeleted))
             .Include(p => p.Contacts.Where(c => !c.IsDeleted))
             .FirstOrDefaultAsync(p => p.DisplayId == displayId, cancellationToken);
 
-        return person == null ? null : MapToResponseDto(person);
+        return person == null ? Result<PersonResponseDto>.NotFound("Person not found.") : Result<PersonResponseDto>.Success(MapToResponseDto(person));
     }
 
     /// <inheritdoc />
@@ -90,7 +91,7 @@ public class PersonService : IPersonService
     }
 
     /// <inheritdoc />
-    public async Task<PersonResponseDto> CreateAsync(CreatePersonDto dto, string createdBy, CancellationToken cancellationToken = default)
+    public async Task<Result<PersonResponseDto>> CreateAsync(CreatePersonDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
         var person = new Person
         {
@@ -153,11 +154,11 @@ public class PersonService : IPersonService
             }
         }
 
-        return MapToResponseDto(person);
+        return Result<PersonResponseDto>.Success(MapToResponseDto(person));
     }
 
     /// <inheritdoc />
-    public async Task<PersonResponseDto?> UpdateAsync(long displayId, UpdatePersonDto dto, string modifiedBy, CancellationToken cancellationToken = default)
+    public async Task<Result<PersonResponseDto>> UpdateAsync(long displayId, UpdatePersonDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
         var person = await _personRepository.Query()
             .Include(p => p.Addresses.Where(a => !a.IsDeleted))
@@ -165,7 +166,7 @@ public class PersonService : IPersonService
             .FirstOrDefaultAsync(p => p.DisplayId == displayId, cancellationToken);
 
         if (person == null)
-            return null;
+            return Result<PersonResponseDto>.NotFound("Person not found.");
 
         person.FirstName = dto.FirstName;
         person.LastName = dto.LastName;
@@ -178,11 +179,11 @@ public class PersonService : IPersonService
 
         await _personRepository.UpdateAsync(person, cancellationToken);
 
-        return MapToResponseDto(person);
+        return Result<PersonResponseDto>.Success(MapToResponseDto(person));
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
         var person = await _personRepository.Query()
             .Include(p => p.Addresses.Where(a => !a.IsDeleted))
@@ -191,7 +192,7 @@ public class PersonService : IPersonService
             .FirstOrDefaultAsync(p => p.DisplayId == displayId, cancellationToken);
 
         if (person == null)
-            return false;
+            return Result.NotFound("Person not found.");
 
         // Cascade soft delete to related addresses
         foreach (var address in person.Addresses)
@@ -221,7 +222,7 @@ public class PersonService : IPersonService
         person.ModifiedBy = deletedBy;
         person.ModifiedOn = DateTime.UtcNow;
         await _personRepository.DeleteAsync(person, cancellationToken);
-        return true;
+        return Result.Success();
     }
 
     private static PersonResponseDto MapToResponseDto(Person person)

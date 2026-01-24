@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Document;
 
@@ -15,7 +16,7 @@ public interface IDocumentService
     /// <param name="documentDisplayId">The document's display ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The document details or null if not found.</returns>
-    Task<DocumentResponseDto?> GetByDisplayIdAsync(
+    Task<Result<DocumentResponseDto>> GetByDisplayIdAsync(
         long personDisplayId,
         long documentDisplayId,
         CancellationToken cancellationToken = default);
@@ -40,7 +41,7 @@ public interface IDocumentService
     /// <param name="createdBy">The user who is uploading the document.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The created document details.</returns>
-    Task<DocumentResponseDto?> UploadAsync(
+    Task<Result<DocumentResponseDto>> UploadAsync(
         long personDisplayId,
         UploadDocumentDto dto,
         string createdBy,
@@ -55,7 +56,7 @@ public interface IDocumentService
     /// <param name="modifiedBy">The user who is modifying the document.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated document details or null if not found.</returns>
-    Task<DocumentResponseDto?> UpdateAsync(
+    Task<Result<DocumentResponseDto>> UpdateAsync(
         long personDisplayId,
         long documentDisplayId,
         UpdateDocumentDto dto,
@@ -69,7 +70,7 @@ public interface IDocumentService
     /// <param name="documentDisplayId">The document's display ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The download result or null if not found.</returns>
-    Task<BlobDownloadResultDto?> DownloadAsync(
+    Task<Result<BlobDownloadResultDto>> DownloadAsync(
         long personDisplayId,
         long documentDisplayId,
         CancellationToken cancellationToken = default);
@@ -82,7 +83,7 @@ public interface IDocumentService
     /// <param name="deletedBy">The user who is deleting the document.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if deleted successfully, false if not found.</returns>
-    Task<bool> DeleteAsync(
+    Task<Result> DeleteAsync(
         long personDisplayId,
         long documentDisplayId,
         string deletedBy,
@@ -96,7 +97,7 @@ public interface IDocumentService
     /// <param name="modifiedBy">The user who is uploading the image.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The URL of the uploaded profile image or null if person not found.</returns>
-    Task<string?> UploadProfileImageAsync(
+    Task<Result<string>> UploadProfileImageAsync(
         long personDisplayId,
         UploadDocumentDto dto,
         string modifiedBy,
@@ -109,7 +110,7 @@ public interface IDocumentService
     /// <param name="modifiedBy">The user who is deleting the image.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if deleted successfully, false if not found.</returns>
-    Task<bool> DeleteProfileImageAsync(
+    Task<Result> DeleteProfileImageAsync(
         long personDisplayId,
         string modifiedBy,
         CancellationToken cancellationToken = default);
@@ -120,7 +121,7 @@ public interface IDocumentService
     /// <param name="personDisplayId">The person's display ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The download result or null if not found.</returns>
-    Task<BlobDownloadResultDto?> GetProfileImageAsync(
+    Task<Result<BlobDownloadResultDto>> GetProfileImageAsync(
         long personDisplayId,
         CancellationToken cancellationToken = default);
 }

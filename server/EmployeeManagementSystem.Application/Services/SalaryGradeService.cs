@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.SalaryGrade;
 using EmployeeManagementSystem.Application.Interfaces;
@@ -22,10 +23,10 @@ public class SalaryGradeService : ISalaryGradeService
     }
 
     /// <inheritdoc />
-    public async Task<SalaryGradeResponseDto?> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
+    public async Task<Result<SalaryGradeResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
         var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
-        return salaryGrade == null ? null : MapToResponseDto(salaryGrade);
+        return salaryGrade == null ? Result<SalaryGradeResponseDto>.NotFound("Salary grade not found.") : Result<SalaryGradeResponseDto>.Success(MapToResponseDto(salaryGrade));
     }
 
     /// <inheritdoc />
@@ -75,7 +76,7 @@ public class SalaryGradeService : ISalaryGradeService
     }
 
     /// <inheritdoc />
-    public async Task<SalaryGradeResponseDto> CreateAsync(CreateSalaryGradeDto dto, string createdBy, CancellationToken cancellationToken = default)
+    public async Task<Result<SalaryGradeResponseDto>> CreateAsync(CreateSalaryGradeDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
         var salaryGrade = new SalaryGrade
         {
@@ -89,15 +90,15 @@ public class SalaryGradeService : ISalaryGradeService
 
         await _salaryGradeRepository.AddAsync(salaryGrade, cancellationToken);
 
-        return MapToResponseDto(salaryGrade);
+        return Result<SalaryGradeResponseDto>.Success(MapToResponseDto(salaryGrade));
     }
 
     /// <inheritdoc />
-    public async Task<SalaryGradeResponseDto?> UpdateAsync(long displayId, UpdateSalaryGradeDto dto, string modifiedBy, CancellationToken cancellationToken = default)
+    public async Task<Result<SalaryGradeResponseDto>> UpdateAsync(long displayId, UpdateSalaryGradeDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
         var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         if (salaryGrade == null)
-            return null;
+            return Result<SalaryGradeResponseDto>.NotFound("Salary grade not found.");
 
         salaryGrade.SalaryGradeName = dto.SalaryGradeName;
         salaryGrade.Description = dto.Description;
@@ -109,20 +110,20 @@ public class SalaryGradeService : ISalaryGradeService
 
         await _salaryGradeRepository.UpdateAsync(salaryGrade, cancellationToken);
 
-        return MapToResponseDto(salaryGrade);
+        return Result<SalaryGradeResponseDto>.Success(MapToResponseDto(salaryGrade));
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
         var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         if (salaryGrade == null)
-            return false;
+            return Result.NotFound("Salary grade not found.");
 
         salaryGrade.ModifiedBy = deletedBy;
         salaryGrade.ModifiedOn = DateTime.UtcNow;
         await _salaryGradeRepository.DeleteAsync(salaryGrade, cancellationToken);
-        return true;
+        return Result.Success();
     }
 
     private static SalaryGradeResponseDto MapToResponseDto(SalaryGrade salaryGrade)

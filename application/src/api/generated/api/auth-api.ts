@@ -22,202 +22,33 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
-import type { CreateItemDto } from '../models';
+import type { AuthResponseDto } from '../models';
 // @ts-ignore
-import type { ItemResponseDto } from '../models';
+import type { GoogleAccessTokenRequestDto } from '../models';
 // @ts-ignore
-import type { ItemResponseDtoPagedResult } from '../models';
+import type { GoogleAuthRequestDto } from '../models';
 // @ts-ignore
 import type { ProblemDetails } from '../models';
 // @ts-ignore
-import type { UpdateItemDto } from '../models';
+import type { RefreshTokenRequestDto } from '../models';
+// @ts-ignore
+import type { RevokeTokenRequestDto } from '../models';
+// @ts-ignore
+import type { UserDto } from '../models';
 /**
- * ItemsApi - axios parameter creator
+ * AuthApi - axios parameter creator
  * @export
  */
-export const ItemsApiAxiosParamCreator = function (configuration?: Configuration) {
+export const AuthApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
          * 
-         * @param {number} displayId 
+         * @param {GoogleAuthRequestDto} [googleAuthRequestDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1ItemsDisplayIdDelete: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'displayId' is not null or undefined
-            assertParamExists('apiV1ItemsDisplayIdDelete', 'displayId', displayId)
-            const localVarPath = `/api/v1/Items/{displayId}`
-                .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication Bearer required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {number} displayId 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1ItemsDisplayIdGet: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'displayId' is not null or undefined
-            assertParamExists('apiV1ItemsDisplayIdGet', 'displayId', displayId)
-            const localVarPath = `/api/v1/Items/{displayId}`
-                .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication Bearer required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {number} displayId 
-         * @param {UpdateItemDto} [updateItemDto] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1ItemsDisplayIdPut: async (displayId: number, updateItemDto?: UpdateItemDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'displayId' is not null or undefined
-            assertParamExists('apiV1ItemsDisplayIdPut', 'displayId', displayId)
-            const localVarPath = `/api/v1/Items/{displayId}`
-                .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication Bearer required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(updateItemDto, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {number} [pageNumber] 
-         * @param {number} [pageSize] 
-         * @param {string} [searchTerm] 
-         * @param {string} [sortBy] 
-         * @param {boolean} [sortDescending] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1ItemsGet: async (pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v1/Items`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication Bearer required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-            if (pageNumber !== undefined) {
-                localVarQueryParameter['PageNumber'] = pageNumber;
-            }
-
-            if (pageSize !== undefined) {
-                localVarQueryParameter['PageSize'] = pageSize;
-            }
-
-            if (searchTerm !== undefined) {
-                localVarQueryParameter['SearchTerm'] = searchTerm;
-            }
-
-            if (sortBy !== undefined) {
-                localVarQueryParameter['SortBy'] = sortBy;
-            }
-
-            if (sortDescending !== undefined) {
-                localVarQueryParameter['SortDescending'] = sortDescending;
-            }
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {CreateItemDto} [createItemDto] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV1ItemsPost: async (createItemDto?: CreateItemDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v1/Items`;
+        apiV1AuthGooglePost: async (googleAuthRequestDto?: GoogleAuthRequestDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/Auth/google`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -240,7 +71,151 @@ export const ItemsApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(createItemDto, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(googleAuthRequestDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {GoogleAccessTokenRequestDto} [googleAccessTokenRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1AuthGoogleTokenPost: async (googleAccessTokenRequestDto?: GoogleAccessTokenRequestDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/Auth/google/token`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(googleAccessTokenRequestDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1AuthMeGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/Auth/me`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {RefreshTokenRequestDto} [refreshTokenRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1AuthRefreshPost: async (refreshTokenRequestDto?: RefreshTokenRequestDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/Auth/refresh`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(refreshTokenRequestDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {RevokeTokenRequestDto} [revokeTokenRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1AuthRevokePost: async (revokeTokenRequestDto?: RevokeTokenRequestDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/Auth/revoke`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(revokeTokenRequestDto, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -251,205 +226,187 @@ export const ItemsApiAxiosParamCreator = function (configuration?: Configuration
 };
 
 /**
- * ItemsApi - functional programming interface
+ * AuthApi - functional programming interface
  * @export
  */
-export const ItemsApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = ItemsApiAxiosParamCreator(configuration)
+export const AuthApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AuthApiAxiosParamCreator(configuration)
     return {
         /**
          * 
-         * @param {number} displayId 
+         * @param {GoogleAuthRequestDto} [googleAuthRequestDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1ItemsDisplayIdDelete(displayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1ItemsDisplayIdDelete(displayId, options);
+        async apiV1AuthGooglePost(googleAuthRequestDto?: GoogleAuthRequestDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthGooglePost(googleAuthRequestDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ItemsApi.apiV1ItemsDisplayIdDelete']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiV1AuthGooglePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {number} displayId 
+         * @param {GoogleAccessTokenRequestDto} [googleAccessTokenRequestDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1ItemsDisplayIdGet(displayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ItemResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1ItemsDisplayIdGet(displayId, options);
+        async apiV1AuthGoogleTokenPost(googleAccessTokenRequestDto?: GoogleAccessTokenRequestDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthGoogleTokenPost(googleAccessTokenRequestDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ItemsApi.apiV1ItemsDisplayIdGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiV1AuthGoogleTokenPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {number} displayId 
-         * @param {UpdateItemDto} [updateItemDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1ItemsDisplayIdPut(displayId: number, updateItemDto?: UpdateItemDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ItemResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1ItemsDisplayIdPut(displayId, updateItemDto, options);
+        async apiV1AuthMeGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthMeGet(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ItemsApi.apiV1ItemsDisplayIdPut']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiV1AuthMeGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {number} [pageNumber] 
-         * @param {number} [pageSize] 
-         * @param {string} [searchTerm] 
-         * @param {string} [sortBy] 
-         * @param {boolean} [sortDescending] 
+         * @param {RefreshTokenRequestDto} [refreshTokenRequestDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1ItemsGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ItemResponseDtoPagedResult>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1ItemsGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options);
+        async apiV1AuthRefreshPost(refreshTokenRequestDto?: RefreshTokenRequestDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthRefreshPost(refreshTokenRequestDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ItemsApi.apiV1ItemsGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiV1AuthRefreshPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {CreateItemDto} [createItemDto] 
+         * @param {RevokeTokenRequestDto} [revokeTokenRequestDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1ItemsPost(createItemDto?: CreateItemDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ItemResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1ItemsPost(createItemDto, options);
+        async apiV1AuthRevokePost(revokeTokenRequestDto?: RevokeTokenRequestDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1AuthRevokePost(revokeTokenRequestDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ItemsApi.apiV1ItemsPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['AuthApi.apiV1AuthRevokePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
 
 /**
- * ItemsApi - factory interface
+ * AuthApi - factory interface
  * @export
  */
-export const ItemsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = ItemsApiFp(configuration)
+export const AuthApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AuthApiFp(configuration)
     return {
         /**
          * 
-         * @param {number} displayId 
+         * @param {GoogleAuthRequestDto} [googleAuthRequestDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1ItemsDisplayIdDelete(displayId: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV1ItemsDisplayIdDelete(displayId, options).then((request) => request(axios, basePath));
+        apiV1AuthGooglePost(googleAuthRequestDto?: GoogleAuthRequestDto, options?: RawAxiosRequestConfig): AxiosPromise<AuthResponseDto> {
+            return localVarFp.apiV1AuthGooglePost(googleAuthRequestDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {number} displayId 
+         * @param {GoogleAccessTokenRequestDto} [googleAccessTokenRequestDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1ItemsDisplayIdGet(displayId: number, options?: RawAxiosRequestConfig): AxiosPromise<ItemResponseDto> {
-            return localVarFp.apiV1ItemsDisplayIdGet(displayId, options).then((request) => request(axios, basePath));
+        apiV1AuthGoogleTokenPost(googleAccessTokenRequestDto?: GoogleAccessTokenRequestDto, options?: RawAxiosRequestConfig): AxiosPromise<AuthResponseDto> {
+            return localVarFp.apiV1AuthGoogleTokenPost(googleAccessTokenRequestDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {number} displayId 
-         * @param {UpdateItemDto} [updateItemDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1ItemsDisplayIdPut(displayId: number, updateItemDto?: UpdateItemDto, options?: RawAxiosRequestConfig): AxiosPromise<ItemResponseDto> {
-            return localVarFp.apiV1ItemsDisplayIdPut(displayId, updateItemDto, options).then((request) => request(axios, basePath));
+        apiV1AuthMeGet(options?: RawAxiosRequestConfig): AxiosPromise<UserDto> {
+            return localVarFp.apiV1AuthMeGet(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {number} [pageNumber] 
-         * @param {number} [pageSize] 
-         * @param {string} [searchTerm] 
-         * @param {string} [sortBy] 
-         * @param {boolean} [sortDescending] 
+         * @param {RefreshTokenRequestDto} [refreshTokenRequestDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1ItemsGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<ItemResponseDtoPagedResult> {
-            return localVarFp.apiV1ItemsGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(axios, basePath));
+        apiV1AuthRefreshPost(refreshTokenRequestDto?: RefreshTokenRequestDto, options?: RawAxiosRequestConfig): AxiosPromise<AuthResponseDto> {
+            return localVarFp.apiV1AuthRefreshPost(refreshTokenRequestDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {CreateItemDto} [createItemDto] 
+         * @param {RevokeTokenRequestDto} [revokeTokenRequestDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1ItemsPost(createItemDto?: CreateItemDto, options?: RawAxiosRequestConfig): AxiosPromise<ItemResponseDto> {
-            return localVarFp.apiV1ItemsPost(createItemDto, options).then((request) => request(axios, basePath));
+        apiV1AuthRevokePost(revokeTokenRequestDto?: RevokeTokenRequestDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiV1AuthRevokePost(revokeTokenRequestDto, options).then((request) => request(axios, basePath));
         },
     };
 };
 
 /**
- * ItemsApi - object-oriented interface
+ * AuthApi - object-oriented interface
  * @export
- * @class ItemsApi
+ * @class AuthApi
  * @extends {BaseAPI}
  */
-export class ItemsApi extends BaseAPI {
+export class AuthApi extends BaseAPI {
     /**
      * 
-     * @param {number} displayId 
+     * @param {GoogleAuthRequestDto} [googleAuthRequestDto] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
-     * @memberof ItemsApi
+     * @memberof AuthApi
      */
-    public apiV1ItemsDisplayIdDelete(displayId: number, options?: RawAxiosRequestConfig) {
-        return ItemsApiFp(this.configuration).apiV1ItemsDisplayIdDelete(displayId, options).then((request) => request(this.axios, this.basePath));
+    public apiV1AuthGooglePost(googleAuthRequestDto?: GoogleAuthRequestDto, options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiV1AuthGooglePost(googleAuthRequestDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {number} displayId 
+     * @param {GoogleAccessTokenRequestDto} [googleAccessTokenRequestDto] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
-     * @memberof ItemsApi
+     * @memberof AuthApi
      */
-    public apiV1ItemsDisplayIdGet(displayId: number, options?: RawAxiosRequestConfig) {
-        return ItemsApiFp(this.configuration).apiV1ItemsDisplayIdGet(displayId, options).then((request) => request(this.axios, this.basePath));
+    public apiV1AuthGoogleTokenPost(googleAccessTokenRequestDto?: GoogleAccessTokenRequestDto, options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiV1AuthGoogleTokenPost(googleAccessTokenRequestDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {number} displayId 
-     * @param {UpdateItemDto} [updateItemDto] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
-     * @memberof ItemsApi
+     * @memberof AuthApi
      */
-    public apiV1ItemsDisplayIdPut(displayId: number, updateItemDto?: UpdateItemDto, options?: RawAxiosRequestConfig) {
-        return ItemsApiFp(this.configuration).apiV1ItemsDisplayIdPut(displayId, updateItemDto, options).then((request) => request(this.axios, this.basePath));
+    public apiV1AuthMeGet(options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiV1AuthMeGet(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {number} [pageNumber] 
-     * @param {number} [pageSize] 
-     * @param {string} [searchTerm] 
-     * @param {string} [sortBy] 
-     * @param {boolean} [sortDescending] 
+     * @param {RefreshTokenRequestDto} [refreshTokenRequestDto] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
-     * @memberof ItemsApi
+     * @memberof AuthApi
      */
-    public apiV1ItemsGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig) {
-        return ItemsApiFp(this.configuration).apiV1ItemsGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(this.axios, this.basePath));
+    public apiV1AuthRefreshPost(refreshTokenRequestDto?: RefreshTokenRequestDto, options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiV1AuthRefreshPost(refreshTokenRequestDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {CreateItemDto} [createItemDto] 
+     * @param {RevokeTokenRequestDto} [revokeTokenRequestDto] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
-     * @memberof ItemsApi
+     * @memberof AuthApi
      */
-    public apiV1ItemsPost(createItemDto?: CreateItemDto, options?: RawAxiosRequestConfig) {
-        return ItemsApiFp(this.configuration).apiV1ItemsPost(createItemDto, options).then((request) => request(this.axios, this.basePath));
+    public apiV1AuthRevokePost(revokeTokenRequestDto?: RevokeTokenRequestDto, options?: RawAxiosRequestConfig) {
+        return AuthApiFp(this.configuration).apiV1AuthRevokePost(revokeTokenRequestDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

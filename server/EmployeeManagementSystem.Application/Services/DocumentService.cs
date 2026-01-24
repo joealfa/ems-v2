@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Document;
 using EmployeeManagementSystem.Application.Interfaces;
@@ -57,7 +58,7 @@ public class DocumentService : IDocumentService
     }
 
     /// <inheritdoc />
-    public async Task<DocumentResponseDto?> GetByDisplayIdAsync(
+    public async Task<Result<DocumentResponseDto>> GetByDisplayIdAsync(
         long personDisplayId,
         long documentDisplayId,
         CancellationToken cancellationToken = default)
@@ -66,12 +67,15 @@ public class DocumentService : IDocumentService
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
-            return null;
+            return Result<DocumentResponseDto>.NotFound("Person not found.");
 
         var document = await _documentRepository.Query()
             .FirstOrDefaultAsync(d => d.PersonId == person.Id && d.DisplayId == documentDisplayId, cancellationToken);
 
-        return document == null ? null : MapToResponseDto(document, personDisplayId);
+        if (document == null)
+            return Result<DocumentResponseDto>.NotFound("Document not found.");
+
+        return Result<DocumentResponseDto>.Success(MapToResponseDto(document, personDisplayId));
     }
 
     /// <inheritdoc />
@@ -138,7 +142,7 @@ public class DocumentService : IDocumentService
     }
 
     /// <inheritdoc />
-    public async Task<DocumentResponseDto?> UploadAsync(
+    public async Task<Result<DocumentResponseDto>> UploadAsync(
         long personDisplayId,
         UploadDocumentDto dto,
         string createdBy,
@@ -148,12 +152,12 @@ public class DocumentService : IDocumentService
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
-            return null;
+            return Result<DocumentResponseDto>.NotFound("Person not found.");
 
         var extension = Path.GetExtension(dto.FileName);
         if (!AllowedExtensions.Contains(extension))
         {
-            throw new ArgumentException($"File extension '{extension}' is not allowed. Allowed extensions: {string.Join(", ", AllowedExtensions)}");
+            return Result<DocumentResponseDto>.BadRequest($"File extension '{extension}' is not allowed. Allowed extensions: {string.Join(", ", AllowedExtensions)}");
         }
 
         var documentType = GetDocumentType(extension);
@@ -184,11 +188,11 @@ public class DocumentService : IDocumentService
 
         await _documentRepository.AddAsync(document, cancellationToken);
 
-        return MapToResponseDto(document, personDisplayId);
+        return Result<DocumentResponseDto>.Success(MapToResponseDto(document, personDisplayId));
     }
 
     /// <inheritdoc />
-    public async Task<DocumentResponseDto?> UpdateAsync(
+    public async Task<Result<DocumentResponseDto>> UpdateAsync(
         long personDisplayId,
         long documentDisplayId,
         UpdateDocumentDto dto,
@@ -199,13 +203,13 @@ public class DocumentService : IDocumentService
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
-            return null;
+            return Result<DocumentResponseDto>.NotFound("Person not found.");
 
         var document = await _documentRepository.Query()
             .FirstOrDefaultAsync(d => d.PersonId == person.Id && d.DisplayId == documentDisplayId, cancellationToken);
 
         if (document == null)
-            return null;
+            return Result<DocumentResponseDto>.NotFound("Document not found.");
 
         document.Description = dto.Description;
         document.ModifiedBy = modifiedBy;
@@ -213,11 +217,11 @@ public class DocumentService : IDocumentService
 
         await _documentRepository.UpdateAsync(document, cancellationToken);
 
-        return MapToResponseDto(document, personDisplayId);
+        return Result<DocumentResponseDto>.Success(MapToResponseDto(document, personDisplayId));
     }
 
     /// <inheritdoc />
-    public async Task<BlobDownloadResultDto?> DownloadAsync(
+    public async Task<Result<BlobDownloadResultDto>> DownloadAsync(
         long personDisplayId,
         long documentDisplayId,
         CancellationToken cancellationToken = default)
@@ -226,29 +230,29 @@ public class DocumentService : IDocumentService
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
-            return null;
+            return Result<BlobDownloadResultDto>.NotFound("Person not found.");
 
         var document = await _documentRepository.Query()
             .FirstOrDefaultAsync(d => d.PersonId == person.Id && d.DisplayId == documentDisplayId, cancellationToken);
 
         if (document == null)
-            return null;
+            return Result<BlobDownloadResultDto>.NotFound("Document not found.");
 
         var content = await _blobStorageService.DownloadAsync(
             document.ContainerName,
             document.BlobName,
             cancellationToken);
 
-        return new BlobDownloadResultDto
+        return Result<BlobDownloadResultDto>.Success(new BlobDownloadResultDto
         {
             Content = content,
             ContentType = document.ContentType,
             FileName = document.FileName
-        };
+        });
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteAsync(
+    public async Task<Result> DeleteAsync(
         long personDisplayId,
         long documentDisplayId,
         string deletedBy,
@@ -258,13 +262,13 @@ public class DocumentService : IDocumentService
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
-            return false;
+            return Result.NotFound("Person not found.");
 
         var document = await _documentRepository.Query()
             .FirstOrDefaultAsync(d => d.PersonId == person.Id && d.DisplayId == documentDisplayId, cancellationToken);
 
         if (document == null)
-            return false;
+            return Result.NotFound("Document not found.");
 
         // Note: We keep the blob in storage for potential recovery
         // If you want to delete the blob as well, uncomment the line below
@@ -275,11 +279,11 @@ public class DocumentService : IDocumentService
         document.ModifiedOn = DateTime.UtcNow;
         await _documentRepository.DeleteAsync(document, cancellationToken);
 
-        return true;
+        return Result.Success();
     }
 
     /// <inheritdoc />
-    public async Task<string?> UploadProfileImageAsync(
+    public async Task<Result<string>> UploadProfileImageAsync(
         long personDisplayId,
         UploadDocumentDto dto,
         string modifiedBy,
@@ -289,12 +293,12 @@ public class DocumentService : IDocumentService
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
-            return null;
+            return Result<string>.NotFound("Person not found.");
 
         var extension = Path.GetExtension(dto.FileName);
         if (!AllowedImageExtensions.Contains(extension))
         {
-            throw new ArgumentException($"File extension '{extension}' is not allowed for profile images. Allowed extensions: {string.Join(", ", AllowedImageExtensions)}");
+            return Result<string>.BadRequest($"File extension '{extension}' is not allowed for profile images. Allowed extensions: {string.Join(", ", AllowedImageExtensions)}");
         }
 
         // Delete existing profile image if any
@@ -319,11 +323,11 @@ public class DocumentService : IDocumentService
 
         await _personRepository.UpdateAsync(person, cancellationToken);
 
-        return blobUrl;
+        return Result<string>.Success(blobUrl);
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteProfileImageAsync(
+    public async Task<Result> DeleteProfileImageAsync(
         long personDisplayId,
         string modifiedBy,
         CancellationToken cancellationToken = default)
@@ -331,8 +335,11 @@ public class DocumentService : IDocumentService
         var person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
-        if (person == null || string.IsNullOrEmpty(person.ProfileImageUrl))
-            return false;
+        if (person == null)
+            return Result.NotFound("Person not found.");
+
+        if (string.IsNullOrEmpty(person.ProfileImageUrl))
+            return Result.NotFound("No profile image to delete.");
 
         var extension = Path.GetExtension(person.ProfileImageUrl);
         var blobName = $"{person.Id}/profile{extension}";
@@ -345,19 +352,22 @@ public class DocumentService : IDocumentService
 
         await _personRepository.UpdateAsync(person, cancellationToken);
 
-        return true;
+        return Result.Success();
     }
 
     /// <inheritdoc />
-    public async Task<BlobDownloadResultDto?> GetProfileImageAsync(
+    public async Task<Result<BlobDownloadResultDto>> GetProfileImageAsync(
         long personDisplayId,
         CancellationToken cancellationToken = default)
     {
         var person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
-        if (person == null || string.IsNullOrEmpty(person.ProfileImageUrl))
-            return null;
+        if (person == null)
+            return Result<BlobDownloadResultDto>.NotFound("Person not found.");
+
+        if (string.IsNullOrEmpty(person.ProfileImageUrl))
+            return Result<BlobDownloadResultDto>.NotFound("No profile image found.");
 
         var extension = Path.GetExtension(person.ProfileImageUrl);
         var blobName = $"{person.Id}/profile{extension}";
@@ -371,12 +381,12 @@ public class DocumentService : IDocumentService
             _ => "application/octet-stream"
         };
 
-        return new BlobDownloadResultDto
+        return Result<BlobDownloadResultDto>.Success(new BlobDownloadResultDto
         {
             Content = content,
             ContentType = contentType,
             FileName = $"profile{extension}"
-        };
+        });
     }
 
     private static DocumentType GetDocumentType(string extension)

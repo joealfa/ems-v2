@@ -1,6 +1,9 @@
+using EmployeeManagementSystem.Api.Controllers;
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.School;
 using EmployeeManagementSystem.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeManagementSystem.Api.v1.Controllers;
@@ -11,7 +14,8 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
-public class SchoolsController : ControllerBase
+[Authorize]
+public class SchoolsController : ApiControllerBase
 {
     private readonly ISchoolService _schoolService;
 
@@ -53,10 +57,7 @@ public class SchoolsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _schoolService.GetByDisplayIdAsync(displayId, cancellationToken);
-        if (result == null)
-            return NotFound();
-
-        return Ok(result);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -75,11 +76,8 @@ public class SchoolsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // TODO: Get actual user from authentication
-        var createdBy = "System";
-
-        var result = await _schoolService.CreateAsync(dto, createdBy, cancellationToken);
-        return CreatedAtAction(nameof(GetByDisplayId), new { displayId = result.DisplayId }, result);
+        var result = await _schoolService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
+        return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
 
     /// <summary>
@@ -101,14 +99,8 @@ public class SchoolsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // TODO: Get actual user from authentication
-        var modifiedBy = "System";
-
-        var result = await _schoolService.UpdateAsync(displayId, dto, modifiedBy, cancellationToken);
-        if (result == null)
-            return NotFound();
-
-        return Ok(result);
+        var result = await _schoolService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -124,13 +116,7 @@ public class SchoolsController : ControllerBase
         long displayId,
         CancellationToken cancellationToken)
     {
-        // TODO: Get actual user from authentication
-        var deletedBy = "System";
-
-        var result = await _schoolService.DeleteAsync(displayId, deletedBy, cancellationToken);
-        if (!result)
-            return NotFound();
-
-        return NoContent();
+        var result = await _schoolService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
+        return ToNoContentResult(result);
     }
 }

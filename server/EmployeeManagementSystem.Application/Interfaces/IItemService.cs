@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Item;
 
@@ -11,7 +12,7 @@ public interface IItemService
     /// <summary>
     /// Gets an item by display ID.
     /// </summary>
-    Task<ItemResponseDto?> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default);
+    Task<Result<ItemResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a paginated list of items.
@@ -21,15 +22,15 @@ public interface IItemService
     /// <summary>
     /// Creates a new item.
     /// </summary>
-    Task<ItemResponseDto> CreateAsync(CreateItemDto dto, string createdBy, CancellationToken cancellationToken = default);
+    Task<Result<ItemResponseDto>> CreateAsync(CreateItemDto dto, string createdBy, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates an existing item.
     /// </summary>
-    Task<ItemResponseDto?> UpdateAsync(long displayId, UpdateItemDto dto, string modifiedBy, CancellationToken cancellationToken = default);
+    Task<Result<ItemResponseDto>> UpdateAsync(long displayId, UpdateItemDto dto, string modifiedBy, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes an item by display ID.
     /// </summary>
-    Task<bool> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default);
+    Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default);
 }
