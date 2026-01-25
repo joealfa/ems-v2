@@ -26,15 +26,18 @@ public static class ApiErrorMessages
     /// <summary>
     /// Gets the default message for the specified error code.
     /// </summary>
-    public static string GetDefault(ApiErrorCode code) => code switch
+    public static string GetDefault(ApiErrorCode code)
     {
-        ApiErrorCode.BadRequest => BadRequest,
-        ApiErrorCode.NotFound => NotFound,
-        ApiErrorCode.Unauthorized => Unauthorized,
-        ApiErrorCode.Conflict => Conflict,
-        ApiErrorCode.InternalError => InternalError,
-        _ => BadRequest
-    };
+        return code switch
+        {
+            ApiErrorCode.BadRequest => BadRequest,
+            ApiErrorCode.NotFound => NotFound,
+            ApiErrorCode.Unauthorized => Unauthorized,
+            ApiErrorCode.Conflict => Conflict,
+            ApiErrorCode.InternalError => InternalError,
+            _ => BadRequest
+        };
+    }
 }
 
 /// <summary>
@@ -65,20 +68,32 @@ public record ApiErrorResponse
     /// <param name="message">Optional custom message. If null, uses the default message for the code.</param>
     /// <returns>A new ApiErrorResponse instance.</returns>
     public static ApiErrorResponse Create(ApiErrorCode code, string? message = null)
-        => new(code, message ?? ApiErrorMessages.GetDefault(code));
+    {
+        return new(code, message ?? ApiErrorMessages.GetDefault(code));
+    }
 
     public static ApiErrorResponse BadRequest(string? message = null)
-        => Create(ApiErrorCode.BadRequest, message);
+    {
+        return Create(ApiErrorCode.BadRequest, message);
+    }
 
     public static ApiErrorResponse NotFound(string? message = null)
-        => Create(ApiErrorCode.NotFound, message);
+    {
+        return Create(ApiErrorCode.NotFound, message);
+    }
 
     public static ApiErrorResponse Unauthorized(string? message = null)
-        => Create(ApiErrorCode.Unauthorized, message);
+    {
+        return Create(ApiErrorCode.Unauthorized, message);
+    }
 
     public static ApiErrorResponse Conflict(string? message = null)
-        => Create(ApiErrorCode.Conflict, message);
+    {
+        return Create(ApiErrorCode.Conflict, message);
+    }
 
     public static ApiErrorResponse InternalError(string? message = null)
-        => Create(ApiErrorCode.InternalError, message);
+    {
+        return Create(ApiErrorCode.InternalError, message);
+    }
 }

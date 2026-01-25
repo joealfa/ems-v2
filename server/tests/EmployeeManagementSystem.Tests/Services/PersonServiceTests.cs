@@ -7,6 +7,7 @@ using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Domain.Enums;
 using EmployeeManagementSystem.Tests.Helpers;
 using Moq;
+using System.Reflection;
 
 namespace EmployeeManagementSystem.Tests.Services;
 
@@ -38,14 +39,14 @@ public class PersonServiceTests
     public async Task GetByDisplayIdAsync_WhenPersonExists_ReturnsPersonResponseDto()
     {
         // Arrange
-        var displayId = 123456789012L;
-        var person = CreateTestPerson(displayId);
+        long displayId = 123456789012L;
+        Person person = CreateTestPerson(displayId);
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _personService.GetByDisplayIdAsync(displayId);
+        Result<PersonResponseDto> result = await _personService.GetByDisplayIdAsync(displayId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -59,12 +60,12 @@ public class PersonServiceTests
     public async Task GetByDisplayIdAsync_WhenPersonDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var displayId = 999999999999L;
-        var persons = new List<Person>().BuildMockQueryable();
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        long displayId = 999999999999L;
+        IQueryable<Person> persons = new List<Person>().BuildMockQueryable();
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _personService.GetByDisplayIdAsync(displayId);
+        Result<PersonResponseDto> result = await _personService.GetByDisplayIdAsync(displayId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -79,18 +80,18 @@ public class PersonServiceTests
     public async Task GetPagedAsync_ReturnsPagedResult()
     {
         // Arrange
-        var query = new PersonPaginationQuery { PageNumber = 1, PageSize = 10 };
-        var persons = new List<Person>
+        PersonPaginationQuery query = new() { PageNumber = 1, PageSize = 10 };
+        IQueryable<Person> persons = new List<Person>
         {
             CreateTestPerson(100000000001L, "John", "Doe"),
             CreateTestPerson(100000000002L, "Jane", "Smith"),
             CreateTestPerson(100000000003L, "Bob", "Johnson")
         }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _personService.GetPagedAsync(query);
+        PagedResult<PersonListDto> result = await _personService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -104,18 +105,18 @@ public class PersonServiceTests
     public async Task GetPagedAsync_WithSearchTerm_FiltersResults()
     {
         // Arrange
-        var query = new PersonPaginationQuery { PageNumber = 1, PageSize = 10, SearchTerm = "John" };
-        var persons = new List<Person>
+        PersonPaginationQuery query = new() { PageNumber = 1, PageSize = 10, SearchTerm = "John" };
+        IQueryable<Person> persons = new List<Person>
         {
             CreateTestPerson(100000000001L, "John", "Doe"),
             CreateTestPerson(100000000002L, "Jane", "Smith"),
             CreateTestPerson(100000000003L, "Bob", "Johnson")
         }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _personService.GetPagedAsync(query);
+        PagedResult<PersonListDto> result = await _personService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -126,8 +127,8 @@ public class PersonServiceTests
     public async Task GetPagedAsync_WithPagination_ReturnsCorrectPage()
     {
         // Arrange
-        var query = new PersonPaginationQuery { PageNumber = 2, PageSize = 2 };
-        var persons = new List<Person>
+        PersonPaginationQuery query = new() { PageNumber = 2, PageSize = 2 };
+        IQueryable<Person> persons = new List<Person>
         {
             CreateTestPerson(100000000001L, "Alice", "Anderson"),
             CreateTestPerson(100000000002L, "Bob", "Brown"),
@@ -135,10 +136,10 @@ public class PersonServiceTests
             CreateTestPerson(100000000004L, "David", "Davis")
         }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _personService.GetPagedAsync(query);
+        PagedResult<PersonListDto> result = await _personService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -155,7 +156,7 @@ public class PersonServiceTests
     public async Task CreateAsync_WithValidData_ReturnsCreatedPerson()
     {
         // Arrange
-        var createDto = new CreatePersonDto
+        CreatePersonDto createDto = new()
         {
             FirstName = "Test",
             LastName = "Person",
@@ -165,12 +166,12 @@ public class PersonServiceTests
             CivilStatus = CivilStatus.Single
         };
 
-        _personRepositoryMock
+        _ = _personRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Person>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Person p, CancellationToken _) => p);
 
         // Act
-        var result = await _personService.CreateAsync(createDto, "TestUser");
+        Result<PersonResponseDto> result = await _personService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -189,7 +190,7 @@ public class PersonServiceTests
     public async Task CreateAsync_WithAddresses_CreatesPersonWithAddresses()
     {
         // Arrange
-        var createDto = new CreatePersonDto
+        CreatePersonDto createDto = new()
         {
             FirstName = "Test",
             LastName = "Person",
@@ -208,16 +209,16 @@ public class PersonServiceTests
             ]
         };
 
-        _personRepositoryMock
+        _ = _personRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Person>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Person p, CancellationToken _) => p);
 
-        _addressRepositoryMock
+        _ = _addressRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Address>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Address a, CancellationToken _) => a);
 
         // Act
-        var result = await _personService.CreateAsync(createDto, "TestUser");
+        Result<PersonResponseDto> result = await _personService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -229,7 +230,7 @@ public class PersonServiceTests
     public async Task CreateAsync_WithContacts_CreatesPersonWithContacts()
     {
         // Arrange
-        var createDto = new CreatePersonDto
+        CreatePersonDto createDto = new()
         {
             FirstName = "Test",
             LastName = "Person",
@@ -246,16 +247,16 @@ public class PersonServiceTests
             ]
         };
 
-        _personRepositoryMock
+        _ = _personRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Person>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Person p, CancellationToken _) => p);
 
-        _contactRepositoryMock
+        _ = _contactRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Contact c, CancellationToken _) => c);
 
         // Act
-        var result = await _personService.CreateAsync(createDto, "TestUser");
+        Result<PersonResponseDto> result = await _personService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -271,21 +272,21 @@ public class PersonServiceTests
     public async Task DeleteAsync_WhenPersonExists_ReturnsTrue()
     {
         // Arrange
-        var displayId = 123456789012L;
-        var person = CreateTestPerson(displayId);
+        long displayId = 123456789012L;
+        Person person = CreateTestPerson(displayId);
         person.Addresses = [];
         person.Contacts = [];
         person.Documents = [];
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
-        _personRepositoryMock
+        _ = _personRepositoryMock
             .Setup(r => r.DeleteAsync(person, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _personService.DeleteAsync(displayId, "TestUser");
+        Result result = await _personService.DeleteAsync(displayId, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -296,13 +297,13 @@ public class PersonServiceTests
     public async Task DeleteAsync_WhenPersonDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var displayId = 999999999999L;
+        long displayId = 999999999999L;
 
-        var persons = new List<Person>().BuildMockQueryable();
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        IQueryable<Person> persons = new List<Person>().BuildMockQueryable();
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _personService.DeleteAsync(displayId, "TestUser");
+        Result result = await _personService.DeleteAsync(displayId, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -320,7 +321,7 @@ public class PersonServiceTests
         string lastName = "Person",
         string? middleName = null)
     {
-        var person = new Person
+        Person person = new()
         {
             FirstName = firstName,
             LastName = lastName,
@@ -333,7 +334,7 @@ public class PersonServiceTests
         };
 
         // Use reflection to set DisplayId since it has a private setter
-        var displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
+        PropertyInfo? displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
         displayIdProperty?.SetValue(person, displayId);
 
         return person;

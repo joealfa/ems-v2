@@ -2,6 +2,7 @@ using EmployeeManagementSystem.Application.DTOs.Auth;
 using EmployeeManagementSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 
 namespace EmployeeManagementSystem.Api.v1.Controllers;
 
@@ -37,8 +38,8 @@ public class AuthController(IAuthService authService) : ControllerBase
 
         try
         {
-            var ipAddress = GetIpAddress();
-            var result = await _authService.AuthenticateWithGoogleAsync(request.IdToken, ipAddress);
+            string ipAddress = GetIpAddress();
+            AuthResponseDto result = await _authService.AuthenticateWithGoogleAsync(request.IdToken, ipAddress);
             SetRefreshTokenCookie(result.RefreshToken);
             return Ok(result);
         }
@@ -72,8 +73,8 @@ public class AuthController(IAuthService authService) : ControllerBase
 
         try
         {
-            var ipAddress = GetIpAddress();
-            var result = await _authService.AuthenticateWithGoogleAccessTokenAsync(request.AccessToken, ipAddress);
+            string ipAddress = GetIpAddress();
+            AuthResponseDto result = await _authService.AuthenticateWithGoogleAccessTokenAsync(request.AccessToken, ipAddress);
             SetRefreshTokenCookie(result.RefreshToken);
             return Ok(result);
         }
@@ -94,15 +95,15 @@ public class AuthController(IAuthService authService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AuthResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto? request)
     {
-        var refreshToken = request?.RefreshToken ?? Request.Cookies["refreshToken"];
+        string? refreshToken = request?.RefreshToken ?? Request.Cookies["refreshToken"];
 
         if (string.IsNullOrEmpty(refreshToken))
         {
             return Unauthorized(new { message = "Refresh token is required" });
         }
 
-        var ipAddress = GetIpAddress();
-        var result = await _authService.RefreshTokenAsync(refreshToken, ipAddress);
+        string ipAddress = GetIpAddress();
+        AuthResponseDto? result = await _authService.RefreshTokenAsync(refreshToken, ipAddress);
 
         if (result == null)
         {
@@ -125,15 +126,15 @@ public class AuthController(IAuthService authService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequestDto? request)
     {
-        var refreshToken = request?.RefreshToken ?? Request.Cookies["refreshToken"];
+        string? refreshToken = request?.RefreshToken ?? Request.Cookies["refreshToken"];
 
         if (string.IsNullOrEmpty(refreshToken))
         {
             return BadRequest(new { message = "Refresh token is required" });
         }
 
-        var ipAddress = GetIpAddress();
-        var result = await _authService.RevokeTokenAsync(refreshToken, ipAddress);
+        string ipAddress = GetIpAddress();
+        bool result = await _authService.RevokeTokenAsync(refreshToken, ipAddress);
 
         if (!result)
         {
@@ -156,22 +157,17 @@ public class AuthController(IAuthService authService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<UserDto>> GetCurrentUser()
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        string? userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
             ?? User.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
         {
             return Unauthorized(new { message = "Invalid user token" });
         }
 
-        var user = await _authService.GetUserByIdAsync(userId);
+        UserDto? user = await _authService.GetUserByIdAsync(userId);
 
-        if (user == null)
-        {
-            return Unauthorized(new { message = "User not found" });
-        }
-
-        return Ok(user);
+        return user == null ? (ActionResult<UserDto>)Unauthorized(new { message = "User not found" }) : (ActionResult<UserDto>)Ok(user);
     }
 
     /// <summary>
@@ -179,7 +175,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     /// </summary>
     private void SetRefreshTokenCookie(string refreshToken)
     {
-        var cookieOptions = new CookieOptions
+        CookieOptions cookieOptions = new()
         {
             HttpOnly = true,
             Secure = true,
@@ -195,11 +191,8 @@ public class AuthController(IAuthService authService) : ControllerBase
     /// </summary>
     private string GetIpAddress()
     {
-        if (Request.Headers.TryGetValue("X-Forwarded-For", out var forwardedFor))
-        {
-            return forwardedFor.FirstOrDefault()?.Split(',').FirstOrDefault()?.Trim() ?? "Unknown";
-        }
-
-        return HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown";
+        return Request.Headers.TryGetValue("X-Forwarded-For", out StringValues forwardedFor)
+            ? forwardedFor.FirstOrDefault()?.Split(',').FirstOrDefault()?.Trim() ?? "Unknown"
+            : HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown";
     }
 }

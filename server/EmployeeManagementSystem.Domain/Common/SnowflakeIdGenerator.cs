@@ -33,7 +33,7 @@ public static class SnowflakeIdGenerator
     {
         lock (Lock)
         {
-            var timestamp = GetCurrentTimestamp();
+            long timestamp = GetCurrentTimestamp();
 
             if (timestamp == _lastTimestamp)
             {
@@ -62,8 +62,8 @@ public static class SnowflakeIdGenerator
 
             // Combine: 8-digit timestamp + 4-digit sequence
             // Timestamp: milliseconds since epoch, modulo 100,000,000 (covers ~3.17 years)
-            var timestampPart = timestamp % 100_000_000L;
-            var sequencePart = _sequence;
+            long timestampPart = timestamp % 100_000_000L;
+            int sequencePart = _sequence;
 
             // Ensure timestamp part is at least 10,000,000 to maintain 12 digits total
             // If timestamp is too small (near epoch), add base offset
@@ -73,7 +73,7 @@ public static class SnowflakeIdGenerator
             }
 
             // Final ID: timestampPart (8 digits) * 10000 + sequencePart (4 digits)
-            var displayId = (timestampPart * 10_000L) + sequencePart;
+            long displayId = (timestampPart * 10_000L) + sequencePart;
 
             // Ensure we're in the valid 12-digit range
             if (displayId < 100_000_000_000L)
@@ -102,7 +102,7 @@ public static class SnowflakeIdGenerator
     /// </summary>
     private static long WaitForNextMillisecond(long lastTimestamp)
     {
-        var timestamp = GetCurrentTimestamp();
+        long timestamp = GetCurrentTimestamp();
         while (timestamp <= lastTimestamp)
         {
             Thread.Sleep(0); // Yield to other threads

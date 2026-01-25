@@ -79,8 +79,8 @@ internal class TestAsyncQueryProvider<TEntity>(IQueryProvider inner) : IAsyncQue
 
     public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
     {
-        var expectedResultType = typeof(TResult).GetGenericArguments()[0];
-        var executionResult = typeof(IQueryProvider)
+        Type expectedResultType = typeof(TResult).GetGenericArguments()[0];
+        object? executionResult = typeof(IQueryProvider)
             .GetMethod(
                 name: nameof(IQueryProvider.Execute),
                 genericParameterCount: 1,

@@ -5,6 +5,7 @@ using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Domain.Enums;
 using EmployeeManagementSystem.Tests.Helpers;
 using Moq;
+using System.Reflection;
 
 namespace EmployeeManagementSystem.Tests.Services;
 
@@ -42,27 +43,27 @@ public class ReportsServiceTests
     public async Task GetDashboardStatsAsync_ReturnsCorrectCounts()
     {
         // Arrange
-        var persons = new List<Person>
+        IQueryable<Person> persons = new List<Person>
         {
             CreateTestPerson(100000000001L),
             CreateTestPerson(100000000002L),
             CreateTestPerson(100000000003L)
         }.BuildMockQueryable();
 
-        var employments = new List<Employment>
+        IQueryable<Employment> employments = new List<Employment>
         {
             CreateTestEmployment(200000000001L, isActive: true),
             CreateTestEmployment(200000000002L, isActive: true),
             CreateTestEmployment(200000000003L, isActive: false)
         }.BuildMockQueryable();
 
-        var schools = new List<School>
+        IQueryable<School> schools = new List<School>
         {
             CreateTestSchool(300000000001L),
             CreateTestSchool(300000000002L)
         }.BuildMockQueryable();
 
-        var positions = new List<Position>
+        IQueryable<Position> positions = new List<Position>
         {
             CreateTestPosition(400000000001L),
             CreateTestPosition(400000000002L),
@@ -70,7 +71,7 @@ public class ReportsServiceTests
             CreateTestPosition(400000000004L)
         }.BuildMockQueryable();
 
-        var salaryGrades = new List<SalaryGrade>
+        IQueryable<SalaryGrade> salaryGrades = new List<SalaryGrade>
         {
             CreateTestSalaryGrade(500000000001L),
             CreateTestSalaryGrade(500000000002L),
@@ -79,7 +80,7 @@ public class ReportsServiceTests
             CreateTestSalaryGrade(500000000005L)
         }.BuildMockQueryable();
 
-        var items = new List<Item>
+        IQueryable<Item> items = new List<Item>
         {
             CreateTestItem(600000000001L),
             CreateTestItem(600000000002L),
@@ -89,15 +90,15 @@ public class ReportsServiceTests
             CreateTestItem(600000000006L)
         }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
-        _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
-        _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
-        _itemRepositoryMock.Setup(r => r.Query()).Returns(items);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        _ = _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
+        _ = _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
+        _ = _itemRepositoryMock.Setup(r => r.Query()).Returns(items);
 
         // Act
-        var result = await _reportsService.GetDashboardStatsAsync();
+        DashboardStatsDto result = await _reportsService.GetDashboardStatsAsync();
 
         // Assert
         Assert.NotNull(result);
@@ -113,22 +114,22 @@ public class ReportsServiceTests
     public async Task GetDashboardStatsAsync_WithEmptyData_ReturnsZeroCounts()
     {
         // Arrange
-        var persons = new List<Person>().BuildMockQueryable();
-        var employments = new List<Employment>().BuildMockQueryable();
-        var schools = new List<School>().BuildMockQueryable();
-        var positions = new List<Position>().BuildMockQueryable();
-        var salaryGrades = new List<SalaryGrade>().BuildMockQueryable();
-        var items = new List<Item>().BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person>().BuildMockQueryable();
+        IQueryable<Employment> employments = new List<Employment>().BuildMockQueryable();
+        IQueryable<School> schools = new List<School>().BuildMockQueryable();
+        IQueryable<Position> positions = new List<Position>().BuildMockQueryable();
+        IQueryable<SalaryGrade> salaryGrades = new List<SalaryGrade>().BuildMockQueryable();
+        IQueryable<Item> items = new List<Item>().BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
-        _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
-        _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
-        _itemRepositoryMock.Setup(r => r.Query()).Returns(items);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        _ = _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
+        _ = _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
+        _ = _itemRepositoryMock.Setup(r => r.Query()).Returns(items);
 
         // Act
-        var result = await _reportsService.GetDashboardStatsAsync();
+        DashboardStatsDto result = await _reportsService.GetDashboardStatsAsync();
 
         // Assert
         Assert.NotNull(result);
@@ -144,37 +145,37 @@ public class ReportsServiceTests
     public async Task GetDashboardStatsAsync_WithNoActiveEmployments_ReturnsZeroActiveEmployments()
     {
         // Arrange
-        var persons = new List<Person>
+        IQueryable<Person> persons = new List<Person>
         {
             CreateTestPerson(100000000001L),
             CreateTestPerson(100000000002L)
         }.BuildMockQueryable();
 
-        var employments = new List<Employment>
+        IQueryable<Employment> employments = new List<Employment>
         {
             CreateTestEmployment(200000000001L, isActive: false),
             CreateTestEmployment(200000000002L, isActive: false),
             CreateTestEmployment(200000000003L, isActive: false)
         }.BuildMockQueryable();
 
-        var schools = new List<School>
+        IQueryable<School> schools = new List<School>
         {
             CreateTestSchool(300000000001L)
         }.BuildMockQueryable();
 
-        var positions = new List<Position>().BuildMockQueryable();
-        var salaryGrades = new List<SalaryGrade>().BuildMockQueryable();
-        var items = new List<Item>().BuildMockQueryable();
+        IQueryable<Position> positions = new List<Position>().BuildMockQueryable();
+        IQueryable<SalaryGrade> salaryGrades = new List<SalaryGrade>().BuildMockQueryable();
+        IQueryable<Item> items = new List<Item>().BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
-        _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
-        _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
-        _itemRepositoryMock.Setup(r => r.Query()).Returns(items);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        _ = _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
+        _ = _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
+        _ = _itemRepositoryMock.Setup(r => r.Query()).Returns(items);
 
         // Act
-        var result = await _reportsService.GetDashboardStatsAsync();
+        DashboardStatsDto result = await _reportsService.GetDashboardStatsAsync();
 
         // Assert
         Assert.NotNull(result);
@@ -187,9 +188,9 @@ public class ReportsServiceTests
     public async Task GetDashboardStatsAsync_WithAllActiveEmployments_ReturnsCorrectActiveCount()
     {
         // Arrange
-        var persons = new List<Person>().BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person>().BuildMockQueryable();
 
-        var employments = new List<Employment>
+        IQueryable<Employment> employments = new List<Employment>
         {
             CreateTestEmployment(200000000001L, isActive: true),
             CreateTestEmployment(200000000002L, isActive: true),
@@ -198,20 +199,20 @@ public class ReportsServiceTests
             CreateTestEmployment(200000000005L, isActive: true)
         }.BuildMockQueryable();
 
-        var schools = new List<School>().BuildMockQueryable();
-        var positions = new List<Position>().BuildMockQueryable();
-        var salaryGrades = new List<SalaryGrade>().BuildMockQueryable();
-        var items = new List<Item>().BuildMockQueryable();
+        IQueryable<School> schools = new List<School>().BuildMockQueryable();
+        IQueryable<Position> positions = new List<Position>().BuildMockQueryable();
+        IQueryable<SalaryGrade> salaryGrades = new List<SalaryGrade>().BuildMockQueryable();
+        IQueryable<Item> items = new List<Item>().BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
-        _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
-        _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
-        _itemRepositoryMock.Setup(r => r.Query()).Returns(items);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        _ = _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
+        _ = _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
+        _ = _itemRepositoryMock.Setup(r => r.Query()).Returns(items);
 
         // Act
-        var result = await _reportsService.GetDashboardStatsAsync();
+        DashboardStatsDto result = await _reportsService.GetDashboardStatsAsync();
 
         // Assert
         Assert.NotNull(result);
@@ -222,24 +223,24 @@ public class ReportsServiceTests
     public async Task GetDashboardStatsAsync_WithCancellationToken_PassesTokenToRepositories()
     {
         // Arrange
-        var cancellationToken = new CancellationToken();
+        CancellationToken cancellationToken = new();
 
-        var persons = new List<Person>().BuildMockQueryable();
-        var employments = new List<Employment>().BuildMockQueryable();
-        var schools = new List<School>().BuildMockQueryable();
-        var positions = new List<Position>().BuildMockQueryable();
-        var salaryGrades = new List<SalaryGrade>().BuildMockQueryable();
-        var items = new List<Item>().BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person>().BuildMockQueryable();
+        IQueryable<Employment> employments = new List<Employment>().BuildMockQueryable();
+        IQueryable<School> schools = new List<School>().BuildMockQueryable();
+        IQueryable<Position> positions = new List<Position>().BuildMockQueryable();
+        IQueryable<SalaryGrade> salaryGrades = new List<SalaryGrade>().BuildMockQueryable();
+        IQueryable<Item> items = new List<Item>().BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
-        _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
-        _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
-        _itemRepositoryMock.Setup(r => r.Query()).Returns(items);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        _ = _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
+        _ = _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
+        _ = _itemRepositoryMock.Setup(r => r.Query()).Returns(items);
 
         // Act
-        var result = await _reportsService.GetDashboardStatsAsync(cancellationToken);
+        DashboardStatsDto result = await _reportsService.GetDashboardStatsAsync(cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -255,25 +256,25 @@ public class ReportsServiceTests
     public async Task GetDashboardStatsAsync_ReturnsDashboardStatsDto()
     {
         // Arrange
-        var persons = new List<Person>().BuildMockQueryable();
-        var employments = new List<Employment>().BuildMockQueryable();
-        var schools = new List<School>().BuildMockQueryable();
-        var positions = new List<Position>().BuildMockQueryable();
-        var salaryGrades = new List<SalaryGrade>().BuildMockQueryable();
-        var items = new List<Item>().BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person>().BuildMockQueryable();
+        IQueryable<Employment> employments = new List<Employment>().BuildMockQueryable();
+        IQueryable<School> schools = new List<School>().BuildMockQueryable();
+        IQueryable<Position> positions = new List<Position>().BuildMockQueryable();
+        IQueryable<SalaryGrade> salaryGrades = new List<SalaryGrade>().BuildMockQueryable();
+        IQueryable<Item> items = new List<Item>().BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
-        _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
-        _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
-        _itemRepositoryMock.Setup(r => r.Query()).Returns(items);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        _ = _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
+        _ = _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
+        _ = _itemRepositoryMock.Setup(r => r.Query()).Returns(items);
 
         // Act
-        var result = await _reportsService.GetDashboardStatsAsync();
+        DashboardStatsDto result = await _reportsService.GetDashboardStatsAsync();
 
         // Assert
-        Assert.IsType<DashboardStatsDto>(result);
+        _ = Assert.IsType<DashboardStatsDto>(result);
     }
 
     #endregion
@@ -282,7 +283,7 @@ public class ReportsServiceTests
 
     private static Person CreateTestPerson(long displayId, string firstName = "Test", string lastName = "Person")
     {
-        var person = new Person
+        Person person = new()
         {
             FirstName = firstName,
             LastName = lastName,
@@ -300,7 +301,7 @@ public class ReportsServiceTests
 
     private static Employment CreateTestEmployment(long displayId, bool isActive = true)
     {
-        var employment = new Employment
+        Employment employment = new()
         {
             DepEdId = $"DEPED-{displayId}",
             AppointmentStatus = AppointmentStatus.Original,
@@ -322,7 +323,7 @@ public class ReportsServiceTests
 
     private static School CreateTestSchool(long displayId)
     {
-        var school = new School
+        School school = new()
         {
             SchoolName = $"Test School {displayId}",
             CreatedBy = "System",
@@ -336,7 +337,7 @@ public class ReportsServiceTests
 
     private static Position CreateTestPosition(long displayId)
     {
-        var position = new Position
+        Position position = new()
         {
             TitleName = $"Position {displayId}",
             CreatedBy = "System",
@@ -350,7 +351,7 @@ public class ReportsServiceTests
 
     private static SalaryGrade CreateTestSalaryGrade(long displayId)
     {
-        var salaryGrade = new SalaryGrade
+        SalaryGrade salaryGrade = new()
         {
             SalaryGradeName = $"SG-{displayId}",
             Step = 1,
@@ -366,7 +367,7 @@ public class ReportsServiceTests
 
     private static Item CreateTestItem(long displayId)
     {
-        var item = new Item
+        Item item = new()
         {
             ItemName = $"Item-{displayId}",
             CreatedBy = "System",
@@ -380,7 +381,7 @@ public class ReportsServiceTests
 
     private static void SetDisplayId<T>(T entity, long displayId) where T : BaseEntity
     {
-        var displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
+        PropertyInfo? displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
         displayIdProperty?.SetValue(entity, displayId);
     }
 

@@ -37,42 +37,58 @@ public class Result<T>
     /// <summary>
     /// Creates a successful result with the specified value.
     /// </summary>
-    public static Result<T> Success(T value) => new(value, true, null, FailureType.None);
+    public static Result<T> Success(T value)
+    {
+        return new(value, true, null, FailureType.None);
+    }
 
     /// <summary>
     /// Creates a not found result.
     /// </summary>
-    public static Result<T> NotFound(string? message = null) => 
-        new(default, false, message ?? "Resource not found.", FailureType.NotFound);
+    public static Result<T> NotFound(string? message = null)
+    {
+        return new(default, false, message ?? "Resource not found.", FailureType.NotFound);
+    }
 
     /// <summary>
     /// Creates a bad request result with validation errors.
     /// </summary>
-    public static Result<T> BadRequest(string message) => 
-        new(default, false, message, FailureType.BadRequest);
+    public static Result<T> BadRequest(string message)
+    {
+        return new(default, false, message, FailureType.BadRequest);
+    }
 
     /// <summary>
     /// Creates an unauthorized result.
     /// </summary>
-    public static Result<T> Unauthorized(string? message = null) => 
-        new(default, false, message ?? "Unauthorized.", FailureType.Unauthorized);
+    public static Result<T> Unauthorized(string? message = null)
+    {
+        return new(default, false, message ?? "Unauthorized.", FailureType.Unauthorized);
+    }
 
     /// <summary>
     /// Creates a conflict result (e.g., duplicate resource).
     /// </summary>
-    public static Result<T> Conflict(string message) => 
-        new(default, false, message, FailureType.Conflict);
+    public static Result<T> Conflict(string message)
+    {
+        return new(default, false, message, FailureType.Conflict);
+    }
 
     /// <summary>
     /// Creates an internal error result.
     /// </summary>
-    public static Result<T> InternalError(string message) => 
-        new(default, false, message, FailureType.InternalError);
+    public static Result<T> InternalError(string message)
+    {
+        return new(default, false, message, FailureType.InternalError);
+    }
 
     /// <summary>
     /// Implicitly converts a value to a successful result.
     /// </summary>
-    public static implicit operator Result<T>(T value) => Success(value);
+    public static implicit operator Result<T>(T value)
+    {
+        return Success(value);
+    }
 }
 
 /// <summary>
@@ -105,37 +121,50 @@ public class Result
     /// <summary>
     /// Creates a successful result.
     /// </summary>
-    public static Result Success() => new(true, null, FailureType.None);
+    public static Result Success()
+    {
+        return new(true, null, FailureType.None);
+    }
 
     /// <summary>
     /// Creates a not found result.
     /// </summary>
-    public static Result NotFound(string? message = null) => 
-        new(false, message ?? "Resource not found.", FailureType.NotFound);
+    public static Result NotFound(string? message = null)
+    {
+        return new(false, message ?? "Resource not found.", FailureType.NotFound);
+    }
 
     /// <summary>
     /// Creates a bad request result.
     /// </summary>
-    public static Result BadRequest(string message) => 
-        new(false, message, FailureType.BadRequest);
+    public static Result BadRequest(string message)
+    {
+        return new(false, message, FailureType.BadRequest);
+    }
 
     /// <summary>
     /// Creates an unauthorized result.
     /// </summary>
-    public static Result Unauthorized(string? message = null) => 
-        new(false, message ?? "Unauthorized.", FailureType.Unauthorized);
+    public static Result Unauthorized(string? message = null)
+    {
+        return new(false, message ?? "Unauthorized.", FailureType.Unauthorized);
+    }
 
     /// <summary>
     /// Creates a conflict result.
     /// </summary>
-    public static Result Conflict(string message) => 
-        new(false, message, FailureType.Conflict);
+    public static Result Conflict(string message)
+    {
+        return new(false, message, FailureType.Conflict);
+    }
 
     /// <summary>
     /// Creates an internal error result.
     /// </summary>
-    public static Result InternalError(string message) => 
-        new(false, message, FailureType.InternalError);
+    public static Result InternalError(string message)
+    {
+        return new(false, message, FailureType.InternalError);
+    }
 }
 
 /// <summary>

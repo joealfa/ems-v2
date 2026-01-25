@@ -1,5 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using EmployeeManagementSystem.Domain.Common;
+using System.ComponentModel.DataAnnotations;
 
 namespace EmployeeManagementSystem.Domain.Entities;
 

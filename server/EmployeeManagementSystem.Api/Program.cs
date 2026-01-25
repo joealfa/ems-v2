@@ -1,5 +1,3 @@
-using System.Text;
-using System.Text.Json.Serialization;
 using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Infrastructure.Data;
@@ -9,19 +7,21 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using System.Text;
+using System.Text.Json.Serialization;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Get JWT configuration
-var jwtConfig = builder.Configuration.GetSection("Authentication:Jwt");
-var jwtSecret = jwtConfig["Secret"] ?? throw new InvalidOperationException("Authentication:Jwt:Secret is not configured");
-var jwtIssuer = jwtConfig["Issuer"] ?? throw new InvalidOperationException("Authentication:Jwt:Issuer is not configured");
-var jwtAudience = jwtConfig["Audience"] ?? throw new InvalidOperationException("Authentication:Jwt:Audience is not configured");
+IConfigurationSection jwtConfig = builder.Configuration.GetSection("Authentication:Jwt");
+string jwtSecret = jwtConfig["Secret"] ?? throw new InvalidOperationException("Authentication:Jwt:Secret is not configured");
+string jwtIssuer = jwtConfig["Issuer"] ?? throw new InvalidOperationException("Authentication:Jwt:Issuer is not configured");
+string jwtAudience = jwtConfig["Audience"] ?? throw new InvalidOperationException("Authentication:Jwt:Audience is not configured");
 
 // Get Google OAuth2 configuration
-var googleConfig = builder.Configuration.GetSection("Authentication:Google");
-var googleClientId = googleConfig["ClientId"] ?? throw new InvalidOperationException("Authentication:Google:ClientId is not configured");
-var googleClientSecret = googleConfig["ClientSecret"] ?? throw new InvalidOperationException("Authentication:Google:ClientSecret is not configured");
+IConfigurationSection googleConfig = builder.Configuration.GetSection("Authentication:Google");
+string googleClientId = googleConfig["ClientId"] ?? throw new InvalidOperationException("Authentication:Google:ClientId is not configured");
+string googleClientSecret = googleConfig["ClientSecret"] ?? throw new InvalidOperationException("Authentication:Google:ClientSecret is not configured");
 
 // Configure JWT Bearer Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -140,21 +140,21 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowedHosts", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "https://localhost:7009")
+        _ = policy.WithOrigins("http://localhost:5173", "https://localhost:7009")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
     });
 });
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
+    _ = app.MapOpenApi();
+    _ = app.UseSwagger();
+    _ = app.UseSwaggerUI(options =>
     {
         // Configure OAuth2 for Swagger UI - auto-populate credentials
         options.OAuthClientId(googleClientId);
@@ -164,10 +164,10 @@ if (app.Environment.IsDevelopment())
         options.OAuthScopes("openid", "email", "profile");
         options.OAuthScopeSeparator(" ");
     });
-    
+
     // Apply migrations and seed data in development
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    using IServiceScope scope = app.Services.CreateScope();
+    ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await dbContext.Database.MigrateAsync();
     await DataSeeder.SeedAsync(dbContext);
 }

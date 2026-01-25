@@ -6,6 +6,7 @@ using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Tests.Helpers;
 using Moq;
+using System.Reflection;
 
 namespace EmployeeManagementSystem.Tests.Services;
 
@@ -26,15 +27,15 @@ public class SalaryGradeServiceTests
     public async Task GetByDisplayIdAsync_WhenSalaryGradeExists_ReturnsSalaryGradeResponseDto()
     {
         // Arrange
-        var displayId = 123456789012L;
-        var salaryGrade = CreateTestSalaryGrade(displayId, "SG-11", 1, 27000m);
+        long displayId = 123456789012L;
+        SalaryGrade salaryGrade = CreateTestSalaryGrade(displayId, "SG-11", 1, 27000m);
 
-        _salaryGradeRepositoryMock
+        _ = _salaryGradeRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(displayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(salaryGrade);
 
         // Act
-        var result = await _salaryGradeService.GetByDisplayIdAsync(displayId);
+        Result<SalaryGradeResponseDto> result = await _salaryGradeService.GetByDisplayIdAsync(displayId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -49,14 +50,14 @@ public class SalaryGradeServiceTests
     public async Task GetByDisplayIdAsync_WhenSalaryGradeDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var displayId = 999999999999L;
+        long displayId = 999999999999L;
 
-        _salaryGradeRepositoryMock
+        _ = _salaryGradeRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(displayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((SalaryGrade?)null);
 
         // Act
-        var result = await _salaryGradeService.GetByDisplayIdAsync(displayId);
+        Result<SalaryGradeResponseDto> result = await _salaryGradeService.GetByDisplayIdAsync(displayId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -71,18 +72,18 @@ public class SalaryGradeServiceTests
     public async Task GetPagedAsync_ReturnsPagedResult()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10 };
-        var salaryGrades = new List<SalaryGrade>
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10 };
+        IQueryable<SalaryGrade> salaryGrades = new List<SalaryGrade>
         {
             CreateTestSalaryGrade(100000000001L, "SG-10", 1, 25000m),
             CreateTestSalaryGrade(100000000002L, "SG-11", 1, 27000m),
             CreateTestSalaryGrade(100000000003L, "SG-12", 1, 29000m)
         }.BuildMockQueryable();
 
-        _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
+        _ = _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
 
         // Act
-        var result = await _salaryGradeService.GetPagedAsync(query);
+        PagedResult<SalaryGradeResponseDto> result = await _salaryGradeService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -94,31 +95,31 @@ public class SalaryGradeServiceTests
     public async Task GetPagedAsync_WithSearchTerm_FiltersResults()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10, SearchTerm = "SG-11" };
-        var salaryGrades = new List<SalaryGrade>
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10, SearchTerm = "SG-11" };
+        IQueryable<SalaryGrade> salaryGrades = new List<SalaryGrade>
         {
             CreateTestSalaryGrade(100000000001L, "SG-10", 1, 25000m),
             CreateTestSalaryGrade(100000000002L, "SG-11", 1, 27000m),
             CreateTestSalaryGrade(100000000003L, "SG-12", 1, 29000m)
         }.BuildMockQueryable();
 
-        _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
+        _ = _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
 
         // Act
-        var result = await _salaryGradeService.GetPagedAsync(query);
+        PagedResult<SalaryGradeResponseDto> result = await _salaryGradeService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(1, result.TotalCount);
-        Assert.Single(result.Items);
+        _ = Assert.Single(result.Items);
     }
 
     [Fact]
     public async Task GetPagedAsync_WithPagination_ReturnsCorrectPage()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 2, PageSize = 2 };
-        var salaryGrades = new List<SalaryGrade>
+        PaginationQuery query = new() { PageNumber = 2, PageSize = 2 };
+        IQueryable<SalaryGrade> salaryGrades = new List<SalaryGrade>
         {
             CreateTestSalaryGrade(100000000001L, "SG-10", 1, 25000m),
             CreateTestSalaryGrade(100000000002L, "SG-11", 1, 27000m),
@@ -126,10 +127,10 @@ public class SalaryGradeServiceTests
             CreateTestSalaryGrade(100000000004L, "SG-13", 1, 31000m)
         }.BuildMockQueryable();
 
-        _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
+        _ = _salaryGradeRepositoryMock.Setup(r => r.Query()).Returns(salaryGrades);
 
         // Act
-        var result = await _salaryGradeService.GetPagedAsync(query);
+        PagedResult<SalaryGradeResponseDto> result = await _salaryGradeService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -146,7 +147,7 @@ public class SalaryGradeServiceTests
     public async Task CreateAsync_WithValidData_ReturnsCreatedSalaryGrade()
     {
         // Arrange
-        var createDto = new CreateSalaryGradeDto
+        CreateSalaryGradeDto createDto = new()
         {
             SalaryGradeName = "SG-15",
             Description = "Test salary grade",
@@ -154,12 +155,12 @@ public class SalaryGradeServiceTests
             MonthlySalary = 35000m
         };
 
-        _salaryGradeRepositoryMock
+        _ = _salaryGradeRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<SalaryGrade>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((SalaryGrade sg, CancellationToken _) => sg);
 
         // Act
-        var result = await _salaryGradeService.CreateAsync(createDto, "TestUser");
+        Result<SalaryGradeResponseDto> result = await _salaryGradeService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -177,19 +178,19 @@ public class SalaryGradeServiceTests
     public async Task CreateAsync_WithDifferentSteps_CreatesCorrectly()
     {
         // Arrange
-        var createDto = new CreateSalaryGradeDto
+        CreateSalaryGradeDto createDto = new()
         {
             SalaryGradeName = "SG-15",
             Step = 5,
             MonthlySalary = 40000m
         };
 
-        _salaryGradeRepositoryMock
+        _ = _salaryGradeRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<SalaryGrade>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((SalaryGrade sg, CancellationToken _) => sg);
 
         // Act
-        var result = await _salaryGradeService.CreateAsync(createDto, "TestUser");
+        Result<SalaryGradeResponseDto> result = await _salaryGradeService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -206,9 +207,9 @@ public class SalaryGradeServiceTests
     public async Task UpdateAsync_WhenSalaryGradeExists_ReturnsUpdatedSalaryGrade()
     {
         // Arrange
-        var displayId = 123456789012L;
-        var existingSalaryGrade = CreateTestSalaryGrade(displayId, "SG-11", 1, 27000m);
-        var updateDto = new UpdateSalaryGradeDto
+        long displayId = 123456789012L;
+        SalaryGrade existingSalaryGrade = CreateTestSalaryGrade(displayId, "SG-11", 1, 27000m);
+        UpdateSalaryGradeDto updateDto = new()
         {
             SalaryGradeName = "SG-11",
             Description = "Updated Description",
@@ -217,16 +218,16 @@ public class SalaryGradeServiceTests
             IsActive = true
         };
 
-        _salaryGradeRepositoryMock
+        _ = _salaryGradeRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(displayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingSalaryGrade);
 
-        _salaryGradeRepositoryMock
+        _ = _salaryGradeRepositoryMock
             .Setup(r => r.UpdateAsync(It.IsAny<SalaryGrade>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _salaryGradeService.UpdateAsync(displayId, updateDto, "TestUser");
+        Result<SalaryGradeResponseDto> result = await _salaryGradeService.UpdateAsync(displayId, updateDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -241,20 +242,20 @@ public class SalaryGradeServiceTests
     public async Task UpdateAsync_WhenSalaryGradeDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var displayId = 999999999999L;
-        var updateDto = new UpdateSalaryGradeDto
+        long displayId = 999999999999L;
+        UpdateSalaryGradeDto updateDto = new()
         {
             SalaryGradeName = "SG-99",
             Step = 1,
             MonthlySalary = 50000m
         };
 
-        _salaryGradeRepositoryMock
+        _ = _salaryGradeRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(displayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((SalaryGrade?)null);
 
         // Act
-        var result = await _salaryGradeService.UpdateAsync(displayId, updateDto, "TestUser");
+        Result<SalaryGradeResponseDto> result = await _salaryGradeService.UpdateAsync(displayId, updateDto, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -270,19 +271,19 @@ public class SalaryGradeServiceTests
     public async Task DeleteAsync_WhenSalaryGradeExists_ReturnsTrue()
     {
         // Arrange
-        var displayId = 123456789012L;
-        var salaryGrade = CreateTestSalaryGrade(displayId, "SG-11", 1, 27000m);
+        long displayId = 123456789012L;
+        SalaryGrade salaryGrade = CreateTestSalaryGrade(displayId, "SG-11", 1, 27000m);
 
-        _salaryGradeRepositoryMock
+        _ = _salaryGradeRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(displayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(salaryGrade);
 
-        _salaryGradeRepositoryMock
+        _ = _salaryGradeRepositoryMock
             .Setup(r => r.DeleteAsync(salaryGrade, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _salaryGradeService.DeleteAsync(displayId, "TestUser");
+        Result result = await _salaryGradeService.DeleteAsync(displayId, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -293,14 +294,14 @@ public class SalaryGradeServiceTests
     public async Task DeleteAsync_WhenSalaryGradeDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var displayId = 999999999999L;
+        long displayId = 999999999999L;
 
-        _salaryGradeRepositoryMock
+        _ = _salaryGradeRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(displayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((SalaryGrade?)null);
 
         // Act
-        var result = await _salaryGradeService.DeleteAsync(displayId, "TestUser");
+        Result result = await _salaryGradeService.DeleteAsync(displayId, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -314,7 +315,7 @@ public class SalaryGradeServiceTests
 
     private static SalaryGrade CreateTestSalaryGrade(long displayId, string salaryGradeName, int step, decimal monthlySalary, string? description = null)
     {
-        var salaryGrade = new SalaryGrade
+        SalaryGrade salaryGrade = new()
         {
             SalaryGradeName = salaryGradeName,
             Description = description,
@@ -326,7 +327,7 @@ public class SalaryGradeServiceTests
         };
 
         // Use reflection to set DisplayId since it has a private setter
-        var displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
+        PropertyInfo? displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
         displayIdProperty?.SetValue(salaryGrade, displayId);
 
         return salaryGrade;

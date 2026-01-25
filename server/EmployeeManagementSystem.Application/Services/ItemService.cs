@@ -20,33 +20,32 @@ public class ItemService(IRepository<Item> itemRepository) : IItemService
     /// <inheritdoc />
     public async Task<Result<ItemResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
-        var item = await _itemRepository.GetByDisplayIdAsync(displayId, cancellationToken);
-        if (item == null)
-            return Result<ItemResponseDto>.NotFound($"Item with ID {displayId} not found.");
-
-        return Result<ItemResponseDto>.Success(MapToResponseDto(item));
+        Item? item = await _itemRepository.GetByDisplayIdAsync(displayId, cancellationToken);
+        return item == null
+            ? Result<ItemResponseDto>.NotFound($"Item with ID {displayId} not found.")
+            : Result<ItemResponseDto>.Success(MapToResponseDto(item));
     }
 
     /// <inheritdoc />
     public async Task<PagedResult<ItemResponseDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
-        var queryable = _itemRepository.Query();
+        IQueryable<Item> queryable = _itemRepository.Query();
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            var searchTerm = query.SearchTerm.ToLower();
+            string searchTerm = query.SearchTerm.ToLower();
             queryable = queryable.Where(i =>
                 i.ItemName.ToLower().Contains(searchTerm) ||
                 (i.Description != null && i.Description.ToLower().Contains(searchTerm)));
         }
 
-        var totalCount = await queryable.CountAsync(cancellationToken);
+        int totalCount = await queryable.CountAsync(cancellationToken);
 
         queryable = query.SortDescending
             ? queryable.OrderByDescending(i => i.ItemName)
             : queryable.OrderBy(i => i.ItemName);
 
-        var items = await queryable
+        List<ItemResponseDto> items = await queryable
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(i => new ItemResponseDto
@@ -74,14 +73,14 @@ public class ItemService(IRepository<Item> itemRepository) : IItemService
     /// <inheritdoc />
     public async Task<Result<ItemResponseDto>> CreateAsync(CreateItemDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
-        var item = new Item
+        Item item = new()
         {
             ItemName = dto.ItemName,
             Description = dto.Description,
             CreatedBy = createdBy
         };
 
-        await _itemRepository.AddAsync(item, cancellationToken);
+        _ = await _itemRepository.AddAsync(item, cancellationToken);
 
         return Result<ItemResponseDto>.Success(MapToResponseDto(item));
     }
@@ -89,9 +88,11 @@ public class ItemService(IRepository<Item> itemRepository) : IItemService
     /// <inheritdoc />
     public async Task<Result<ItemResponseDto>> UpdateAsync(long displayId, UpdateItemDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
-        var item = await _itemRepository.GetByDisplayIdAsync(displayId, cancellationToken);
+        Item? item = await _itemRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         if (item == null)
+        {
             return Result<ItemResponseDto>.NotFound($"Item with ID {displayId} not found.");
+        }
 
         item.ItemName = dto.ItemName;
         item.Description = dto.Description;
@@ -106,9 +107,11 @@ public class ItemService(IRepository<Item> itemRepository) : IItemService
     /// <inheritdoc />
     public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
-        var item = await _itemRepository.GetByDisplayIdAsync(displayId, cancellationToken);
+        Item? item = await _itemRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         if (item == null)
+        {
             return Result.NotFound($"Item with ID {displayId} not found.");
+        }
 
         item.ModifiedBy = deletedBy;
         await _itemRepository.DeleteAsync(item, cancellationToken);

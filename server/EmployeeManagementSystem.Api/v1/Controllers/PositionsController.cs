@@ -1,10 +1,10 @@
+using EmployeeManagementSystem.Api.Controllers;
 using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Position;
 using EmployeeManagementSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using EmployeeManagementSystem.Api.Controllers;
 
 namespace EmployeeManagementSystem.Api.v1.Controllers;
 
@@ -34,7 +34,7 @@ public class PositionsController(IPositionService positionService) : ApiControll
         [FromQuery] PaginationQuery query,
         CancellationToken cancellationToken)
     {
-        var result = await _positionService.GetPagedAsync(query, cancellationToken);
+        PagedResult<PositionResponseDto> result = await _positionService.GetPagedAsync(query, cancellationToken);
         return Ok(result);
     }
 
@@ -51,7 +51,7 @@ public class PositionsController(IPositionService positionService) : ApiControll
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _positionService.GetByDisplayIdAsync(displayId, cancellationToken);
+        Result<PositionResponseDto> result = await _positionService.GetByDisplayIdAsync(displayId, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -68,7 +68,7 @@ public class PositionsController(IPositionService positionService) : ApiControll
         [FromBody] CreatePositionDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _positionService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
+        Result<PositionResponseDto> result = await _positionService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
 
@@ -88,7 +88,7 @@ public class PositionsController(IPositionService positionService) : ApiControll
         [FromBody] UpdatePositionDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _positionService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        Result<PositionResponseDto> result = await _positionService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -105,7 +105,7 @@ public class PositionsController(IPositionService positionService) : ApiControll
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _positionService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
+        Result result = await _positionService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
         return ToNoContentResult(result);
     }
 }

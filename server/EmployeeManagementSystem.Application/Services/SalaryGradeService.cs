@@ -20,30 +20,30 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
     /// <inheritdoc />
     public async Task<Result<SalaryGradeResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
-        var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
+        SalaryGrade? salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         return salaryGrade == null ? Result<SalaryGradeResponseDto>.NotFound("Salary grade not found.") : Result<SalaryGradeResponseDto>.Success(MapToResponseDto(salaryGrade));
     }
 
     /// <inheritdoc />
     public async Task<PagedResult<SalaryGradeResponseDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
-        var queryable = _salaryGradeRepository.Query();
+        IQueryable<SalaryGrade> queryable = _salaryGradeRepository.Query();
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            var searchTerm = query.SearchTerm.ToLower();
+            string searchTerm = query.SearchTerm.ToLower();
             queryable = queryable.Where(sg =>
                 sg.SalaryGradeName.ToLower().Contains(searchTerm) ||
                 (sg.Description != null && sg.Description.ToLower().Contains(searchTerm)));
         }
 
-        var totalCount = await queryable.CountAsync(cancellationToken);
+        int totalCount = await queryable.CountAsync(cancellationToken);
 
         queryable = query.SortDescending
             ? queryable.OrderByDescending(sg => sg.SalaryGradeName)
             : queryable.OrderBy(sg => sg.SalaryGradeName);
 
-        var items = await queryable
+        List<SalaryGradeResponseDto> items = await queryable
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(sg => new SalaryGradeResponseDto
@@ -73,7 +73,7 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
     /// <inheritdoc />
     public async Task<Result<SalaryGradeResponseDto>> CreateAsync(CreateSalaryGradeDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
-        var salaryGrade = new SalaryGrade
+        SalaryGrade salaryGrade = new()
         {
             SalaryGradeName = dto.SalaryGradeName,
             Description = dto.Description,
@@ -82,7 +82,7 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
             CreatedBy = createdBy
         };
 
-        await _salaryGradeRepository.AddAsync(salaryGrade, cancellationToken);
+        _ = await _salaryGradeRepository.AddAsync(salaryGrade, cancellationToken);
 
         return Result<SalaryGradeResponseDto>.Success(MapToResponseDto(salaryGrade));
     }
@@ -90,9 +90,11 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
     /// <inheritdoc />
     public async Task<Result<SalaryGradeResponseDto>> UpdateAsync(long displayId, UpdateSalaryGradeDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
-        var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
+        SalaryGrade? salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         if (salaryGrade == null)
+        {
             return Result<SalaryGradeResponseDto>.NotFound("Salary grade not found.");
+        }
 
         salaryGrade.SalaryGradeName = dto.SalaryGradeName;
         salaryGrade.Description = dto.Description;
@@ -109,9 +111,11 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
     /// <inheritdoc />
     public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
-        var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
+        SalaryGrade? salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         if (salaryGrade == null)
+        {
             return Result.NotFound("Salary grade not found.");
+        }
 
         salaryGrade.ModifiedBy = deletedBy;
         await _salaryGradeRepository.DeleteAsync(salaryGrade, cancellationToken);

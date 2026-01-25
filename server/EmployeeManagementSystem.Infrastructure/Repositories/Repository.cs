@@ -1,8 +1,8 @@
-using System.Linq.Expressions;
 using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace EmployeeManagementSystem.Infrastructure.Repositories;
 
@@ -51,27 +51,22 @@ public class Repository<T>(ApplicationDbContext context) : IRepository<T> where 
         bool descending = false,
         CancellationToken cancellationToken = default)
     {
-        var query = _dbSet.AsQueryable();
+        IQueryable<T> query = _dbSet.AsQueryable();
 
         if (predicate != null)
         {
             query = query.Where(predicate);
         }
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        int totalCount = await query.CountAsync(cancellationToken);
 
-        if (orderBy != null)
-        {
-            query = descending
+        query = orderBy != null
+            ? descending
                 ? query.OrderByDescending(orderBy)
-                : query.OrderBy(orderBy);
-        }
-        else
-        {
-            query = query.OrderBy(e => e.CreatedOn);
-        }
+                : query.OrderBy(orderBy)
+            : query.OrderBy(e => e.CreatedOn);
 
-        var items = await query
+        List<T> items = await query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
@@ -83,14 +78,14 @@ public class Repository<T>(ApplicationDbContext context) : IRepository<T> where 
     public virtual async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
     {
         const int maxRetries = 3;
-        var attempt = 0;
+        int attempt = 0;
 
         while (true)
         {
             try
             {
-                await _dbSet.AddAsync(entity, cancellationToken);
-                await _context.SaveChangesAsync(cancellationToken);
+                _ = await _dbSet.AddAsync(entity, cancellationToken);
+                _ = await _context.SaveChangesAsync(cancellationToken);
                 return entity;
             }
             catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex) && attempt < maxRetries)
@@ -110,7 +105,7 @@ public class Repository<T>(ApplicationDbContext context) : IRepository<T> where 
     {
         // Check for SQL Server unique constraint violation (error 2601 or 2627)
         // Also check the message for DisplayId to ensure it's the right constraint
-        var message = ex.InnerException?.Message ?? ex.Message;
+        string message = ex.InnerException?.Message ?? ex.Message;
         return message.Contains("unique", StringComparison.OrdinalIgnoreCase) ||
                message.Contains("duplicate", StringComparison.OrdinalIgnoreCase) ||
                message.Contains("2601") ||
@@ -120,8 +115,8 @@ public class Repository<T>(ApplicationDbContext context) : IRepository<T> where 
     /// <inheritdoc />
     public virtual async Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
     {
-        _dbSet.Update(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        _ = _dbSet.Update(entity);
+        _ = await _context.SaveChangesAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -129,8 +124,8 @@ public class Repository<T>(ApplicationDbContext context) : IRepository<T> where 
     {
         // Soft delete
         entity.IsDeleted = true;
-        _dbSet.Update(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        _ = _dbSet.Update(entity);
+        _ = await _context.SaveChangesAsync(cancellationToken);
     }
 
     /// <inheritdoc />

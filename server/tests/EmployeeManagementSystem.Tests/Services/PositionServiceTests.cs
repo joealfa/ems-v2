@@ -6,6 +6,7 @@ using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Tests.Helpers;
 using Moq;
+using System.Reflection;
 
 namespace EmployeeManagementSystem.Tests.Services;
 
@@ -26,15 +27,15 @@ public class PositionServiceTests
     public async Task GetByDisplayIdAsync_WhenPositionExists_ReturnsPositionResponseDto()
     {
         // Arrange
-        var displayId = 123456789012L;
-        var position = CreateTestPosition(displayId, "Teacher I", "Entry level teaching position");
+        long displayId = 123456789012L;
+        Position position = CreateTestPosition(displayId, "Teacher I", "Entry level teaching position");
 
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(displayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(position);
 
         // Act
-        var result = await _positionService.GetByDisplayIdAsync(displayId);
+        Result<PositionResponseDto> result = await _positionService.GetByDisplayIdAsync(displayId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -48,14 +49,14 @@ public class PositionServiceTests
     public async Task GetByDisplayIdAsync_WhenPositionDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var displayId = 999999999999L;
+        long displayId = 999999999999L;
 
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(displayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Position?)null);
 
         // Act
-        var result = await _positionService.GetByDisplayIdAsync(displayId);
+        Result<PositionResponseDto> result = await _positionService.GetByDisplayIdAsync(displayId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -70,18 +71,18 @@ public class PositionServiceTests
     public async Task GetPagedAsync_ReturnsPagedResult()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10 };
-        var positions = new List<Position>
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10 };
+        IQueryable<Position> positions = new List<Position>
         {
             CreateTestPosition(100000000001L, "Position A"),
             CreateTestPosition(100000000002L, "Position B"),
             CreateTestPosition(100000000003L, "Position C")
         }.BuildMockQueryable();
 
-        _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
+        _ = _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
 
         // Act
-        var result = await _positionService.GetPagedAsync(query);
+        PagedResult<PositionResponseDto> result = await _positionService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -93,18 +94,18 @@ public class PositionServiceTests
     public async Task GetPagedAsync_WithSearchTerm_FiltersResults()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10, SearchTerm = "Teacher" };
-        var positions = new List<Position>
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10, SearchTerm = "Teacher" };
+        IQueryable<Position> positions = new List<Position>
         {
             CreateTestPosition(100000000001L, "Teacher I"),
             CreateTestPosition(100000000002L, "Principal"),
             CreateTestPosition(100000000003L, "Teacher III")
         }.BuildMockQueryable();
 
-        _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
+        _ = _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
 
         // Act
-        var result = await _positionService.GetPagedAsync(query);
+        PagedResult<PositionResponseDto> result = await _positionService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -115,13 +116,13 @@ public class PositionServiceTests
     public async Task GetPagedAsync_EmptyDatabase_ReturnsEmptyResult()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10 };
-        var positions = new List<Position>().BuildMockQueryable();
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10 };
+        IQueryable<Position> positions = new List<Position>().BuildMockQueryable();
 
-        _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
+        _ = _positionRepositoryMock.Setup(r => r.Query()).Returns(positions);
 
         // Act
-        var result = await _positionService.GetPagedAsync(query);
+        PagedResult<PositionResponseDto> result = await _positionService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -137,18 +138,18 @@ public class PositionServiceTests
     public async Task CreateAsync_WithValidData_ReturnsCreatedPosition()
     {
         // Arrange
-        var createDto = new CreatePositionDto
+        CreatePositionDto createDto = new()
         {
             TitleName = "New Position",
             Description = "Test position description"
         };
 
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Position p, CancellationToken _) => p);
 
         // Act
-        var result = await _positionService.CreateAsync(createDto, "TestUser");
+        Result<PositionResponseDto> result = await _positionService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -164,17 +165,17 @@ public class PositionServiceTests
     public async Task CreateAsync_WithoutDescription_CreatesPositionSuccessfully()
     {
         // Arrange
-        var createDto = new CreatePositionDto
+        CreatePositionDto createDto = new()
         {
             TitleName = "New Position"
         };
 
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Position p, CancellationToken _) => p);
 
         // Act
-        var result = await _positionService.CreateAsync(createDto, "TestUser");
+        Result<PositionResponseDto> result = await _positionService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -191,25 +192,25 @@ public class PositionServiceTests
     public async Task UpdateAsync_WhenPositionExists_ReturnsUpdatedPosition()
     {
         // Arrange
-        var displayId = 123456789012L;
-        var existingPosition = CreateTestPosition(displayId, "Original Title", "Original Description");
-        var updateDto = new UpdatePositionDto
+        long displayId = 123456789012L;
+        Position existingPosition = CreateTestPosition(displayId, "Original Title", "Original Description");
+        UpdatePositionDto updateDto = new()
         {
             TitleName = "Updated Title",
             Description = "Updated Description",
             IsActive = true
         };
 
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(displayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPosition);
 
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.UpdateAsync(It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _positionService.UpdateAsync(displayId, updateDto, "TestUser");
+        Result<PositionResponseDto> result = await _positionService.UpdateAsync(displayId, updateDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -224,18 +225,18 @@ public class PositionServiceTests
     public async Task UpdateAsync_WhenPositionDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var displayId = 999999999999L;
-        var updateDto = new UpdatePositionDto
+        long displayId = 999999999999L;
+        UpdatePositionDto updateDto = new()
         {
             TitleName = "Updated Title"
         };
 
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(displayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Position?)null);
 
         // Act
-        var result = await _positionService.UpdateAsync(displayId, updateDto, "TestUser");
+        Result<PositionResponseDto> result = await _positionService.UpdateAsync(displayId, updateDto, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -251,19 +252,19 @@ public class PositionServiceTests
     public async Task DeleteAsync_WhenPositionExists_ReturnsTrue()
     {
         // Arrange
-        var displayId = 123456789012L;
-        var position = CreateTestPosition(displayId, "Test Position");
+        long displayId = 123456789012L;
+        Position position = CreateTestPosition(displayId, "Test Position");
 
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(displayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(position);
 
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.DeleteAsync(position, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _positionService.DeleteAsync(displayId, "TestUser");
+        Result result = await _positionService.DeleteAsync(displayId, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -274,14 +275,14 @@ public class PositionServiceTests
     public async Task DeleteAsync_WhenPositionDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var displayId = 999999999999L;
+        long displayId = 999999999999L;
 
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(displayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Position?)null);
 
         // Act
-        var result = await _positionService.DeleteAsync(displayId, "TestUser");
+        Result result = await _positionService.DeleteAsync(displayId, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -295,7 +296,7 @@ public class PositionServiceTests
 
     private static Position CreateTestPosition(long displayId, string titleName, string? description = null)
     {
-        var position = new Position
+        Position position = new()
         {
             TitleName = titleName,
             Description = description,
@@ -305,7 +306,7 @@ public class PositionServiceTests
         };
 
         // Use reflection to set DisplayId since it has a private setter
-        var displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
+        PropertyInfo? displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
         displayIdProperty?.SetValue(position, displayId);
 
         return position;

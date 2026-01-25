@@ -20,30 +20,30 @@ public class PositionService(IRepository<Position> positionRepository) : IPositi
     /// <inheritdoc />
     public async Task<Result<PositionResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
-        var position = await _positionRepository.GetByDisplayIdAsync(displayId, cancellationToken);
+        Position? position = await _positionRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         return position == null ? Result<PositionResponseDto>.NotFound("Position not found.") : Result<PositionResponseDto>.Success(MapToResponseDto(position));
     }
 
     /// <inheritdoc />
     public async Task<PagedResult<PositionResponseDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
-        var queryable = _positionRepository.Query();
+        IQueryable<Position> queryable = _positionRepository.Query();
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            var searchTerm = query.SearchTerm.ToLower();
+            string searchTerm = query.SearchTerm.ToLower();
             queryable = queryable.Where(p =>
                 p.TitleName.ToLower().Contains(searchTerm) ||
                 (p.Description != null && p.Description.ToLower().Contains(searchTerm)));
         }
 
-        var totalCount = await queryable.CountAsync(cancellationToken);
+        int totalCount = await queryable.CountAsync(cancellationToken);
 
         queryable = query.SortDescending
             ? queryable.OrderByDescending(p => p.TitleName)
             : queryable.OrderBy(p => p.TitleName);
 
-        var items = await queryable
+        List<PositionResponseDto> items = await queryable
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(p => new PositionResponseDto
@@ -71,14 +71,14 @@ public class PositionService(IRepository<Position> positionRepository) : IPositi
     /// <inheritdoc />
     public async Task<Result<PositionResponseDto>> CreateAsync(CreatePositionDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
-        var position = new Position
+        Position position = new()
         {
             TitleName = dto.TitleName,
             Description = dto.Description,
             CreatedBy = createdBy
         };
 
-        await _positionRepository.AddAsync(position, cancellationToken);
+        _ = await _positionRepository.AddAsync(position, cancellationToken);
 
         return Result<PositionResponseDto>.Success(MapToResponseDto(position));
     }
@@ -86,9 +86,11 @@ public class PositionService(IRepository<Position> positionRepository) : IPositi
     /// <inheritdoc />
     public async Task<Result<PositionResponseDto>> UpdateAsync(long displayId, UpdatePositionDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
-        var position = await _positionRepository.GetByDisplayIdAsync(displayId, cancellationToken);
+        Position? position = await _positionRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         if (position == null)
+        {
             return Result<PositionResponseDto>.NotFound("Position not found.");
+        }
 
         position.TitleName = dto.TitleName;
         position.Description = dto.Description;
@@ -103,9 +105,11 @@ public class PositionService(IRepository<Position> positionRepository) : IPositi
     /// <inheritdoc />
     public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
-        var position = await _positionRepository.GetByDisplayIdAsync(displayId, cancellationToken);
+        Position? position = await _positionRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         if (position == null)
+        {
             return Result.NotFound("Position not found.");
+        }
 
         position.ModifiedBy = deletedBy;
         await _positionRepository.DeleteAsync(position, cancellationToken);

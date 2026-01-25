@@ -34,7 +34,7 @@ public class SchoolsController(ISchoolService schoolService) : ApiControllerBase
         [FromQuery] PaginationQuery query,
         CancellationToken cancellationToken)
     {
-        var result = await _schoolService.GetPagedAsync(query, cancellationToken);
+        PagedResult<SchoolListDto> result = await _schoolService.GetPagedAsync(query, cancellationToken);
         return Ok(result);
     }
 
@@ -51,7 +51,7 @@ public class SchoolsController(ISchoolService schoolService) : ApiControllerBase
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _schoolService.GetByDisplayIdAsync(displayId, cancellationToken);
+        Result<SchoolResponseDto> result = await _schoolService.GetByDisplayIdAsync(displayId, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -68,7 +68,7 @@ public class SchoolsController(ISchoolService schoolService) : ApiControllerBase
         [FromBody] CreateSchoolDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _schoolService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
+        Result<SchoolResponseDto> result = await _schoolService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
 
@@ -88,7 +88,7 @@ public class SchoolsController(ISchoolService schoolService) : ApiControllerBase
         [FromBody] UpdateSchoolDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _schoolService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        Result<SchoolResponseDto> result = await _schoolService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -105,7 +105,7 @@ public class SchoolsController(ISchoolService schoolService) : ApiControllerBase
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _schoolService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
+        Result result = await _schoolService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
         return ToNoContentResult(result);
     }
 }

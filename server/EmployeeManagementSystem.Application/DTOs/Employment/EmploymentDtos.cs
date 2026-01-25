@@ -1,5 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using EmployeeManagementSystem.Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace EmployeeManagementSystem.Application.DTOs.Employment;
 

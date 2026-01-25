@@ -56,19 +56,20 @@ public class DocumentService(
         long documentDisplayId,
         CancellationToken cancellationToken = default)
     {
-        var person = await _personRepository.Query()
+        Person? person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
+        {
             return Result<DocumentResponseDto>.NotFound("Person not found.");
+        }
 
-        var document = await _documentRepository.Query()
+        Document? document = await _documentRepository.Query()
             .FirstOrDefaultAsync(d => d.PersonId == person.Id && d.DisplayId == documentDisplayId, cancellationToken);
 
-        if (document == null)
-            return Result<DocumentResponseDto>.NotFound("Document not found.");
-
-        return Result<DocumentResponseDto>.Success(MapToResponseDto(document, personDisplayId));
+        return document == null
+            ? Result<DocumentResponseDto>.NotFound("Document not found.")
+            : Result<DocumentResponseDto>.Success(MapToResponseDto(document, personDisplayId));
     }
 
     /// <inheritdoc />
@@ -77,7 +78,7 @@ public class DocumentService(
         PaginationQuery query,
         CancellationToken cancellationToken = default)
     {
-        var person = await _personRepository.Query()
+        Person? person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
@@ -91,24 +92,24 @@ public class DocumentService(
             };
         }
 
-        var queryable = _documentRepository.Query()
+        IQueryable<Document> queryable = _documentRepository.Query()
             .Where(d => d.PersonId == person.Id);
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            var searchTerm = query.SearchTerm.ToLower();
+            string searchTerm = query.SearchTerm.ToLower();
             queryable = queryable.Where(d =>
                 d.FileName.ToLower().Contains(searchTerm) ||
                 (d.Description != null && d.Description.ToLower().Contains(searchTerm)));
         }
 
-        var totalCount = await queryable.CountAsync(cancellationToken);
+        int totalCount = await queryable.CountAsync(cancellationToken);
 
         queryable = query.SortDescending
             ? queryable.OrderByDescending(d => d.CreatedOn)
             : queryable.OrderBy(d => d.CreatedOn);
 
-        var items = await queryable
+        List<DocumentListDto> items = await queryable
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(d => new DocumentListDto
@@ -141,29 +142,31 @@ public class DocumentService(
         string createdBy,
         CancellationToken cancellationToken = default)
     {
-        var person = await _personRepository.Query()
+        Person? person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
+        {
             return Result<DocumentResponseDto>.NotFound("Person not found.");
+        }
 
-        var extension = Path.GetExtension(dto.FileName);
+        string extension = Path.GetExtension(dto.FileName);
         if (!AllowedExtensions.Contains(extension))
         {
             return Result<DocumentResponseDto>.BadRequest($"File extension '{extension}' is not allowed. Allowed extensions: {string.Join(", ", AllowedExtensions)}");
         }
 
-        var documentType = GetDocumentType(extension);
-        var blobName = GenerateBlobName(person.Id, dto.FileName);
+        DocumentType documentType = GetDocumentType(extension);
+        string blobName = GenerateBlobName(person.Id, dto.FileName);
 
-        var blobUrl = await _blobStorageService.UploadAsync(
+        string blobUrl = await _blobStorageService.UploadAsync(
             DocumentsContainer,
             blobName,
             dto.FileStream,
             dto.ContentType,
             cancellationToken);
 
-        var document = new Document
+        Document document = new()
         {
             FileName = dto.FileName,
             FileExtension = extension,
@@ -178,7 +181,7 @@ public class DocumentService(
             CreatedBy = createdBy
         };
 
-        await _documentRepository.AddAsync(document, cancellationToken);
+        _ = await _documentRepository.AddAsync(document, cancellationToken);
 
         return Result<DocumentResponseDto>.Success(MapToResponseDto(document, personDisplayId));
     }
@@ -191,17 +194,21 @@ public class DocumentService(
         string modifiedBy,
         CancellationToken cancellationToken = default)
     {
-        var person = await _personRepository.Query()
+        Person? person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
+        {
             return Result<DocumentResponseDto>.NotFound("Person not found.");
+        }
 
-        var document = await _documentRepository.Query()
+        Document? document = await _documentRepository.Query()
             .FirstOrDefaultAsync(d => d.PersonId == person.Id && d.DisplayId == documentDisplayId, cancellationToken);
 
         if (document == null)
+        {
             return Result<DocumentResponseDto>.NotFound("Document not found.");
+        }
 
         document.Description = dto.Description;
         document.ModifiedBy = modifiedBy;
@@ -217,19 +224,23 @@ public class DocumentService(
         long documentDisplayId,
         CancellationToken cancellationToken = default)
     {
-        var person = await _personRepository.Query()
+        Person? person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
+        {
             return Result<BlobDownloadResultDto>.NotFound("Person not found.");
+        }
 
-        var document = await _documentRepository.Query()
+        Document? document = await _documentRepository.Query()
             .FirstOrDefaultAsync(d => d.PersonId == person.Id && d.DisplayId == documentDisplayId, cancellationToken);
 
         if (document == null)
+        {
             return Result<BlobDownloadResultDto>.NotFound("Document not found.");
+        }
 
-        var content = await _blobStorageService.DownloadAsync(
+        Stream content = await _blobStorageService.DownloadAsync(
             document.ContainerName,
             document.BlobName,
             cancellationToken);
@@ -249,17 +260,21 @@ public class DocumentService(
         string deletedBy,
         CancellationToken cancellationToken = default)
     {
-        var person = await _personRepository.Query()
+        Person? person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
+        {
             return Result.NotFound("Person not found.");
+        }
 
-        var document = await _documentRepository.Query()
+        Document? document = await _documentRepository.Query()
             .FirstOrDefaultAsync(d => d.PersonId == person.Id && d.DisplayId == documentDisplayId, cancellationToken);
 
         if (document == null)
+        {
             return Result.NotFound("Document not found.");
+        }
 
         // Note: We keep the blob in storage for potential recovery
         // If you want to delete the blob as well, uncomment the line below
@@ -279,13 +294,15 @@ public class DocumentService(
         string modifiedBy,
         CancellationToken cancellationToken = default)
     {
-        var person = await _personRepository.Query()
+        Person? person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
+        {
             return Result<string>.NotFound("Person not found.");
+        }
 
-        var extension = Path.GetExtension(dto.FileName);
+        string extension = Path.GetExtension(dto.FileName);
         if (!AllowedImageExtensions.Contains(extension))
         {
             return Result<string>.BadRequest($"File extension '{extension}' is not allowed for profile images. Allowed extensions: {string.Join(", ", AllowedImageExtensions)}");
@@ -294,13 +311,13 @@ public class DocumentService(
         // Delete existing profile image if any
         if (!string.IsNullOrEmpty(person.ProfileImageUrl))
         {
-            var existingBlobName = $"{person.Id}/profile{Path.GetExtension(person.ProfileImageUrl)}";
-            await _blobStorageService.DeleteAsync(ProfileImagesContainer, existingBlobName, cancellationToken);
+            string existingBlobName = $"{person.Id}/profile{Path.GetExtension(person.ProfileImageUrl)}";
+            _ = await _blobStorageService.DeleteAsync(ProfileImagesContainer, existingBlobName, cancellationToken);
         }
 
-        var blobName = $"{person.Id}/profile{extension}";
+        string blobName = $"{person.Id}/profile{extension}";
 
-        var blobUrl = await _blobStorageService.UploadAsync(
+        string blobUrl = await _blobStorageService.UploadAsync(
             ProfileImagesContainer,
             blobName,
             dto.FileStream,
@@ -321,19 +338,23 @@ public class DocumentService(
         string modifiedBy,
         CancellationToken cancellationToken = default)
     {
-        var person = await _personRepository.Query()
+        Person? person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
+        {
             return Result.NotFound("Person not found.");
+        }
 
         if (string.IsNullOrEmpty(person.ProfileImageUrl))
+        {
             return Result.NotFound("No profile image to delete.");
+        }
 
-        var extension = Path.GetExtension(person.ProfileImageUrl);
-        var blobName = $"{person.Id}/profile{extension}";
+        string extension = Path.GetExtension(person.ProfileImageUrl);
+        string blobName = $"{person.Id}/profile{extension}";
 
-        await _blobStorageService.DeleteAsync(ProfileImagesContainer, blobName, cancellationToken);
+        _ = await _blobStorageService.DeleteAsync(ProfileImagesContainer, blobName, cancellationToken);
 
         person.ProfileImageUrl = null;
         person.ModifiedBy = modifiedBy;
@@ -348,21 +369,25 @@ public class DocumentService(
         long personDisplayId,
         CancellationToken cancellationToken = default)
     {
-        var person = await _personRepository.Query()
+        Person? person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
+        {
             return Result<BlobDownloadResultDto>.NotFound("Person not found.");
+        }
 
         if (string.IsNullOrEmpty(person.ProfileImageUrl))
+        {
             return Result<BlobDownloadResultDto>.NotFound("No profile image found.");
+        }
 
-        var extension = Path.GetExtension(person.ProfileImageUrl);
-        var blobName = $"{person.Id}/profile{extension}";
+        string extension = Path.GetExtension(person.ProfileImageUrl);
+        string blobName = $"{person.Id}/profile{extension}";
 
-        var content = await _blobStorageService.DownloadAsync(ProfileImagesContainer, blobName, cancellationToken);
+        Stream content = await _blobStorageService.DownloadAsync(ProfileImagesContainer, blobName, cancellationToken);
 
-        var contentType = extension.ToLowerInvariant() switch
+        string contentType = extension.ToLowerInvariant() switch
         {
             ".jpg" or ".jpeg" => "image/jpeg",
             ".png" => "image/png",
@@ -379,15 +404,15 @@ public class DocumentService(
 
     private static DocumentType GetDocumentType(string extension)
     {
-        return ExtensionToDocumentType.TryGetValue(extension, out var type)
+        return ExtensionToDocumentType.TryGetValue(extension, out DocumentType type)
             ? type
             : DocumentType.Other;
     }
 
     private static string GenerateBlobName(Guid personId, string fileName)
     {
-        var extension = Path.GetExtension(fileName);
-        var uniqueId = Guid.NewGuid().ToString("N");
+        string extension = Path.GetExtension(fileName);
+        string uniqueId = Guid.NewGuid().ToString("N");
         return $"{personId}/{uniqueId}{extension}";
     }
 

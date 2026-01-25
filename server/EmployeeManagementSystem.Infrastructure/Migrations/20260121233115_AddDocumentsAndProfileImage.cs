@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -11,14 +10,14 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
+            _ = migrationBuilder.AddColumn<string>(
                 name: "ProfileImageUrl",
                 table: "Persons",
                 type: "nvarchar(2048)",
                 maxLength: 2048,
                 nullable: true);
 
-            migrationBuilder.CreateTable(
+            _ = migrationBuilder.CreateTable(
                 name: "Documents",
                 columns: table => new
                 {
@@ -42,8 +41,8 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Documents", x => x.Id);
-                    table.ForeignKey(
+                    _ = table.PrimaryKey("PK_Documents", x => x.Id);
+                    _ = table.ForeignKey(
                         name: "FK_Documents_Persons_PersonId",
                         column: x => x.PersonId,
                         principalTable: "Persons",
@@ -51,13 +50,13 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
+            _ = migrationBuilder.CreateIndex(
                 name: "IX_Documents_DisplayId",
                 table: "Documents",
                 column: "DisplayId",
                 unique: true);
 
-            migrationBuilder.CreateIndex(
+            _ = migrationBuilder.CreateIndex(
                 name: "IX_Documents_PersonId",
                 table: "Documents",
                 column: "PersonId");
@@ -66,10 +65,10 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
+            _ = migrationBuilder.DropTable(
                 name: "Documents");
 
-            migrationBuilder.DropColumn(
+            _ = migrationBuilder.DropColumn(
                 name: "ProfileImageUrl",
                 table: "Persons");
         }

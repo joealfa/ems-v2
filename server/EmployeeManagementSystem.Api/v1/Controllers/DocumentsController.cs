@@ -58,7 +58,7 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
         [FromQuery] PaginationQuery query,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.GetPagedAsync(displayId, query, cancellationToken);
+        PagedResult<DocumentListDto> result = await _documentService.GetPagedAsync(displayId, query, cancellationToken);
         return Ok(result);
     }
 
@@ -77,7 +77,7 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
         long documentDisplayId,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.GetByDisplayIdAsync(displayId, documentDisplayId, cancellationToken);
+        Result<DocumentResponseDto> result = await _documentService.GetByDisplayIdAsync(displayId, documentDisplayId, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -102,15 +102,21 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
         CancellationToken cancellationToken)
     {
         if (file == null || file.Length == 0)
+        {
             return BadRequest("No file provided.");
+        }
 
         if (file.Length > MaxFileSizeBytes)
+        {
             return BadRequest($"File size exceeds the maximum allowed size of {MaxFileSizeBytes / (1024 * 1024)} MB.");
+        }
 
         if (!AllowedContentTypes.Contains(file.ContentType))
+        {
             return BadRequest($"File type '{file.ContentType}' is not allowed.");
+        }
 
-        var dto = new UploadDocumentDto
+        UploadDocumentDto dto = new()
         {
             FileStream = file.OpenReadStream(),
             FileName = file.FileName,
@@ -119,7 +125,7 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
             Description = description
         };
 
-        var result = await _documentService.UploadAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        Result<DocumentResponseDto> result = await _documentService.UploadAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, nameof(GetByDisplayId), new { displayId, documentDisplayId = result.Value?.DisplayId ?? 0 });
     }
 
@@ -140,7 +146,7 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
         [FromBody] UpdateDocumentDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.UpdateAsync(displayId, documentDisplayId, dto, CurrentUserEmail, cancellationToken);
+        Result<DocumentResponseDto> result = await _documentService.UpdateAsync(displayId, documentDisplayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -159,7 +165,7 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
         long documentDisplayId,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.DownloadAsync(displayId, documentDisplayId, cancellationToken);
+        Result<BlobDownloadResultDto> result = await _documentService.DownloadAsync(displayId, documentDisplayId, cancellationToken);
         return ToFileResult(result);
     }
 
@@ -178,7 +184,7 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
         long documentDisplayId,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.DeleteAsync(displayId, documentDisplayId, CurrentUserEmail, cancellationToken);
+        Result result = await _documentService.DeleteAsync(displayId, documentDisplayId, CurrentUserEmail, cancellationToken);
         return ToNoContentResult(result);
     }
 
@@ -201,15 +207,21 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
         CancellationToken cancellationToken)
     {
         if (file == null || file.Length == 0)
+        {
             return BadRequest("No file provided.");
+        }
 
         if (file.Length > MaxImageSizeBytes)
+        {
             return BadRequest($"Image size exceeds the maximum allowed size of {MaxImageSizeBytes / (1024 * 1024)} MB.");
+        }
 
         if (!AllowedImageContentTypes.Contains(file.ContentType))
+        {
             return BadRequest($"File type '{file.ContentType}' is not allowed for profile images. Only JPEG and PNG are allowed.");
+        }
 
-        var dto = new UploadDocumentDto
+        UploadDocumentDto dto = new()
         {
             FileStream = file.OpenReadStream(),
             FileName = file.FileName,
@@ -217,7 +229,7 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
             FileSizeBytes = file.Length
         };
 
-        var result = await _documentService.UploadProfileImageAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        Result<string> result = await _documentService.UploadProfileImageAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -235,7 +247,7 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.GetProfileImageAsync(displayId, cancellationToken);
+        Result<BlobDownloadResultDto> result = await _documentService.GetProfileImageAsync(displayId, cancellationToken);
         return ToFileResult(result);
     }
 
@@ -252,7 +264,7 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.DeleteProfileImageAsync(displayId, CurrentUserEmail, cancellationToken);
+        Result result = await _documentService.DeleteProfileImageAsync(displayId, CurrentUserEmail, cancellationToken);
         return ToNoContentResult(result);
     }
 }

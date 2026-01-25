@@ -1,4 +1,5 @@
 using EmployeeManagementSystem.Api.Controllers;
+using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Item;
 using EmployeeManagementSystem.Application.Interfaces;
@@ -33,7 +34,7 @@ public class ItemsController(IItemService itemService) : ApiControllerBase
         [FromQuery] PaginationQuery query,
         CancellationToken cancellationToken)
     {
-        var result = await _itemService.GetPagedAsync(query, cancellationToken);
+        PagedResult<ItemResponseDto> result = await _itemService.GetPagedAsync(query, cancellationToken);
         return Ok(result);
     }
 
@@ -50,7 +51,7 @@ public class ItemsController(IItemService itemService) : ApiControllerBase
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _itemService.GetByDisplayIdAsync(displayId, cancellationToken);
+        Result<ItemResponseDto> result = await _itemService.GetByDisplayIdAsync(displayId, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -67,7 +68,7 @@ public class ItemsController(IItemService itemService) : ApiControllerBase
         [FromBody] CreateItemDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _itemService.CreateAsync(dto, CurrentUser, cancellationToken);
+        Result<ItemResponseDto> result = await _itemService.CreateAsync(dto, CurrentUser, cancellationToken);
         return ToCreatedResult(result, nameof(GetByDisplayId), new { displayId = result.Value?.DisplayId });
     }
 
@@ -87,7 +88,7 @@ public class ItemsController(IItemService itemService) : ApiControllerBase
         [FromBody] UpdateItemDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _itemService.UpdateAsync(displayId, dto, CurrentUser, cancellationToken);
+        Result<ItemResponseDto> result = await _itemService.UpdateAsync(displayId, dto, CurrentUser, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -104,7 +105,7 @@ public class ItemsController(IItemService itemService) : ApiControllerBase
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _itemService.DeleteAsync(displayId, CurrentUser, cancellationToken);
+        Result result = await _itemService.DeleteAsync(displayId, CurrentUser, cancellationToken);
         return ToNoContentResult(result);
     }
 }

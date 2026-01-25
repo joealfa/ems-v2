@@ -10,35 +10,35 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_Addresses_Persons_PersonId",
                 table: "Addresses");
 
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_Addresses_Schools_SchoolId",
                 table: "Addresses");
 
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_Contacts_Persons_PersonId",
                 table: "Contacts");
 
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_Contacts_Schools_SchoolId",
                 table: "Contacts");
 
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_Documents_Persons_PersonId",
                 table: "Documents");
 
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_EmploymentSchools_Employments_EmploymentId",
                 table: "EmploymentSchools");
 
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_EmploymentSchools_Schools_SchoolId",
                 table: "EmploymentSchools");
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_Addresses_Persons_PersonId",
                 table: "Addresses",
                 column: "PersonId",
@@ -46,7 +46,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_Addresses_Schools_SchoolId",
                 table: "Addresses",
                 column: "SchoolId",
@@ -54,7 +54,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_Contacts_Persons_PersonId",
                 table: "Contacts",
                 column: "PersonId",
@@ -62,7 +62,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_Contacts_Schools_SchoolId",
                 table: "Contacts",
                 column: "SchoolId",
@@ -70,7 +70,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_Documents_Persons_PersonId",
                 table: "Documents",
                 column: "PersonId",
@@ -78,7 +78,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_EmploymentSchools_Employments_EmploymentId",
                 table: "EmploymentSchools",
                 column: "EmploymentId",
@@ -86,7 +86,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_EmploymentSchools_Schools_SchoolId",
                 table: "EmploymentSchools",
                 column: "SchoolId",
@@ -98,35 +98,35 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_Addresses_Persons_PersonId",
                 table: "Addresses");
 
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_Addresses_Schools_SchoolId",
                 table: "Addresses");
 
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_Contacts_Persons_PersonId",
                 table: "Contacts");
 
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_Contacts_Schools_SchoolId",
                 table: "Contacts");
 
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_Documents_Persons_PersonId",
                 table: "Documents");
 
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_EmploymentSchools_Employments_EmploymentId",
                 table: "EmploymentSchools");
 
-            migrationBuilder.DropForeignKey(
+            _ = migrationBuilder.DropForeignKey(
                 name: "FK_EmploymentSchools_Schools_SchoolId",
                 table: "EmploymentSchools");
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_Addresses_Persons_PersonId",
                 table: "Addresses",
                 column: "PersonId",
@@ -134,7 +134,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_Addresses_Schools_SchoolId",
                 table: "Addresses",
                 column: "SchoolId",
@@ -142,7 +142,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_Contacts_Persons_PersonId",
                 table: "Contacts",
                 column: "PersonId",
@@ -150,7 +150,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_Contacts_Schools_SchoolId",
                 table: "Contacts",
                 column: "SchoolId",
@@ -158,7 +158,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_Documents_Persons_PersonId",
                 table: "Documents",
                 column: "PersonId",
@@ -166,7 +166,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_EmploymentSchools_Employments_EmploymentId",
                 table: "EmploymentSchools",
                 column: "EmploymentId",
@@ -174,7 +174,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
 
-            migrationBuilder.AddForeignKey(
+            _ = migrationBuilder.AddForeignKey(
                 name: "FK_EmploymentSchools_Schools_SchoolId",
                 table: "EmploymentSchools",
                 column: "SchoolId",

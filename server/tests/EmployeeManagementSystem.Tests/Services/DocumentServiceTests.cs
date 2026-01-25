@@ -7,6 +7,7 @@ using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Domain.Enums;
 using EmployeeManagementSystem.Tests.Helpers;
 using Moq;
+using System.Reflection;
 
 namespace EmployeeManagementSystem.Tests.Services;
 
@@ -35,19 +36,19 @@ public class DocumentServiceTests
     public async Task GetByDisplayIdAsync_WhenPersonAndDocumentExist_ReturnsDocumentResponseDto()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var documentDisplayId = 200000000001L;
-        var person = CreateTestPerson(personDisplayId);
-        var document = CreateTestDocument(documentDisplayId, person.Id);
+        long personDisplayId = 100000000001L;
+        long documentDisplayId = 200000000001L;
+        Person person = CreateTestPerson(personDisplayId);
+        Document document = CreateTestDocument(documentDisplayId, person.Id);
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
-        var documents = new List<Document> { document }.BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Document> documents = new List<Document> { document }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
 
         // Act
-        var result = await _documentService.GetByDisplayIdAsync(personDisplayId, documentDisplayId);
+        Result<DocumentResponseDto> result = await _documentService.GetByDisplayIdAsync(personDisplayId, documentDisplayId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -60,14 +61,14 @@ public class DocumentServiceTests
     public async Task GetByDisplayIdAsync_WhenPersonDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var personDisplayId = 999999999999L;
-        var documentDisplayId = 200000000001L;
+        long personDisplayId = 999999999999L;
+        long documentDisplayId = 200000000001L;
 
-        var persons = new List<Person>().BuildMockQueryable();
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        IQueryable<Person> persons = new List<Person>().BuildMockQueryable();
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _documentService.GetByDisplayIdAsync(personDisplayId, documentDisplayId);
+        Result<DocumentResponseDto> result = await _documentService.GetByDisplayIdAsync(personDisplayId, documentDisplayId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -78,18 +79,18 @@ public class DocumentServiceTests
     public async Task GetByDisplayIdAsync_WhenDocumentDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var documentDisplayId = 999999999999L;
-        var person = CreateTestPerson(personDisplayId);
+        long personDisplayId = 100000000001L;
+        long documentDisplayId = 999999999999L;
+        Person person = CreateTestPerson(personDisplayId);
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
-        var documents = new List<Document>().BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Document> documents = new List<Document>().BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
 
         // Act
-        var result = await _documentService.GetByDisplayIdAsync(personDisplayId, documentDisplayId);
+        Result<DocumentResponseDto> result = await _documentService.GetByDisplayIdAsync(personDisplayId, documentDisplayId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -104,24 +105,24 @@ public class DocumentServiceTests
     public async Task GetPagedAsync_WhenPersonExists_ReturnsPagedResult()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var person = CreateTestPerson(personDisplayId);
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10 };
+        long personDisplayId = 100000000001L;
+        Person person = CreateTestPerson(personDisplayId);
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10 };
 
-        var documents = new List<Document>
+        IQueryable<Document> documents = new List<Document>
         {
             CreateTestDocument(200000000001L, person.Id, "Document1.pdf"),
             CreateTestDocument(200000000002L, person.Id, "Document2.pdf"),
             CreateTestDocument(200000000003L, person.Id, "Document3.pdf")
         }.BuildMockQueryable();
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
 
         // Act
-        var result = await _documentService.GetPagedAsync(personDisplayId, query);
+        PagedResult<DocumentListDto> result = await _documentService.GetPagedAsync(personDisplayId, query);
 
         // Assert
         Assert.NotNull(result);
@@ -133,14 +134,14 @@ public class DocumentServiceTests
     public async Task GetPagedAsync_WhenPersonDoesNotExist_ReturnsEmptyResult()
     {
         // Arrange
-        var personDisplayId = 999999999999L;
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10 };
+        long personDisplayId = 999999999999L;
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10 };
 
-        var persons = new List<Person>().BuildMockQueryable();
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        IQueryable<Person> persons = new List<Person>().BuildMockQueryable();
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _documentService.GetPagedAsync(personDisplayId, query);
+        PagedResult<DocumentListDto> result = await _documentService.GetPagedAsync(personDisplayId, query);
 
         // Assert
         Assert.NotNull(result);
@@ -152,24 +153,24 @@ public class DocumentServiceTests
     public async Task GetPagedAsync_WithSearchTerm_FiltersResults()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var person = CreateTestPerson(personDisplayId);
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10, SearchTerm = "Report" };
+        long personDisplayId = 100000000001L;
+        Person person = CreateTestPerson(personDisplayId);
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10, SearchTerm = "Report" };
 
-        var documents = new List<Document>
+        IQueryable<Document> documents = new List<Document>
         {
             CreateTestDocument(200000000001L, person.Id, "Report.pdf"),
             CreateTestDocument(200000000002L, person.Id, "Contract.pdf"),
             CreateTestDocument(200000000003L, person.Id, "Annual_Report.pdf")
         }.BuildMockQueryable();
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
 
         // Act
-        var result = await _documentService.GetPagedAsync(personDisplayId, query);
+        PagedResult<DocumentListDto> result = await _documentService.GetPagedAsync(personDisplayId, query);
 
         // Assert
         Assert.NotNull(result);
@@ -184,11 +185,11 @@ public class DocumentServiceTests
     public async Task UploadAsync_WithValidData_ReturnsDocumentResponseDto()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var person = CreateTestPerson(personDisplayId);
-        var persons = new List<Person> { person }.BuildMockQueryable();
+        long personDisplayId = 100000000001L;
+        Person person = CreateTestPerson(personDisplayId);
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
 
-        var uploadDto = new UploadDocumentDto
+        UploadDocumentDto uploadDto = new()
         {
             FileName = "test.pdf",
             ContentType = "application/pdf",
@@ -197,8 +198,8 @@ public class DocumentServiceTests
             Description = "Test document"
         };
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _blobStorageServiceMock
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _blobStorageServiceMock
             .Setup(b => b.UploadAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
@@ -207,12 +208,12 @@ public class DocumentServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://storage.blob.core.windows.net/documents/test.pdf");
 
-        _documentRepositoryMock
+        _ = _documentRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Document>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Document d, CancellationToken _) => d);
 
         // Act
-        var result = await _documentService.UploadAsync(personDisplayId, uploadDto, "TestUser");
+        Result<DocumentResponseDto> result = await _documentService.UploadAsync(personDisplayId, uploadDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -234,10 +235,10 @@ public class DocumentServiceTests
     public async Task UploadAsync_WhenPersonDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var personDisplayId = 999999999999L;
-        var persons = new List<Person>().BuildMockQueryable();
+        long personDisplayId = 999999999999L;
+        IQueryable<Person> persons = new List<Person>().BuildMockQueryable();
 
-        var uploadDto = new UploadDocumentDto
+        UploadDocumentDto uploadDto = new()
         {
             FileName = "test.pdf",
             ContentType = "application/pdf",
@@ -245,10 +246,10 @@ public class DocumentServiceTests
             FileStream = new MemoryStream()
         };
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _documentService.UploadAsync(personDisplayId, uploadDto, "TestUser");
+        Result<DocumentResponseDto> result = await _documentService.UploadAsync(personDisplayId, uploadDto, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -263,11 +264,11 @@ public class DocumentServiceTests
     public async Task UploadAsync_WithDisallowedExtension_ReturnsBadRequest(string extension)
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var person = CreateTestPerson(personDisplayId);
-        var persons = new List<Person> { person }.BuildMockQueryable();
+        long personDisplayId = 100000000001L;
+        Person person = CreateTestPerson(personDisplayId);
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
 
-        var uploadDto = new UploadDocumentDto
+        UploadDocumentDto uploadDto = new()
         {
             FileName = $"test{extension}",
             ContentType = "application/octet-stream",
@@ -275,10 +276,10 @@ public class DocumentServiceTests
             FileStream = new MemoryStream()
         };
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _documentService.UploadAsync(personDisplayId, uploadDto, "TestUser");
+        Result<DocumentResponseDto> result = await _documentService.UploadAsync(personDisplayId, uploadDto, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -297,11 +298,11 @@ public class DocumentServiceTests
     public async Task UploadAsync_WithAllowedExtension_SetsCorrectDocumentType(string extension, DocumentType expectedType)
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var person = CreateTestPerson(personDisplayId);
-        var persons = new List<Person> { person }.BuildMockQueryable();
+        long personDisplayId = 100000000001L;
+        Person person = CreateTestPerson(personDisplayId);
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
 
-        var uploadDto = new UploadDocumentDto
+        UploadDocumentDto uploadDto = new()
         {
             FileName = $"test{extension}",
             ContentType = "application/octet-stream",
@@ -309,8 +310,8 @@ public class DocumentServiceTests
             FileStream = new MemoryStream()
         };
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _blobStorageServiceMock
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _blobStorageServiceMock
             .Setup(b => b.UploadAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
@@ -319,12 +320,12 @@ public class DocumentServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://storage.blob.core.windows.net/documents/test.pdf");
 
-        _documentRepositoryMock
+        _ = _documentRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Document>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Document d, CancellationToken _) => d);
 
         // Act
-        var result = await _documentService.UploadAsync(personDisplayId, uploadDto, "TestUser");
+        Result<DocumentResponseDto> result = await _documentService.UploadAsync(personDisplayId, uploadDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -339,24 +340,24 @@ public class DocumentServiceTests
     public async Task UpdateAsync_WhenDocumentExists_UpdatesDescription()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var documentDisplayId = 200000000001L;
-        var person = CreateTestPerson(personDisplayId);
-        var document = CreateTestDocument(documentDisplayId, person.Id);
+        long personDisplayId = 100000000001L;
+        long documentDisplayId = 200000000001L;
+        Person person = CreateTestPerson(personDisplayId);
+        Document document = CreateTestDocument(documentDisplayId, person.Id);
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
-        var documents = new List<Document> { document }.BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Document> documents = new List<Document> { document }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
-        _documentRepositoryMock
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
+        _ = _documentRepositoryMock
             .Setup(r => r.UpdateAsync(It.IsAny<Document>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var updateDto = new UpdateDocumentDto { Description = "Updated description" };
+        UpdateDocumentDto updateDto = new() { Description = "Updated description" };
 
         // Act
-        var result = await _documentService.UpdateAsync(personDisplayId, documentDisplayId, updateDto, "TestUser");
+        Result<DocumentResponseDto> result = await _documentService.UpdateAsync(personDisplayId, documentDisplayId, updateDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -367,20 +368,20 @@ public class DocumentServiceTests
     public async Task UpdateAsync_WhenDocumentDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var documentDisplayId = 999999999999L;
-        var person = CreateTestPerson(personDisplayId);
+        long personDisplayId = 100000000001L;
+        long documentDisplayId = 999999999999L;
+        Person person = CreateTestPerson(personDisplayId);
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
-        var documents = new List<Document>().BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Document> documents = new List<Document>().BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
 
-        var updateDto = new UpdateDocumentDto { Description = "Updated description" };
+        UpdateDocumentDto updateDto = new() { Description = "Updated description" };
 
         // Act
-        var result = await _documentService.UpdateAsync(personDisplayId, documentDisplayId, updateDto, "TestUser");
+        Result<DocumentResponseDto> result = await _documentService.UpdateAsync(personDisplayId, documentDisplayId, updateDto, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -395,22 +396,22 @@ public class DocumentServiceTests
     public async Task DeleteAsync_WhenDocumentExists_DeletesSuccessfully()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var documentDisplayId = 200000000001L;
-        var person = CreateTestPerson(personDisplayId);
-        var document = CreateTestDocument(documentDisplayId, person.Id);
+        long personDisplayId = 100000000001L;
+        long documentDisplayId = 200000000001L;
+        Person person = CreateTestPerson(personDisplayId);
+        Document document = CreateTestDocument(documentDisplayId, person.Id);
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
-        var documents = new List<Document> { document }.BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Document> documents = new List<Document> { document }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
-        _documentRepositoryMock
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
+        _ = _documentRepositoryMock
             .Setup(r => r.DeleteAsync(It.IsAny<Document>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _documentService.DeleteAsync(personDisplayId, documentDisplayId, "TestUser");
+        Result result = await _documentService.DeleteAsync(personDisplayId, documentDisplayId, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -421,18 +422,18 @@ public class DocumentServiceTests
     public async Task DeleteAsync_WhenDocumentDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var documentDisplayId = 999999999999L;
-        var person = CreateTestPerson(personDisplayId);
+        long personDisplayId = 100000000001L;
+        long documentDisplayId = 999999999999L;
+        Person person = CreateTestPerson(personDisplayId);
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
-        var documents = new List<Document>().BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Document> documents = new List<Document>().BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
 
         // Act
-        var result = await _documentService.DeleteAsync(personDisplayId, documentDisplayId, "TestUser");
+        Result result = await _documentService.DeleteAsync(personDisplayId, documentDisplayId, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -447,19 +448,19 @@ public class DocumentServiceTests
     public async Task DownloadAsync_WhenDocumentExists_ReturnsDownloadResult()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var documentDisplayId = 200000000001L;
-        var person = CreateTestPerson(personDisplayId);
-        var document = CreateTestDocument(documentDisplayId, person.Id);
+        long personDisplayId = 100000000001L;
+        long documentDisplayId = 200000000001L;
+        Person person = CreateTestPerson(personDisplayId);
+        Document document = CreateTestDocument(documentDisplayId, person.Id);
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
-        var documents = new List<Document> { document }.BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Document> documents = new List<Document> { document }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
 
-        var expectedStream = new MemoryStream(new byte[] { 1, 2, 3 });
-        _blobStorageServiceMock
+        MemoryStream expectedStream = new(new byte[] { 1, 2, 3 });
+        _ = _blobStorageServiceMock
             .Setup(b => b.DownloadAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
@@ -467,7 +468,7 @@ public class DocumentServiceTests
             .ReturnsAsync(expectedStream);
 
         // Act
-        var result = await _documentService.DownloadAsync(personDisplayId, documentDisplayId);
+        Result<BlobDownloadResultDto> result = await _documentService.DownloadAsync(personDisplayId, documentDisplayId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -480,18 +481,18 @@ public class DocumentServiceTests
     public async Task DownloadAsync_WhenDocumentDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var documentDisplayId = 999999999999L;
-        var person = CreateTestPerson(personDisplayId);
+        long personDisplayId = 100000000001L;
+        long documentDisplayId = 999999999999L;
+        Person person = CreateTestPerson(personDisplayId);
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
-        var documents = new List<Document>().BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Document> documents = new List<Document>().BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _documentRepositoryMock.Setup(r => r.Query()).Returns(documents);
 
         // Act
-        var result = await _documentService.DownloadAsync(personDisplayId, documentDisplayId);
+        Result<BlobDownloadResultDto> result = await _documentService.DownloadAsync(personDisplayId, documentDisplayId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -506,11 +507,11 @@ public class DocumentServiceTests
     public async Task UploadProfileImageAsync_WithValidImage_UploadsSuccessfully()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var person = CreateTestPerson(personDisplayId);
-        var persons = new List<Person> { person }.BuildMockQueryable();
+        long personDisplayId = 100000000001L;
+        Person person = CreateTestPerson(personDisplayId);
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
 
-        var uploadDto = new UploadDocumentDto
+        UploadDocumentDto uploadDto = new()
         {
             FileName = "profile.jpg",
             ContentType = "image/jpeg",
@@ -518,8 +519,8 @@ public class DocumentServiceTests
             FileStream = new MemoryStream()
         };
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _blobStorageServiceMock
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _blobStorageServiceMock
             .Setup(b => b.UploadAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
@@ -528,12 +529,12 @@ public class DocumentServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://storage.blob.core.windows.net/profile-images/profile.jpg");
 
-        _personRepositoryMock
+        _ = _personRepositoryMock
             .Setup(r => r.UpdateAsync(It.IsAny<Person>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _documentService.UploadProfileImageAsync(personDisplayId, uploadDto, "TestUser");
+        Result<string> result = await _documentService.UploadProfileImageAsync(personDisplayId, uploadDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -548,11 +549,11 @@ public class DocumentServiceTests
     public async Task UploadProfileImageAsync_WithNonImageFile_ReturnsBadRequest(string extension)
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var person = CreateTestPerson(personDisplayId);
-        var persons = new List<Person> { person }.BuildMockQueryable();
+        long personDisplayId = 100000000001L;
+        Person person = CreateTestPerson(personDisplayId);
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
 
-        var uploadDto = new UploadDocumentDto
+        UploadDocumentDto uploadDto = new()
         {
             FileName = $"profile{extension}",
             ContentType = "application/octet-stream",
@@ -560,10 +561,10 @@ public class DocumentServiceTests
             FileStream = new MemoryStream()
         };
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _documentService.UploadProfileImageAsync(personDisplayId, uploadDto, "TestUser");
+        Result<string> result = await _documentService.UploadProfileImageAsync(personDisplayId, uploadDto, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -578,25 +579,25 @@ public class DocumentServiceTests
     public async Task DeleteProfileImageAsync_WhenProfileImageExists_DeletesSuccessfully()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var person = CreateTestPerson(personDisplayId);
+        long personDisplayId = 100000000001L;
+        Person person = CreateTestPerson(personDisplayId);
         person.ProfileImageUrl = "https://storage.blob.core.windows.net/profile-images/profile.jpg";
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
-        _blobStorageServiceMock
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _blobStorageServiceMock
             .Setup(b => b.DeleteAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _personRepositoryMock
+        _ = _personRepositoryMock
             .Setup(r => r.UpdateAsync(It.IsAny<Person>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _documentService.DeleteProfileImageAsync(personDisplayId, "TestUser");
+        Result result = await _documentService.DeleteProfileImageAsync(personDisplayId, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -610,16 +611,16 @@ public class DocumentServiceTests
     public async Task DeleteProfileImageAsync_WhenNoProfileImage_ReturnsNotFound()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var person = CreateTestPerson(personDisplayId);
+        long personDisplayId = 100000000001L;
+        Person person = CreateTestPerson(personDisplayId);
         person.ProfileImageUrl = null;
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _documentService.DeleteProfileImageAsync(personDisplayId, "TestUser");
+        Result result = await _documentService.DeleteProfileImageAsync(personDisplayId, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -634,16 +635,16 @@ public class DocumentServiceTests
     public async Task GetProfileImageAsync_WhenProfileImageExists_ReturnsDownloadResult()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var person = CreateTestPerson(personDisplayId);
+        long personDisplayId = 100000000001L;
+        Person person = CreateTestPerson(personDisplayId);
         person.ProfileImageUrl = "https://storage.blob.core.windows.net/profile-images/profile.jpg";
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
-        var expectedStream = new MemoryStream(new byte[] { 1, 2, 3 });
-        _blobStorageServiceMock
+        MemoryStream expectedStream = new(new byte[] { 1, 2, 3 });
+        _ = _blobStorageServiceMock
             .Setup(b => b.DownloadAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
@@ -651,7 +652,7 @@ public class DocumentServiceTests
             .ReturnsAsync(expectedStream);
 
         // Act
-        var result = await _documentService.GetProfileImageAsync(personDisplayId);
+        Result<BlobDownloadResultDto> result = await _documentService.GetProfileImageAsync(personDisplayId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -663,16 +664,16 @@ public class DocumentServiceTests
     public async Task GetProfileImageAsync_WhenNoProfileImage_ReturnsNotFound()
     {
         // Arrange
-        var personDisplayId = 100000000001L;
-        var person = CreateTestPerson(personDisplayId);
+        long personDisplayId = 100000000001L;
+        Person person = CreateTestPerson(personDisplayId);
         person.ProfileImageUrl = null;
 
-        var persons = new List<Person> { person }.BuildMockQueryable();
+        IQueryable<Person> persons = new List<Person> { person }.BuildMockQueryable();
 
-        _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
+        _ = _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
 
         // Act
-        var result = await _documentService.GetProfileImageAsync(personDisplayId);
+        Result<BlobDownloadResultDto> result = await _documentService.GetProfileImageAsync(personDisplayId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -685,7 +686,7 @@ public class DocumentServiceTests
 
     private static Person CreateTestPerson(long displayId, string firstName = "Test", string lastName = "Person")
     {
-        var person = new Person
+        Person person = new()
         {
             FirstName = firstName,
             LastName = lastName,
@@ -696,7 +697,7 @@ public class DocumentServiceTests
             CreatedOn = DateTime.UtcNow
         };
 
-        var displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
+        PropertyInfo? displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
         displayIdProperty?.SetValue(person, displayId);
 
         return person;
@@ -704,7 +705,7 @@ public class DocumentServiceTests
 
     private static Document CreateTestDocument(long displayId, Guid personId, string fileName = "test.pdf")
     {
-        var document = new Document
+        Document document = new()
         {
             FileName = fileName,
             FileExtension = Path.GetExtension(fileName),
@@ -719,7 +720,7 @@ public class DocumentServiceTests
             CreatedOn = DateTime.UtcNow
         };
 
-        var displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
+        PropertyInfo? displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
         displayIdProperty?.SetValue(document, displayId);
 
         return document;

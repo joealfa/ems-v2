@@ -6,6 +6,7 @@ using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Tests.Helpers;
 using Moq;
+using System.Reflection;
 
 namespace EmployeeManagementSystem.Tests.Services;
 
@@ -37,14 +38,14 @@ public class SchoolServiceTests
     public async Task GetByDisplayIdAsync_WhenSchoolExists_ReturnsSchoolResponseDto()
     {
         // Arrange
-        var displayId = 123456789012L;
-        var school = CreateTestSchool(displayId, "Sample Elementary School");
+        long displayId = 123456789012L;
+        School school = CreateTestSchool(displayId, "Sample Elementary School");
 
-        var schools = new List<School> { school }.BuildMockQueryable();
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        IQueryable<School> schools = new List<School> { school }.BuildMockQueryable();
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
 
         // Act
-        var result = await _schoolService.GetByDisplayIdAsync(displayId);
+        Result<SchoolResponseDto> result = await _schoolService.GetByDisplayIdAsync(displayId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -57,12 +58,12 @@ public class SchoolServiceTests
     public async Task GetByDisplayIdAsync_WhenSchoolDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var displayId = 999999999999L;
-        var schools = new List<School>().BuildMockQueryable();
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        long displayId = 999999999999L;
+        IQueryable<School> schools = new List<School>().BuildMockQueryable();
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
 
         // Act
-        var result = await _schoolService.GetByDisplayIdAsync(displayId);
+        Result<SchoolResponseDto> result = await _schoolService.GetByDisplayIdAsync(displayId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -77,18 +78,18 @@ public class SchoolServiceTests
     public async Task GetPagedAsync_ReturnsPagedResult()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10 };
-        var schools = new List<School>
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10 };
+        IQueryable<School> schools = new List<School>
         {
             CreateTestSchool(100000000001L, "School A"),
             CreateTestSchool(100000000002L, "School B"),
             CreateTestSchool(100000000003L, "School C")
         }.BuildMockQueryable();
 
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
 
         // Act
-        var result = await _schoolService.GetPagedAsync(query);
+        PagedResult<SchoolListDto> result = await _schoolService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -100,18 +101,18 @@ public class SchoolServiceTests
     public async Task GetPagedAsync_WithSearchTerm_FiltersResults()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10, SearchTerm = "Elementary" };
-        var schools = new List<School>
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10, SearchTerm = "Elementary" };
+        IQueryable<School> schools = new List<School>
         {
             CreateTestSchool(100000000001L, "Elementary School A"),
             CreateTestSchool(100000000002L, "High School B"),
             CreateTestSchool(100000000003L, "Elementary School C")
         }.BuildMockQueryable();
 
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
 
         // Act
-        var result = await _schoolService.GetPagedAsync(query);
+        PagedResult<SchoolListDto> result = await _schoolService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -122,18 +123,18 @@ public class SchoolServiceTests
     public async Task GetPagedAsync_WithSortDescending_ReturnsSortedResults()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10, SortDescending = true };
-        var schools = new List<School>
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10, SortDescending = true };
+        IQueryable<School> schools = new List<School>
         {
             CreateTestSchool(100000000001L, "Alpha School"),
             CreateTestSchool(100000000002L, "Zeta School"),
             CreateTestSchool(100000000003L, "Beta School")
         }.BuildMockQueryable();
 
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
 
         // Act
-        var result = await _schoolService.GetPagedAsync(query);
+        PagedResult<SchoolListDto> result = await _schoolService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -149,17 +150,17 @@ public class SchoolServiceTests
     public async Task CreateAsync_WithValidData_ReturnsCreatedSchool()
     {
         // Arrange
-        var createDto = new CreateSchoolDto
+        CreateSchoolDto createDto = new()
         {
             SchoolName = "New Test School"
         };
 
-        _schoolRepositoryMock
+        _ = _schoolRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<School>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((School s, CancellationToken _) => s);
 
         // Act
-        var result = await _schoolService.CreateAsync(createDto, "TestUser");
+        Result<SchoolResponseDto> result = await _schoolService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -174,7 +175,7 @@ public class SchoolServiceTests
     public async Task CreateAsync_WithAddresses_CreatesSchoolWithAddresses()
     {
         // Arrange
-        var createDto = new CreateSchoolDto
+        CreateSchoolDto createDto = new()
         {
             SchoolName = "New Test School",
             Addresses =
@@ -189,16 +190,16 @@ public class SchoolServiceTests
             ]
         };
 
-        _schoolRepositoryMock
+        _ = _schoolRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<School>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((School s, CancellationToken _) => s);
 
-        _addressRepositoryMock
+        _ = _addressRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Address>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Address a, CancellationToken _) => a);
 
         // Act
-        var result = await _schoolService.CreateAsync(createDto, "TestUser");
+        Result<SchoolResponseDto> result = await _schoolService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.NotNull(result);
@@ -209,7 +210,7 @@ public class SchoolServiceTests
     public async Task CreateAsync_WithContacts_CreatesSchoolWithContacts()
     {
         // Arrange
-        var createDto = new CreateSchoolDto
+        CreateSchoolDto createDto = new()
         {
             SchoolName = "New Test School",
             Contacts =
@@ -222,16 +223,16 @@ public class SchoolServiceTests
             ]
         };
 
-        _schoolRepositoryMock
+        _ = _schoolRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<School>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((School s, CancellationToken _) => s);
 
-        _contactRepositoryMock
+        _ = _contactRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Contact>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Contact c, CancellationToken _) => c);
 
         // Act
-        var result = await _schoolService.CreateAsync(createDto, "TestUser");
+        Result<SchoolResponseDto> result = await _schoolService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.NotNull(result);
@@ -246,21 +247,21 @@ public class SchoolServiceTests
     public async Task DeleteAsync_WhenSchoolExists_ReturnsTrue()
     {
         // Arrange
-        var displayId = 123456789012L;
-        var school = CreateTestSchool(displayId, "Test School");
+        long displayId = 123456789012L;
+        School school = CreateTestSchool(displayId, "Test School");
         school.Addresses = [];
         school.Contacts = [];
         school.EmploymentSchools = [];
 
-        var schools = new List<School> { school }.BuildMockQueryable();
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        IQueryable<School> schools = new List<School> { school }.BuildMockQueryable();
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
 
-        _schoolRepositoryMock
+        _ = _schoolRepositoryMock
             .Setup(r => r.DeleteAsync(school, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _schoolService.DeleteAsync(displayId, "TestUser");
+        Result result = await _schoolService.DeleteAsync(displayId, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -271,13 +272,13 @@ public class SchoolServiceTests
     public async Task DeleteAsync_WhenSchoolDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var displayId = 999999999999L;
+        long displayId = 999999999999L;
 
-        var schools = new List<School>().BuildMockQueryable();
-        _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
+        IQueryable<School> schools = new List<School>().BuildMockQueryable();
+        _ = _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);
 
         // Act
-        var result = await _schoolService.DeleteAsync(displayId, "TestUser");
+        Result result = await _schoolService.DeleteAsync(displayId, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -291,7 +292,7 @@ public class SchoolServiceTests
 
     private static School CreateTestSchool(long displayId, string schoolName)
     {
-        var school = new School
+        School school = new()
         {
             SchoolName = schoolName,
             IsActive = true,
@@ -300,7 +301,7 @@ public class SchoolServiceTests
         };
 
         // Use reflection to set DisplayId since it has a private setter
-        var displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
+        PropertyInfo? displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
         displayIdProperty?.SetValue(school, displayId);
 
         return school;

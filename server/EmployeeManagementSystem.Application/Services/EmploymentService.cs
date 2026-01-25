@@ -33,7 +33,7 @@ public class EmploymentService(
     /// <inheritdoc />
     public async Task<Result<EmploymentResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
-        var employment = await _employmentRepository.Query()
+        Employment? employment = await _employmentRepository.Query()
             .Include(e => e.Person)
             .Include(e => e.Position)
             .Include(e => e.SalaryGrade)
@@ -50,14 +50,14 @@ public class EmploymentService(
     /// <inheritdoc />
     public async Task<PagedResult<EmploymentListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
-        var baseQuery = _employmentRepository.Query()
+        IQueryable<Employment> baseQuery = _employmentRepository.Query()
             .Include(e => e.Person)
             .Include(e => e.Position)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            var searchTerm = query.SearchTerm.ToLower();
+            string searchTerm = query.SearchTerm.ToLower();
             baseQuery = baseQuery.Where(e =>
                 (e.DepEdId != null && e.DepEdId.ToLower().Contains(searchTerm)) ||
                 e.Person.FirstName.ToLower().Contains(searchTerm) ||
@@ -65,13 +65,13 @@ public class EmploymentService(
                 e.Position.TitleName.ToLower().Contains(searchTerm));
         }
 
-        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        int totalCount = await baseQuery.CountAsync(cancellationToken);
 
-        var orderedQuery = query.SortDescending
+        IOrderedQueryable<Employment> orderedQuery = query.SortDescending
             ? baseQuery.OrderByDescending(e => e.Person.LastName).ThenByDescending(e => e.Person.FirstName)
             : baseQuery.OrderBy(e => e.Person.LastName).ThenBy(e => e.Person.FirstName);
 
-        var items = await orderedQuery
+        List<EmploymentListDto> items = await orderedQuery
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(e => new EmploymentListDto
@@ -102,23 +102,31 @@ public class EmploymentService(
     public async Task<Result<EmploymentResponseDto>> CreateAsync(CreateEmploymentDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
         // Resolve foreign key references by display ID
-        var person = await _personRepository.GetByDisplayIdAsync(dto.PersonDisplayId, cancellationToken);
+        Person? person = await _personRepository.GetByDisplayIdAsync(dto.PersonDisplayId, cancellationToken);
         if (person == null)
+        {
             return Result<EmploymentResponseDto>.BadRequest($"Person with DisplayId {dto.PersonDisplayId} not found.");
+        }
 
-        var position = await _positionRepository.GetByDisplayIdAsync(dto.PositionDisplayId, cancellationToken);
+        Position? position = await _positionRepository.GetByDisplayIdAsync(dto.PositionDisplayId, cancellationToken);
         if (position == null)
+        {
             return Result<EmploymentResponseDto>.BadRequest($"Position with DisplayId {dto.PositionDisplayId} not found.");
+        }
 
-        var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(dto.SalaryGradeDisplayId, cancellationToken);
+        SalaryGrade? salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(dto.SalaryGradeDisplayId, cancellationToken);
         if (salaryGrade == null)
+        {
             return Result<EmploymentResponseDto>.BadRequest($"SalaryGrade with DisplayId {dto.SalaryGradeDisplayId} not found.");
+        }
 
-        var item = await _itemRepository.GetByDisplayIdAsync(dto.ItemDisplayId, cancellationToken);
+        Item? item = await _itemRepository.GetByDisplayIdAsync(dto.ItemDisplayId, cancellationToken);
         if (item == null)
+        {
             return Result<EmploymentResponseDto>.BadRequest($"Item with DisplayId {dto.ItemDisplayId} not found.");
+        }
 
-        var employment = new Employment
+        Employment employment = new()
         {
             DepEdId = dto.DepEdId,
             PSIPOPItemNumber = dto.PSIPOPItemNumber,
@@ -136,18 +144,20 @@ public class EmploymentService(
             CreatedBy = createdBy
         };
 
-        await _employmentRepository.AddAsync(employment, cancellationToken);
+        _ = await _employmentRepository.AddAsync(employment, cancellationToken);
 
         // Add school assignments if provided
         if (dto.Schools != null && dto.Schools.Count > 0)
         {
-            foreach (var schoolDto in dto.Schools)
+            foreach (CreateEmploymentSchoolDto schoolDto in dto.Schools)
             {
-                var school = await _schoolRepository.GetByDisplayIdAsync(schoolDto.SchoolDisplayId, cancellationToken);
+                School? school = await _schoolRepository.GetByDisplayIdAsync(schoolDto.SchoolDisplayId, cancellationToken);
                 if (school == null)
+                {
                     return Result<EmploymentResponseDto>.BadRequest($"School with DisplayId {schoolDto.SchoolDisplayId} not found.");
+                }
 
-                var employmentSchool = new EmploymentSchool
+                EmploymentSchool employmentSchool = new()
                 {
                     EmploymentId = employment.Id,
                     SchoolId = school.Id,
@@ -156,7 +166,7 @@ public class EmploymentService(
                     IsCurrent = schoolDto.IsCurrent,
                     CreatedBy = createdBy
                 };
-                await _employmentSchoolRepository.AddAsync(employmentSchool, cancellationToken);
+                _ = await _employmentSchoolRepository.AddAsync(employmentSchool, cancellationToken);
                 employment.EmploymentSchools.Add(employmentSchool);
             }
         }
@@ -173,7 +183,7 @@ public class EmploymentService(
     /// <inheritdoc />
     public async Task<Result<EmploymentResponseDto>> UpdateAsync(long displayId, UpdateEmploymentDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
-        var employment = await _employmentRepository.Query()
+        Employment? employment = await _employmentRepository.Query()
             .Include(e => e.Person)
             .Include(e => e.Position)
             .Include(e => e.SalaryGrade)
@@ -183,20 +193,28 @@ public class EmploymentService(
             .FirstOrDefaultAsync(e => e.DisplayId == displayId, cancellationToken);
 
         if (employment == null)
+        {
             return Result<EmploymentResponseDto>.NotFound("Employment not found.");
+        }
 
         // Resolve foreign key references by display ID
-        var position = await _positionRepository.GetByDisplayIdAsync(dto.PositionDisplayId, cancellationToken);
+        Position? position = await _positionRepository.GetByDisplayIdAsync(dto.PositionDisplayId, cancellationToken);
         if (position == null)
+        {
             return Result<EmploymentResponseDto>.BadRequest($"Position with DisplayId {dto.PositionDisplayId} not found.");
+        }
 
-        var salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(dto.SalaryGradeDisplayId, cancellationToken);
+        SalaryGrade? salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(dto.SalaryGradeDisplayId, cancellationToken);
         if (salaryGrade == null)
+        {
             return Result<EmploymentResponseDto>.BadRequest($"SalaryGrade with DisplayId {dto.SalaryGradeDisplayId} not found.");
+        }
 
-        var item = await _itemRepository.GetByDisplayIdAsync(dto.ItemDisplayId, cancellationToken);
+        Item? item = await _itemRepository.GetByDisplayIdAsync(dto.ItemDisplayId, cancellationToken);
         if (item == null)
+        {
             return Result<EmploymentResponseDto>.BadRequest($"Item with DisplayId {dto.ItemDisplayId} not found.");
+        }
 
         employment.DepEdId = dto.DepEdId;
         employment.PSIPOPItemNumber = dto.PSIPOPItemNumber;
@@ -226,15 +244,17 @@ public class EmploymentService(
     /// <inheritdoc />
     public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
-        var employment = await _employmentRepository.Query()
+        Employment? employment = await _employmentRepository.Query()
             .Include(e => e.EmploymentSchools.Where(es => !es.IsDeleted))
             .FirstOrDefaultAsync(e => e.DisplayId == displayId, cancellationToken);
 
         if (employment == null)
+        {
             return Result.NotFound("Employment not found.");
+        }
 
         // Cascade soft delete to related employment schools
-        foreach (var employmentSchool in employment.EmploymentSchools)
+        foreach (EmploymentSchool employmentSchool in employment.EmploymentSchools)
         {
             employmentSchool.ModifiedBy = deletedBy;
             await _employmentSchoolRepository.DeleteAsync(employmentSchool, cancellationToken);
@@ -249,15 +269,19 @@ public class EmploymentService(
     /// <inheritdoc />
     public async Task<Result<EmploymentSchoolResponseDto>> AddSchoolAssignmentAsync(long employmentDisplayId, CreateEmploymentSchoolDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
-        var employment = await _employmentRepository.GetByDisplayIdAsync(employmentDisplayId, cancellationToken);
+        Employment? employment = await _employmentRepository.GetByDisplayIdAsync(employmentDisplayId, cancellationToken);
         if (employment == null)
+        {
             return Result<EmploymentSchoolResponseDto>.NotFound("Employment not found.");
+        }
 
-        var school = await _schoolRepository.GetByDisplayIdAsync(dto.SchoolDisplayId, cancellationToken);
+        School? school = await _schoolRepository.GetByDisplayIdAsync(dto.SchoolDisplayId, cancellationToken);
         if (school == null)
+        {
             return Result<EmploymentSchoolResponseDto>.NotFound($"School with DisplayId {dto.SchoolDisplayId} not found.");
+        }
 
-        var employmentSchool = new EmploymentSchool
+        EmploymentSchool employmentSchool = new()
         {
             EmploymentId = employment.Id,
             SchoolId = school.Id,
@@ -267,7 +291,7 @@ public class EmploymentService(
             CreatedBy = createdBy
         };
 
-        await _employmentSchoolRepository.AddAsync(employmentSchool, cancellationToken);
+        _ = await _employmentSchoolRepository.AddAsync(employmentSchool, cancellationToken);
 
         return Result<EmploymentSchoolResponseDto>.Success(new EmploymentSchoolResponseDto
         {
@@ -286,9 +310,11 @@ public class EmploymentService(
     /// <inheritdoc />
     public async Task<Result> RemoveSchoolAssignmentAsync(long employmentSchoolDisplayId, string deletedBy, CancellationToken cancellationToken = default)
     {
-        var employmentSchool = await _employmentSchoolRepository.GetByDisplayIdAsync(employmentSchoolDisplayId, cancellationToken);
+        EmploymentSchool? employmentSchool = await _employmentSchoolRepository.GetByDisplayIdAsync(employmentSchoolDisplayId, cancellationToken);
         if (employmentSchool == null)
+        {
             return Result.NotFound("Employment school assignment not found.");
+        }
 
         employmentSchool.ModifiedBy = deletedBy;
         await _employmentSchoolRepository.DeleteAsync(employmentSchool, cancellationToken);

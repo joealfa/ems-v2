@@ -34,12 +34,12 @@ public class DevAuthController(IConfiguration configuration, ILogger<DevAuthCont
         {
             request ??= new DevTokenRequest(null, null, null);
 
-            var userId = request.UserId ?? "dev-user-123";
-            var email = request.Email ?? "dev@example.com";
-            var name = request.Name ?? "Dev User";
+            string userId = request.UserId ?? "dev-user-123";
+            string email = request.Email ?? "dev@example.com";
+            string name = request.Name ?? "Dev User";
 
-            var claims = new List<Claim>
-            {
+            List<Claim> claims =
+            [
                 new(ClaimTypes.NameIdentifier, userId),
                 new(ClaimTypes.Email, email),
                 new(ClaimTypes.Name, name),
@@ -47,18 +47,18 @@ public class DevAuthController(IConfiguration configuration, ILogger<DevAuthCont
                 new("email", email),
                 new("name", name),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
+            ];
 
-            var jwtConfig = _configuration.GetSection("Authentication:Jwt");
-            var secret = jwtConfig["Secret"] ?? throw new InvalidOperationException("JWT Secret not configured");
-            var issuer = jwtConfig["Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured");
-            var audience = jwtConfig["Audience"] ?? throw new InvalidOperationException("JWT Audience not configured");
+            IConfigurationSection jwtConfig = _configuration.GetSection("Authentication:Jwt");
+            string secret = jwtConfig["Secret"] ?? throw new InvalidOperationException("JWT Secret not configured");
+            string issuer = jwtConfig["Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured");
+            string audience = jwtConfig["Audience"] ?? throw new InvalidOperationException("JWT Audience not configured");
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expiry = DateTime.UtcNow.AddHours(8);
+            SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(secret));
+            SigningCredentials creds = new(key, SecurityAlgorithms.HmacSha256);
+            DateTime expiry = DateTime.UtcNow.AddHours(8);
 
-            var token = new JwtSecurityToken(
+            JwtSecurityToken token = new(
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
@@ -67,7 +67,7 @@ public class DevAuthController(IConfiguration configuration, ILogger<DevAuthCont
                 signingCredentials: creds
             );
 
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+            string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
             _logger.LogWarning("Development token generated for user: {Email}", email);
 
@@ -100,9 +100,9 @@ public class DevAuthController(IConfiguration configuration, ILogger<DevAuthCont
             return Unauthorized(new { message = "Not authenticated" });
         }
 
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var email = User.FindFirst(ClaimTypes.Email)?.Value;
-        var name = User.FindFirst(ClaimTypes.Name)?.Value;
+        string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        string? email = User.FindFirst(ClaimTypes.Email)?.Value;
+        string? name = User.FindFirst(ClaimTypes.Name)?.Value;
 
         return Ok(new
         {

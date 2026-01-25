@@ -34,7 +34,7 @@ public class EmploymentsController(IEmploymentService employmentService) : ApiCo
         [FromQuery] PaginationQuery query,
         CancellationToken cancellationToken)
     {
-        var result = await _employmentService.GetPagedAsync(query, cancellationToken);
+        PagedResult<EmploymentListDto> result = await _employmentService.GetPagedAsync(query, cancellationToken);
         return Ok(result);
     }
 
@@ -51,7 +51,7 @@ public class EmploymentsController(IEmploymentService employmentService) : ApiCo
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _employmentService.GetByDisplayIdAsync(displayId, cancellationToken);
+        Result<EmploymentResponseDto> result = await _employmentService.GetByDisplayIdAsync(displayId, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -68,7 +68,7 @@ public class EmploymentsController(IEmploymentService employmentService) : ApiCo
         [FromBody] CreateEmploymentDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _employmentService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
+        Result<EmploymentResponseDto> result = await _employmentService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
 
@@ -88,7 +88,7 @@ public class EmploymentsController(IEmploymentService employmentService) : ApiCo
         [FromBody] UpdateEmploymentDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _employmentService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        Result<EmploymentResponseDto> result = await _employmentService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -105,7 +105,7 @@ public class EmploymentsController(IEmploymentService employmentService) : ApiCo
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _employmentService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
+        Result result = await _employmentService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
         return ToNoContentResult(result);
     }
 
@@ -125,7 +125,7 @@ public class EmploymentsController(IEmploymentService employmentService) : ApiCo
         [FromBody] CreateEmploymentSchoolDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _employmentService.AddSchoolAssignmentAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        Result<EmploymentSchoolResponseDto> result = await _employmentService.AddSchoolAssignmentAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
 
@@ -144,7 +144,7 @@ public class EmploymentsController(IEmploymentService employmentService) : ApiCo
         long schoolAssignmentDisplayId,
         CancellationToken cancellationToken)
     {
-        var result = await _employmentService.RemoveSchoolAssignmentAsync(schoolAssignmentDisplayId, CurrentUserEmail, cancellationToken);
+        Result result = await _employmentService.RemoveSchoolAssignmentAsync(schoolAssignmentDisplayId, CurrentUserEmail, cancellationToken);
         return ToNoContentResult(result);
     }
 }

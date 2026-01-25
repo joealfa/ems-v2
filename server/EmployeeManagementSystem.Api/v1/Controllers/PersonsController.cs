@@ -1,8 +1,8 @@
+using EmployeeManagementSystem.Api.Controllers;
 using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Person;
 using EmployeeManagementSystem.Application.Interfaces;
-using EmployeeManagementSystem.Api.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,7 +34,7 @@ public class PersonsController(IPersonService personService) : ApiControllerBase
         [FromQuery] PersonPaginationQuery query,
         CancellationToken cancellationToken)
     {
-        var result = await _personService.GetPagedAsync(query, cancellationToken);
+        PagedResult<PersonListDto> result = await _personService.GetPagedAsync(query, cancellationToken);
         return Ok(result);
     }
 
@@ -51,7 +51,7 @@ public class PersonsController(IPersonService personService) : ApiControllerBase
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _personService.GetByDisplayIdAsync(displayId, cancellationToken);
+        Result<PersonResponseDto> result = await _personService.GetByDisplayIdAsync(displayId, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -68,7 +68,7 @@ public class PersonsController(IPersonService personService) : ApiControllerBase
         [FromBody] CreatePersonDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _personService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
+        Result<PersonResponseDto> result = await _personService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
 
@@ -88,7 +88,7 @@ public class PersonsController(IPersonService personService) : ApiControllerBase
         [FromBody] UpdatePersonDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _personService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        Result<PersonResponseDto> result = await _personService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -105,7 +105,7 @@ public class PersonsController(IPersonService personService) : ApiControllerBase
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _personService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
+        Result result = await _personService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
         return ToNoContentResult(result);
     }
 }

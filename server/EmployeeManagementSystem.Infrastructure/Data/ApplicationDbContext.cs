@@ -1,5 +1,8 @@
 using EmployeeManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
+using System.Linq.Expressions;
 
 namespace EmployeeManagementSystem.Infrastructure.Data;
 
@@ -82,7 +85,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         base.OnModelCreating(modelBuilder);
 
         // Apply global query filter for soft delete (RefreshToken has its own filter configured separately)
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
         {
             // Skip RefreshToken as it has a custom query filter based on User.IsDeleted
             if (entityType.ClrType == typeof(RefreshToken))
@@ -92,227 +95,227 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             if (typeof(AuditableEntity).IsAssignableFrom(entityType.ClrType))
             {
-                modelBuilder.Entity(entityType.ClrType)
+                _ = modelBuilder.Entity(entityType.ClrType)
                     .HasQueryFilter(GetSoftDeleteFilter(entityType.ClrType));
             }
         }
 
         // Configure Person
-        modelBuilder.Entity<Person>(entity =>
+        _ = modelBuilder.Entity<Person>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.DisplayId).IsUnique();
-            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.MiddleName).HasMaxLength(100);
-            entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
-            entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.HasIndex(e => e.DisplayId).IsUnique();
+            _ = entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.MiddleName).HasMaxLength(100);
+            _ = entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
+            _ = entity.Property(e => e.ModifiedBy).HasMaxLength(256);
 
-            entity.HasMany(e => e.Addresses)
+            _ = entity.HasMany(e => e.Addresses)
                 .WithOne(a => a.Person)
                 .HasForeignKey(a => a.PersonId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasMany(e => e.Contacts)
+            _ = entity.HasMany(e => e.Contacts)
                 .WithOne(c => c.Person)
                 .HasForeignKey(c => c.PersonId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasMany(e => e.Employments)
+            _ = entity.HasMany(e => e.Employments)
                 .WithOne(emp => emp.Person)
                 .HasForeignKey(emp => emp.PersonId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasMany(e => e.Documents)
+            _ = entity.HasMany(e => e.Documents)
                 .WithOne(d => d.Person)
                 .HasForeignKey(d => d.PersonId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.Property(e => e.ProfileImageUrl).HasMaxLength(2048);
+            _ = entity.Property(e => e.ProfileImageUrl).HasMaxLength(2048);
         });
 
         // Configure Address
-        modelBuilder.Entity<Address>(entity =>
+        _ = modelBuilder.Entity<Address>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.DisplayId).IsUnique();
-            entity.Property(e => e.Address1).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Address2).HasMaxLength(200);
-            entity.Property(e => e.Barangay).HasMaxLength(100);
-            entity.Property(e => e.City).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Province).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Country).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.ZipCode).HasMaxLength(20);
-            entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
-            entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.HasIndex(e => e.DisplayId).IsUnique();
+            _ = entity.Property(e => e.Address1).IsRequired().HasMaxLength(200);
+            _ = entity.Property(e => e.Address2).HasMaxLength(200);
+            _ = entity.Property(e => e.Barangay).HasMaxLength(100);
+            _ = entity.Property(e => e.City).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.Province).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.Country).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.ZipCode).HasMaxLength(20);
+            _ = entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
+            _ = entity.Property(e => e.ModifiedBy).HasMaxLength(256);
         });
 
         // Configure Contact
-        modelBuilder.Entity<Contact>(entity =>
+        _ = modelBuilder.Entity<Contact>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.DisplayId).IsUnique();
-            entity.Property(e => e.Mobile).HasMaxLength(20);
-            entity.Property(e => e.LandLine).HasMaxLength(20);
-            entity.Property(e => e.Fax).HasMaxLength(20);
-            entity.Property(e => e.Email).HasMaxLength(256);
-            entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
-            entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.HasIndex(e => e.DisplayId).IsUnique();
+            _ = entity.Property(e => e.Mobile).HasMaxLength(20);
+            _ = entity.Property(e => e.LandLine).HasMaxLength(20);
+            _ = entity.Property(e => e.Fax).HasMaxLength(20);
+            _ = entity.Property(e => e.Email).HasMaxLength(256);
+            _ = entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
+            _ = entity.Property(e => e.ModifiedBy).HasMaxLength(256);
         });
 
         // Configure School
-        modelBuilder.Entity<School>(entity =>
+        _ = modelBuilder.Entity<School>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.DisplayId).IsUnique();
-            entity.Property(e => e.SchoolName).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
-            entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.HasIndex(e => e.DisplayId).IsUnique();
+            _ = entity.Property(e => e.SchoolName).IsRequired().HasMaxLength(200);
+            _ = entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
+            _ = entity.Property(e => e.ModifiedBy).HasMaxLength(256);
 
-            entity.HasMany(e => e.Addresses)
+            _ = entity.HasMany(e => e.Addresses)
                 .WithOne(a => a.School)
                 .HasForeignKey(a => a.SchoolId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasMany(e => e.Contacts)
+            _ = entity.HasMany(e => e.Contacts)
                 .WithOne(c => c.School)
                 .HasForeignKey(c => c.SchoolId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Configure Item
-        modelBuilder.Entity<Item>(entity =>
+        _ = modelBuilder.Entity<Item>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.DisplayId).IsUnique();
-            entity.Property(e => e.ItemName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Description).HasMaxLength(500);
-            entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
-            entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.HasIndex(e => e.DisplayId).IsUnique();
+            _ = entity.Property(e => e.ItemName).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.Description).HasMaxLength(500);
+            _ = entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
+            _ = entity.Property(e => e.ModifiedBy).HasMaxLength(256);
         });
 
         // Configure Position
-        modelBuilder.Entity<Position>(entity =>
+        _ = modelBuilder.Entity<Position>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.DisplayId).IsUnique();
-            entity.Property(e => e.TitleName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Description).HasMaxLength(500);
-            entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
-            entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.HasIndex(e => e.DisplayId).IsUnique();
+            _ = entity.Property(e => e.TitleName).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.Description).HasMaxLength(500);
+            _ = entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
+            _ = entity.Property(e => e.ModifiedBy).HasMaxLength(256);
         });
 
         // Configure SalaryGrade
-        modelBuilder.Entity<SalaryGrade>(entity =>
+        _ = modelBuilder.Entity<SalaryGrade>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.DisplayId).IsUnique();
-            entity.Property(e => e.SalaryGradeName).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.Description).HasMaxLength(500);
-            entity.Property(e => e.MonthlySalary).HasPrecision(18, 2);
-            entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
-            entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.HasIndex(e => e.DisplayId).IsUnique();
+            _ = entity.Property(e => e.SalaryGradeName).IsRequired().HasMaxLength(50);
+            _ = entity.Property(e => e.Description).HasMaxLength(500);
+            _ = entity.Property(e => e.MonthlySalary).HasPrecision(18, 2);
+            _ = entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
+            _ = entity.Property(e => e.ModifiedBy).HasMaxLength(256);
         });
 
         // Configure Employment
-        modelBuilder.Entity<Employment>(entity =>
+        _ = modelBuilder.Entity<Employment>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.DisplayId).IsUnique();
-            entity.Property(e => e.DepEdId).HasMaxLength(50);
-            entity.Property(e => e.PSIPOPItemNumber).HasMaxLength(50);
-            entity.Property(e => e.TINId).HasMaxLength(20);
-            entity.Property(e => e.GSISId).HasMaxLength(20);
-            entity.Property(e => e.PhilHealthId).HasMaxLength(20);
-            entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
-            entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.HasIndex(e => e.DisplayId).IsUnique();
+            _ = entity.Property(e => e.DepEdId).HasMaxLength(50);
+            _ = entity.Property(e => e.PSIPOPItemNumber).HasMaxLength(50);
+            _ = entity.Property(e => e.TINId).HasMaxLength(20);
+            _ = entity.Property(e => e.GSISId).HasMaxLength(20);
+            _ = entity.Property(e => e.PhilHealthId).HasMaxLength(20);
+            _ = entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
+            _ = entity.Property(e => e.ModifiedBy).HasMaxLength(256);
 
-            entity.HasOne(e => e.Position)
+            _ = entity.HasOne(e => e.Position)
                 .WithMany(p => p.Employments)
                 .HasForeignKey(e => e.PositionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(e => e.SalaryGrade)
+            _ = entity.HasOne(e => e.SalaryGrade)
                 .WithMany(sg => sg.Employments)
                 .HasForeignKey(e => e.SalaryGradeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(e => e.Item)
+            _ = entity.HasOne(e => e.Item)
                 .WithMany(i => i.Employments)
                 .HasForeignKey(e => e.ItemId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Configure EmploymentSchool (Many-to-Many)
-        modelBuilder.Entity<EmploymentSchool>(entity =>
+        _ = modelBuilder.Entity<EmploymentSchool>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.DisplayId).IsUnique();
-            entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
-            entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.HasIndex(e => e.DisplayId).IsUnique();
+            _ = entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
+            _ = entity.Property(e => e.ModifiedBy).HasMaxLength(256);
 
-            entity.HasIndex(e => new { e.EmploymentId, e.SchoolId, e.StartDate }).IsUnique();
+            _ = entity.HasIndex(e => new { e.EmploymentId, e.SchoolId, e.StartDate }).IsUnique();
 
-            entity.HasOne(es => es.Employment)
+            _ = entity.HasOne(es => es.Employment)
                 .WithMany(e => e.EmploymentSchools)
                 .HasForeignKey(es => es.EmploymentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(es => es.School)
+            _ = entity.HasOne(es => es.School)
                 .WithMany(s => s.EmploymentSchools)
                 .HasForeignKey(es => es.SchoolId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Configure Document
-        modelBuilder.Entity<Document>(entity =>
+        _ = modelBuilder.Entity<Document>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.DisplayId).IsUnique();
-            entity.Property(e => e.FileName).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.FileExtension).IsRequired().HasMaxLength(10);
-            entity.Property(e => e.ContentType).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.BlobUrl).IsRequired().HasMaxLength(2048);
-            entity.Property(e => e.BlobName).IsRequired().HasMaxLength(500);
-            entity.Property(e => e.ContainerName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Description).HasMaxLength(500);
-            entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
-            entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.HasIndex(e => e.DisplayId).IsUnique();
+            _ = entity.Property(e => e.FileName).IsRequired().HasMaxLength(255);
+            _ = entity.Property(e => e.FileExtension).IsRequired().HasMaxLength(10);
+            _ = entity.Property(e => e.ContentType).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.BlobUrl).IsRequired().HasMaxLength(2048);
+            _ = entity.Property(e => e.BlobName).IsRequired().HasMaxLength(500);
+            _ = entity.Property(e => e.ContainerName).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.Description).HasMaxLength(500);
+            _ = entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
+            _ = entity.Property(e => e.ModifiedBy).HasMaxLength(256);
         });
 
         // Configure User
-        modelBuilder.Entity<User>(entity =>
+        _ = modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.GoogleId).IsUnique();
-            entity.HasIndex(e => e.Email).IsUnique();
-            entity.Property(e => e.GoogleId).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Email).IsRequired().HasMaxLength(256);
-            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.ProfilePictureUrl).HasMaxLength(2048);
-            entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.ModifiedBy).HasMaxLength(256);
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.HasIndex(e => e.GoogleId).IsUnique();
+            _ = entity.HasIndex(e => e.Email).IsUnique();
+            _ = entity.Property(e => e.GoogleId).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.Email).IsRequired().HasMaxLength(256);
+            _ = entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.ProfilePictureUrl).HasMaxLength(2048);
+            _ = entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
+            _ = entity.Property(e => e.ModifiedBy).HasMaxLength(256);
 
-            entity.HasMany(e => e.RefreshTokens)
+            _ = entity.HasMany(e => e.RefreshTokens)
                 .WithOne(rt => rt.User)
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Configure RefreshToken
-        modelBuilder.Entity<RefreshToken>(entity =>
+        _ = modelBuilder.Entity<RefreshToken>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.Token).IsUnique();
-            entity.Property(e => e.Token).IsRequired().HasMaxLength(500);
-            entity.Property(e => e.CreatedByIp).HasMaxLength(50);
-            entity.Property(e => e.RevokedByIp).HasMaxLength(50);
-            entity.Property(e => e.ReplacedByToken).HasMaxLength(500);
-            entity.Property(e => e.ReasonRevoked).HasMaxLength(256);
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.HasIndex(e => e.Token).IsUnique();
+            _ = entity.Property(e => e.Token).IsRequired().HasMaxLength(500);
+            _ = entity.Property(e => e.CreatedByIp).HasMaxLength(50);
+            _ = entity.Property(e => e.RevokedByIp).HasMaxLength(50);
+            _ = entity.Property(e => e.ReplacedByToken).HasMaxLength(500);
+            _ = entity.Property(e => e.ReasonRevoked).HasMaxLength(256);
 
             // Add matching query filter for RefreshToken to filter when User is soft deleted
-            entity.HasQueryFilter(rt => !rt.User.IsDeleted);
+            _ = entity.HasQueryFilter(rt => !rt.User.IsDeleted);
         });
     }
 
@@ -321,9 +324,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     /// </summary>
     private static System.Linq.Expressions.LambdaExpression GetSoftDeleteFilter(Type type)
     {
-        var parameter = System.Linq.Expressions.Expression.Parameter(type, "e");
-        var property = System.Linq.Expressions.Expression.Property(parameter, nameof(AuditableEntity.IsDeleted));
-        var condition = System.Linq.Expressions.Expression.Equal(property, System.Linq.Expressions.Expression.Constant(false));
+        ParameterExpression parameter = System.Linq.Expressions.Expression.Parameter(type, "e");
+        MemberExpression property = System.Linq.Expressions.Expression.Property(parameter, nameof(AuditableEntity.IsDeleted));
+        BinaryExpression condition = System.Linq.Expressions.Expression.Equal(property, System.Linq.Expressions.Expression.Constant(false));
         return System.Linq.Expressions.Expression.Lambda(condition, parameter);
     }
 
@@ -350,9 +353,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     /// </summary>
     private void UpdateAuditFields()
     {
-        var entries = ChangeTracker.Entries<AuditableEntity>();
+        IEnumerable<EntityEntry<AuditableEntity>> entries = ChangeTracker.Entries<AuditableEntity>();
 
-        foreach (var entry in entries)
+        foreach (EntityEntry<AuditableEntity> entry in entries)
         {
             if (entry.State == EntityState.Modified)
             {

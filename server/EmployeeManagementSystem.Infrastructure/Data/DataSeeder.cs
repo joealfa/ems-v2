@@ -95,55 +95,55 @@ public static class DataSeeder
         }
 
         // Create Schools
-        var schools = CreateSchools();
+        List<School> schools = CreateSchools();
         await context.Schools.AddRangeAsync(schools);
 
         // Create Positions
-        var positions = CreatePositions();
+        List<Position> positions = CreatePositions();
         await context.Positions.AddRangeAsync(positions);
 
         // Create Salary Grades
-        var salaryGrades = CreateSalaryGrades();
+        List<SalaryGrade> salaryGrades = CreateSalaryGrades();
         await context.SalaryGrades.AddRangeAsync(salaryGrades);
 
         // Create Items - generate enough items for all employments
-        var items = CreateItems();
+        List<Item> items = CreateItems();
         await context.Items.AddRangeAsync(items);
 
         // Create Persons with Addresses and Contacts in batches
-        var persons = CreatePersons();
-        
+        List<Person> persons = CreatePersons();
+
         // Add persons in batches to avoid memory issues
         const int batchSize = 500;
         for (int i = 0; i < persons.Count; i += batchSize)
         {
-            var batch = persons.Skip(i).Take(batchSize).ToList();
+            List<Person> batch = persons.Skip(i).Take(batchSize).ToList();
             await context.Persons.AddRangeAsync(batch);
-            await context.SaveChangesAsync();
+            _ = await context.SaveChangesAsync();
         }
 
         // Create Employments in batches
-        var employments = CreateEmployments(persons, positions, salaryGrades, items);
+        List<Employment> employments = CreateEmployments(persons, positions, salaryGrades, items);
         for (int i = 0; i < employments.Count; i += batchSize)
         {
-            var batch = employments.Skip(i).Take(batchSize).ToList();
+            List<Employment> batch = employments.Skip(i).Take(batchSize).ToList();
             await context.Employments.AddRangeAsync(batch);
-            await context.SaveChangesAsync();
+            _ = await context.SaveChangesAsync();
         }
 
         // Create Employment-School relationships in batches
-        var employmentSchools = CreateEmploymentSchools(employments, schools);
+        List<EmploymentSchool> employmentSchools = CreateEmploymentSchools(employments, schools);
         for (int i = 0; i < employmentSchools.Count; i += batchSize)
         {
-            var batch = employmentSchools.Skip(i).Take(batchSize).ToList();
+            List<EmploymentSchool> batch = employmentSchools.Skip(i).Take(batchSize).ToList();
             await context.EmploymentSchools.AddRangeAsync(batch);
-            await context.SaveChangesAsync();
+            _ = await context.SaveChangesAsync();
         }
     }
 
     private static string GetRandomMobileNumber()
     {
-        var prefixes = new[] { "0917", "0918", "0919", "0920", "0921", "0927", "0928", "0929", "0939", "0949" };
+        string[] prefixes = new[] { "0917", "0918", "0919", "0920", "0921", "0927", "0928", "0929", "0939", "0949" };
         return $"{prefixes[Random.Next(prefixes.Length)]}{Random.Next(1000000, 9999999)}";
     }
 
@@ -160,34 +160,38 @@ public static class DataSeeder
     private static DateOnly GetRandomBirthDate()
     {
         // Generate birth dates for people aged 22-65
-        var minYear = DateTime.UtcNow.Year - 65;
-        var maxYear = DateTime.UtcNow.Year - 22;
-        var year = Random.Next(minYear, maxYear + 1);
-        var month = Random.Next(1, 13);
-        var day = Random.Next(1, DateTime.DaysInMonth(year, month) + 1);
+        int minYear = DateTime.UtcNow.Year - 65;
+        int maxYear = DateTime.UtcNow.Year - 22;
+        int year = Random.Next(minYear, maxYear + 1);
+        int month = Random.Next(1, 13);
+        int day = Random.Next(1, DateTime.DaysInMonth(year, month) + 1);
         return new DateOnly(year, month, day);
     }
 
     private static DateOnly GetRandomAppointmentDate(DateOnly birthDate)
     {
         // Appointment should be at least 22 years after birth (minimum working age)
-        var minYear = birthDate.Year + 22;
-        var maxYear = DateTime.UtcNow.Year;
-        if (minYear > maxYear) minYear = maxYear;
-        var year = Random.Next(minYear, maxYear + 1);
-        var month = Random.Next(1, 13);
-        var day = Random.Next(1, Math.Min(28, DateTime.DaysInMonth(year, month)) + 1);
+        int minYear = birthDate.Year + 22;
+        int maxYear = DateTime.UtcNow.Year;
+        if (minYear > maxYear)
+        {
+            minYear = maxYear;
+        }
+
+        int year = Random.Next(minYear, maxYear + 1);
+        int month = Random.Next(1, 13);
+        int day = Random.Next(1, Math.Min(28, DateTime.DaysInMonth(year, month)) + 1);
         return new DateOnly(year, month, day);
     }
 
     private static List<Address> CreateRandomAddresses(int count)
     {
-        var addresses = new List<Address>();
-        var addressTypes = Enum.GetValues<AddressType>();
+        List<Address> addresses = [];
+        AddressType[] addressTypes = Enum.GetValues<AddressType>();
 
         for (int i = 0; i < count; i++)
         {
-            var city = Cities[Random.Next(Cities.Length)];
+            string city = Cities[Random.Next(Cities.Length)];
             addresses.Add(new Address
             {
                 Address1 = $"{Random.Next(1, 9999)} {StreetNames[Random.Next(StreetNames.Length)]} {StreetTypes[Random.Next(StreetTypes.Length)]}",
@@ -211,16 +215,16 @@ public static class DataSeeder
 
     private static List<Contact> CreateRandomContacts(string firstName, string lastName, int count)
     {
-        var contacts = new List<Contact>();
-        var contactTypes = Enum.GetValues<ContactType>();
-        var normalizedFirst = firstName.ToLower().Replace(" ", "");
-        var normalizedLast = lastName.ToLower().Replace(" ", "");
+        List<Contact> contacts = [];
+        ContactType[] contactTypes = Enum.GetValues<ContactType>();
+        string normalizedFirst = firstName.ToLower().Replace(" ", "");
+        string normalizedLast = lastName.ToLower().Replace(" ", "");
 
         for (int i = 0; i < count; i++)
         {
-            var contactType = i == 0 ? ContactType.Personal : contactTypes[Random.Next(contactTypes.Length)];
-            var emailVariant = Random.Next(4);
-            var email = emailVariant switch
+            ContactType contactType = i == 0 ? ContactType.Personal : contactTypes[Random.Next(contactTypes.Length)];
+            int emailVariant = Random.Next(4);
+            string email = emailVariant switch
             {
                 0 => $"{normalizedFirst}.{normalizedLast}{Random.Next(100)}@{EmailDomains[Random.Next(EmailDomains.Length)]}",
                 1 => $"{normalizedFirst}{normalizedLast[0]}{Random.Next(1000)}@{EmailDomains[Random.Next(EmailDomains.Length)]}",
@@ -245,15 +249,15 @@ public static class DataSeeder
 
     private static List<School> CreateSchools()
     {
-        var schoolTypes = new[] { "Elementary School", "High School", "National High School", "Science High School", "Integrated School", "Central School" };
-        var schools = new List<School>();
+        string[] schoolTypes = new[] { "Elementary School", "High School", "National High School", "Science High School", "Integrated School", "Central School" };
+        List<School> schools = [];
 
         // Create 50 schools to have a good distribution for 5000 employees
         for (int i = 0; i < 50; i++)
         {
-            var city = Cities[i % Cities.Length];
-            var schoolType = schoolTypes[Random.Next(schoolTypes.Length)];
-            var schoolName = $"{city} {schoolType} {(i / Cities.Length) + 1}";
+            string city = Cities[i % Cities.Length];
+            string schoolType = schoolTypes[Random.Next(schoolTypes.Length)];
+            string schoolName = $"{city} {schoolType} {(i / Cities.Length) + 1}";
 
             schools.Add(new School
             {
@@ -336,8 +340,8 @@ public static class DataSeeder
 
     private static List<Item> CreateItems()
     {
-        var items = new List<Item>();
-        var itemTypes = new[]
+        List<Item> items = [];
+        (string, string)[] itemTypes = new[]
         {
             ("TCH1", "Teaching Item - Teacher I"),
             ("TCH2", "Teaching Item - Teacher II"),
@@ -353,7 +357,7 @@ public static class DataSeeder
 
         // Create enough items for 5000 employees with some buffer
         int itemNumber = 1;
-        foreach (var (code, description) in itemTypes)
+        foreach ((string? code, string? description) in itemTypes)
         {
             // Distribute items based on typical organizational structure
             int count = code switch
@@ -390,24 +394,24 @@ public static class DataSeeder
 
     private static List<Person> CreatePersons()
     {
-        var persons = new List<Person>();
-        var genders = Enum.GetValues<Gender>();
-        var civilStatuses = Enum.GetValues<CivilStatus>();
+        List<Person> persons = [];
+        _ = Enum.GetValues<Gender>();
+        CivilStatus[] civilStatuses = Enum.GetValues<CivilStatus>();
 
         for (int i = 0; i < PersonCount; i++)
         {
-            var isMale = Random.Next(100) < 50;
-            var gender = isMale ? Gender.Male : Gender.Female;
-            var firstName = isMale
+            bool isMale = Random.Next(100) < 50;
+            Gender gender = isMale ? Gender.Male : Gender.Female;
+            string firstName = isMale
                 ? MaleFirstNames[Random.Next(MaleFirstNames.Length)]
                 : FemaleFirstNames[Random.Next(FemaleFirstNames.Length)];
-            var lastName = LastNames[Random.Next(LastNames.Length)];
-            var middleName = MiddleNames[Random.Next(MiddleNames.Length)];
+            string lastName = LastNames[Random.Next(LastNames.Length)];
+            string middleName = MiddleNames[Random.Next(MiddleNames.Length)];
 
             // Random number of addresses (1-4)
-            var addressCount = Random.Next(1, 5);
+            int addressCount = Random.Next(1, 5);
             // Random number of contacts (1-4)
-            var contactCount = Random.Next(1, 5);
+            int contactCount = Random.Next(1, 5);
 
             persons.Add(new Person
             {
@@ -433,18 +437,18 @@ public static class DataSeeder
         List<SalaryGrade> salaryGrades,
         List<Item> items)
     {
-        var employments = new List<Employment>();
-        var appointmentStatuses = Enum.GetValues<AppointmentStatus>();
-        var employmentStatuses = Enum.GetValues<EmploymentStatus>();
-        var eligibilities = Enum.GetValues<Eligibility>();
+        List<Employment> employments = [];
+        _ = Enum.GetValues<AppointmentStatus>();
+        _ = Enum.GetValues<EmploymentStatus>();
+        Eligibility[] eligibilities = Enum.GetValues<Eligibility>();
 
         // Position distribution weights (index matches positions list)
         // Teacher I: 40%, Teacher II: 24%, Teacher III: 16%, MT1: 6%, MT2: 4%, HT1: 4%, HT2: 2%, Prin1: 1.6%, Prin2: 1%, AO3: 1.4%
-        var positionWeights = new[] { 40, 24, 16, 6, 4, 4, 2, 2, 1, 1 };
-        var totalWeight = positionWeights.Sum();
+        int[] positionWeights = new[] { 40, 24, 16, 6, 4, 4, 2, 2, 1, 1 };
+        int totalWeight = positionWeights.Sum();
 
         // Salary grade mapping per position index
-        var positionToSalaryGrade = new Dictionary<int, int[]>
+        Dictionary<int, int[]> positionToSalaryGrade = new()
         {
             { 0, new[] { 0, 1, 2 } },      // Teacher I -> SG 11 Step 1-3
             { 1, new[] { 3, 4 } },          // Teacher II -> SG 12 Step 1-2
@@ -461,7 +465,7 @@ public static class DataSeeder
         // Item category mapping based on item code patterns
         // Items are ordered: TCH1 (0-1999), TCH2 (2000-3199), TCH3 (3200-3999), MT1 (4000-4299), MT2 (4300-4499), 
         // HT1 (4500-4699), HT2 (4700-4799), PRIN1 (4800-4879), PRIN2 (4880-4929), AO3 (4930-5129)
-        var positionToItemRange = new Dictionary<int, (int start, int count)>
+        Dictionary<int, (int start, int count)> positionToItemRange = new()
         {
             { 0, (0, 2000) },       // Teacher I
             { 1, (2000, 1200) },    // Teacher II
@@ -474,17 +478,16 @@ public static class DataSeeder
             { 8, (4880, 50) },      // Principal II
             { 9, (4930, 200) }      // Administrative Officer III
         };
-
-        var itemUsageCount = new Dictionary<int, int>();
+        _ = new Dictionary<int, int>();
 
         for (int i = 0; i < persons.Count; i++)
         {
-            var person = persons[i];
+            Person person = persons[i];
 
             // Select position based on weighted distribution
-            var randomWeight = Random.Next(totalWeight);
-            var positionIndex = 0;
-            var cumulativeWeight = 0;
+            int randomWeight = Random.Next(totalWeight);
+            int positionIndex = 0;
+            int cumulativeWeight = 0;
             for (int j = 0; j < positionWeights.Length; j++)
             {
                 cumulativeWeight += positionWeights[j];
@@ -496,26 +499,29 @@ public static class DataSeeder
             }
 
             // Get salary grade for this position
-            var salaryGradeOptions = positionToSalaryGrade[positionIndex];
-            var salaryGradeIndex = salaryGradeOptions[Random.Next(salaryGradeOptions.Length)];
+            int[] salaryGradeOptions = positionToSalaryGrade[positionIndex];
+            int salaryGradeIndex = salaryGradeOptions[Random.Next(salaryGradeOptions.Length)];
 
             // Get item for this position
-            var (itemStart, itemCount) = positionToItemRange[positionIndex];
-            var itemIndex = itemStart + (i % itemCount);
-            if (itemIndex >= items.Count) itemIndex = items.Count - 1;
+            (int itemStart, int itemCount) = positionToItemRange[positionIndex];
+            int itemIndex = itemStart + (i % itemCount);
+            if (itemIndex >= items.Count)
+            {
+                itemIndex = items.Count - 1;
+            }
 
-            var birthDate = person.DateOfBirth;
-            var appointmentDate = GetRandomAppointmentDate(birthDate);
+            DateOnly birthDate = person.DateOfBirth;
+            DateOnly appointmentDate = GetRandomAppointmentDate(birthDate);
 
             // Determine employment status based on years of service
-            var yearsOfService = DateTime.UtcNow.Year - appointmentDate.Year;
-            var employmentStatus = yearsOfService >= 2 ? EmploymentStatus.Permanent : EmploymentStatus.Regular;
-            var appointmentStatus = yearsOfService >= 3 ? AppointmentStatus.Promotion : AppointmentStatus.Original;
+            int yearsOfService = DateTime.UtcNow.Year - appointmentDate.Year;
+            EmploymentStatus employmentStatus = yearsOfService >= 2 ? EmploymentStatus.Permanent : EmploymentStatus.Regular;
+            AppointmentStatus appointmentStatus = yearsOfService >= 3 ? AppointmentStatus.Promotion : AppointmentStatus.Original;
 
             employments.Add(new Employment
             {
-                DepEdId = $"DEPED-{appointmentDate.Year}-{(i + 1):D6}",
-                PSIPOPItemNumber = $"PSIPOP-{(i + 1):D5}",
+                DepEdId = $"DEPED-{appointmentDate.Year}-{i + 1:D6}",
+                PSIPOPItemNumber = $"PSIPOP-{i + 1:D5}",
                 TINId = $"{Random.Next(100, 999)}-{Random.Next(100, 999)}-{Random.Next(100, 999)}-{Random.Next(0, 999):D3}",
                 GSISId = $"{Random.Next(1000000000, int.MaxValue)}",
                 PhilHealthId = $"{Random.Next(10, 99)}-{Random.Next(100000000, 999999999)}-{Random.Next(0, 9)}",
@@ -538,20 +544,20 @@ public static class DataSeeder
 
     private static List<EmploymentSchool> CreateEmploymentSchools(List<Employment> employments, List<School> schools)
     {
-        var employmentSchools = new List<EmploymentSchool>();
+        List<EmploymentSchool> employmentSchools = [];
 
-        foreach (var employment in employments)
+        foreach (Employment employment in employments)
         {
             // Randomly assign to a school
-            var schoolIndex = Random.Next(schools.Count);
-            var startDate = employment.DateOfOriginalAppointment ?? DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-5));
+            int schoolIndex = Random.Next(schools.Count);
+            DateOnly startDate = employment.DateOfOriginalAppointment ?? DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-5));
 
             // Some employees might have worked at a previous school
             if (Random.Next(100) < 20) // 20% chance of having previous school
             {
-                var previousSchoolIndex = (schoolIndex + 1) % schools.Count;
-                var previousStartDate = startDate;
-                var previousEndDate = startDate.AddYears(Random.Next(1, 4));
+                int previousSchoolIndex = (schoolIndex + 1) % schools.Count;
+                DateOnly previousStartDate = startDate;
+                DateOnly previousEndDate = startDate.AddYears(Random.Next(1, 4));
 
                 if (previousEndDate < DateOnly.FromDateTime(DateTime.UtcNow))
                 {

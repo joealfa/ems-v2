@@ -28,7 +28,7 @@ public class ReportsController(IReportsService reportsService) : ControllerBase
     [ProducesResponseType(typeof(DashboardStatsDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<DashboardStatsDto>> GetDashboardStats(CancellationToken cancellationToken)
     {
-        var stats = await _reportsService.GetDashboardStatsAsync(cancellationToken);
+        DashboardStatsDto stats = await _reportsService.GetDashboardStatsAsync(cancellationToken);
         return Ok(stats);
     }
 }

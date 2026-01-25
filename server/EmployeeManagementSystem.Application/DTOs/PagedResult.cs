@@ -47,8 +47,6 @@ public class PagedResult<T>
 /// </summary>
 public class PaginationQuery
 {
-    private int _pageNumber = 1;
-    private int _pageSize = 10;
     private const int MaxPageSize = 100;
 
     /// <summary>
@@ -56,18 +54,18 @@ public class PaginationQuery
     /// </summary>
     public int PageNumber
     {
-        get => _pageNumber;
-        set => _pageNumber = value < 1 ? 1 : value;
-    }
+        get;
+        set => field = value < 1 ? 1 : value;
+    } = 1;
 
     /// <summary>
     /// Gets or sets the page size.
     /// </summary>
     public int PageSize
     {
-        get => _pageSize;
-        set => _pageSize = value > MaxPageSize ? MaxPageSize : (value < 1 ? 10 : value);
-    }
+        get;
+        set => field = value > MaxPageSize ? MaxPageSize : (value < 1 ? 10 : value);
+    } = 10;
 
     /// <summary>
     /// Gets or sets the search term.

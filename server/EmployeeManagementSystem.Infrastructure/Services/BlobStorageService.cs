@@ -1,3 +1,4 @@
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
@@ -33,17 +34,17 @@ public class BlobStorageService : IBlobStorageService
         string contentType,
         CancellationToken cancellationToken = default)
     {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-        await containerClient.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: cancellationToken);
+        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        _ = await containerClient.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: cancellationToken);
 
-        var blobClient = containerClient.GetBlobClient(blobName);
+        BlobClient blobClient = containerClient.GetBlobClient(blobName);
 
-        var blobHttpHeaders = new BlobHttpHeaders
+        BlobHttpHeaders blobHttpHeaders = new()
         {
             ContentType = contentType
         };
 
-        await blobClient.UploadAsync(content, new BlobUploadOptions
+        _ = await blobClient.UploadAsync(content, new BlobUploadOptions
         {
             HttpHeaders = blobHttpHeaders
         }, cancellationToken);
@@ -57,10 +58,10 @@ public class BlobStorageService : IBlobStorageService
         string blobName,
         CancellationToken cancellationToken = default)
     {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-        var blobClient = containerClient.GetBlobClient(blobName);
+        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        BlobClient blobClient = containerClient.GetBlobClient(blobName);
 
-        var response = await blobClient.DownloadStreamingAsync(cancellationToken: cancellationToken);
+        Response<BlobDownloadStreamingResult> response = await blobClient.DownloadStreamingAsync(cancellationToken: cancellationToken);
         return response.Value.Content;
     }
 
@@ -70,10 +71,10 @@ public class BlobStorageService : IBlobStorageService
         string blobName,
         CancellationToken cancellationToken = default)
     {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-        var blobClient = containerClient.GetBlobClient(blobName);
+        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        BlobClient blobClient = containerClient.GetBlobClient(blobName);
 
-        var response = await blobClient.DeleteIfExistsAsync(cancellationToken: cancellationToken);
+        Response<bool> response = await blobClient.DeleteIfExistsAsync(cancellationToken: cancellationToken);
         return response.Value;
     }
 
@@ -83,10 +84,10 @@ public class BlobStorageService : IBlobStorageService
         string blobName,
         CancellationToken cancellationToken = default)
     {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-        var blobClient = containerClient.GetBlobClient(blobName);
+        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        BlobClient blobClient = containerClient.GetBlobClient(blobName);
 
-        var response = await blobClient.ExistsAsync(cancellationToken);
+        Response<bool> response = await blobClient.ExistsAsync(cancellationToken);
         return response.Value;
     }
 
@@ -96,8 +97,8 @@ public class BlobStorageService : IBlobStorageService
         string blobName,
         TimeSpan expiresIn)
     {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-        var blobClient = containerClient.GetBlobClient(blobName);
+        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        BlobClient blobClient = containerClient.GetBlobClient(blobName);
 
         if (!blobClient.CanGenerateSasUri)
         {
@@ -106,7 +107,7 @@ public class BlobStorageService : IBlobStorageService
             throw new InvalidOperationException("Cannot generate SAS URI. Ensure the connection string includes account key.");
         }
 
-        var sasBuilder = new BlobSasBuilder
+        BlobSasBuilder sasBuilder = new()
         {
             BlobContainerName = containerName,
             BlobName = blobName,

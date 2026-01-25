@@ -27,28 +27,28 @@ public class ReportsService(
     public async Task<DashboardStatsDto> GetDashboardStatsAsync(CancellationToken cancellationToken = default)
     {
         // Count total persons (not deleted)
-        var totalPersons = await _personRepository.Query()
+        int totalPersons = await _personRepository.Query()
             .CountAsync(cancellationToken);
 
         // Count active employments (IsActive = true and not deleted)
-        var activeEmployments = await _employmentRepository.Query()
+        int activeEmployments = await _employmentRepository.Query()
             .Where(e => e.IsActive)
             .CountAsync(cancellationToken);
 
         // Count total schools (not deleted)
-        var totalSchools = await _schoolRepository.Query()
+        int totalSchools = await _schoolRepository.Query()
             .CountAsync(cancellationToken);
 
         // Count total positions (not deleted)
-        var totalPositions = await _positionRepository.Query()
+        int totalPositions = await _positionRepository.Query()
             .CountAsync(cancellationToken);
 
         // Count total salary grades (not deleted)
-        var totalSalaryGrades = await _salaryGradeRepository.Query()
+        int totalSalaryGrades = await _salaryGradeRepository.Query()
             .CountAsync(cancellationToken);
 
         // Count total items (not deleted)
-        var totalItems = await _itemRepository.Query()
+        int totalItems = await _itemRepository.Query()
             .CountAsync(cancellationToken);
 
         return new DashboardStatsDto

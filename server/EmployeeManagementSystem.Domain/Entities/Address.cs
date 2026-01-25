@@ -1,5 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using EmployeeManagementSystem.Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace EmployeeManagementSystem.Domain.Entities;
 
@@ -102,12 +102,24 @@ public class Address : BaseEntity
     {
         get
         {
-            var parts = new List<string> { Address1 };
-            if (!string.IsNullOrWhiteSpace(Address2)) parts.Add(Address2);
-            if (!string.IsNullOrWhiteSpace(Barangay)) parts.Add(Barangay);
+            List<string> parts = [Address1];
+            if (!string.IsNullOrWhiteSpace(Address2))
+            {
+                parts.Add(Address2);
+            }
+
+            if (!string.IsNullOrWhiteSpace(Barangay))
+            {
+                parts.Add(Barangay);
+            }
+
             parts.Add(City);
             parts.Add(Province);
-            if (!string.IsNullOrWhiteSpace(ZipCode)) parts.Add(ZipCode);
+            if (!string.IsNullOrWhiteSpace(ZipCode))
+            {
+                parts.Add(ZipCode);
+            }
+
             parts.Add(Country);
             return string.Join(", ", parts);
         }

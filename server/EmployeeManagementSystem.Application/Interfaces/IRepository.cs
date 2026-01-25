@@ -1,5 +1,5 @@
-using System.Linq.Expressions;
 using EmployeeManagementSystem.Domain.Entities;
+using System.Linq.Expressions;
 
 namespace EmployeeManagementSystem.Application.Interfaces;
 

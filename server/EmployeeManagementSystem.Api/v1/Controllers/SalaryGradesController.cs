@@ -34,7 +34,7 @@ public class SalaryGradesController(ISalaryGradeService salaryGradeService) : Ap
         [FromQuery] PaginationQuery query,
         CancellationToken cancellationToken)
     {
-        var result = await _salaryGradeService.GetPagedAsync(query, cancellationToken);
+        PagedResult<SalaryGradeResponseDto> result = await _salaryGradeService.GetPagedAsync(query, cancellationToken);
         return Ok(result);
     }
 
@@ -51,7 +51,7 @@ public class SalaryGradesController(ISalaryGradeService salaryGradeService) : Ap
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _salaryGradeService.GetByDisplayIdAsync(displayId, cancellationToken);
+        Result<SalaryGradeResponseDto> result = await _salaryGradeService.GetByDisplayIdAsync(displayId, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -68,7 +68,7 @@ public class SalaryGradesController(ISalaryGradeService salaryGradeService) : Ap
         [FromBody] CreateSalaryGradeDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _salaryGradeService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
+        Result<SalaryGradeResponseDto> result = await _salaryGradeService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
 
@@ -88,7 +88,7 @@ public class SalaryGradesController(ISalaryGradeService salaryGradeService) : Ap
         [FromBody] UpdateSalaryGradeDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _salaryGradeService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        Result<SalaryGradeResponseDto> result = await _salaryGradeService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -105,7 +105,7 @@ public class SalaryGradesController(ISalaryGradeService salaryGradeService) : Ap
         long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _salaryGradeService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
+        Result result = await _salaryGradeService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
         return ToNoContentResult(result);
     }
 }

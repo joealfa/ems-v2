@@ -27,7 +27,7 @@ public class PersonService(
     /// <inheritdoc />
     public async Task<Result<PersonResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
-        var person = await _personRepository.Query()
+        Person? person = await _personRepository.Query()
             .Include(p => p.Addresses.Where(a => !a.IsDeleted))
             .Include(p => p.Contacts.Where(c => !c.IsDeleted))
             .FirstOrDefaultAsync(p => p.DisplayId == displayId, cancellationToken);
@@ -38,14 +38,14 @@ public class PersonService(
     /// <inheritdoc />
     public async Task<PagedResult<PersonListDto>> GetPagedAsync(PersonPaginationQuery query, CancellationToken cancellationToken = default)
     {
-        var queryable = _personRepository.Query();
+        IQueryable<Person> queryable = _personRepository.Query();
 
         // Apply search term filter (searches across name fields)
         // Split by spaces to handle multi-word searches like "John Doe"
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            var searchTerms = query.SearchTerm.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var term in searchTerms)
+            string[] searchTerms = query.SearchTerm.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (string term in searchTerms)
             {
                 queryable = queryable.Where(p =>
                     p.FirstName.ToLower().Contains(term) ||
@@ -63,8 +63,8 @@ public class PersonService(
         // Split full name filter by spaces to handle multi-word searches
         if (!string.IsNullOrWhiteSpace(query.FullNameFilter))
         {
-            var filterTerms = query.FullNameFilter.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var term in filterTerms)
+            string[] filterTerms = query.FullNameFilter.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (string term in filterTerms)
             {
                 queryable = queryable.Where(p =>
                     p.FirstName.ToLower().Contains(term) ||
@@ -83,13 +83,13 @@ public class PersonService(
             queryable = queryable.Where(p => p.CivilStatus == query.CivilStatus.Value);
         }
 
-        var totalCount = await queryable.CountAsync(cancellationToken);
+        int totalCount = await queryable.CountAsync(cancellationToken);
 
         queryable = query.SortDescending
             ? queryable.OrderByDescending(p => p.LastName).ThenByDescending(p => p.FirstName)
             : queryable.OrderBy(p => p.LastName).ThenBy(p => p.FirstName);
 
-        var items = await queryable
+        List<PersonListDto> items = await queryable
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(p => new PersonListDto
@@ -119,7 +119,7 @@ public class PersonService(
     /// <inheritdoc />
     public async Task<Result<PersonResponseDto>> CreateAsync(CreatePersonDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
-        var person = new Person
+        Person person = new()
         {
             FirstName = dto.FirstName,
             LastName = dto.LastName,
@@ -130,14 +130,14 @@ public class PersonService(
             CreatedBy = createdBy
         };
 
-        await _personRepository.AddAsync(person, cancellationToken);
+        _ = await _personRepository.AddAsync(person, cancellationToken);
 
         // Add addresses if provided
         if (dto.Addresses != null && dto.Addresses.Count > 0)
         {
-            foreach (var addressDto in dto.Addresses)
+            foreach (CreateAddressDto addressDto in dto.Addresses)
             {
-                var address = new Address
+                Address address = new()
                 {
                     Address1 = addressDto.Address1,
                     Address2 = addressDto.Address2,
@@ -152,7 +152,7 @@ public class PersonService(
                     PersonId = person.Id,
                     CreatedBy = createdBy
                 };
-                await _addressRepository.AddAsync(address, cancellationToken);
+                _ = await _addressRepository.AddAsync(address, cancellationToken);
                 person.Addresses.Add(address);
             }
         }
@@ -160,9 +160,9 @@ public class PersonService(
         // Add contacts if provided
         if (dto.Contacts != null && dto.Contacts.Count > 0)
         {
-            foreach (var contactDto in dto.Contacts)
+            foreach (CreateContactDto contactDto in dto.Contacts)
             {
-                var contact = new Contact
+                Contact contact = new()
                 {
                     Mobile = contactDto.Mobile,
                     LandLine = contactDto.LandLine,
@@ -172,7 +172,7 @@ public class PersonService(
                     PersonId = person.Id,
                     CreatedBy = createdBy
                 };
-                await _contactRepository.AddAsync(contact, cancellationToken);
+                _ = await _contactRepository.AddAsync(contact, cancellationToken);
                 person.Contacts.Add(contact);
             }
         }
@@ -183,13 +183,15 @@ public class PersonService(
     /// <inheritdoc />
     public async Task<Result<PersonResponseDto>> UpdateAsync(long displayId, UpdatePersonDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
-        var person = await _personRepository.Query()
+        Person? person = await _personRepository.Query()
             .Include(p => p.Addresses.Where(a => !a.IsDeleted))
             .Include(p => p.Contacts.Where(c => !c.IsDeleted))
             .FirstOrDefaultAsync(p => p.DisplayId == displayId, cancellationToken);
 
         if (person == null)
+        {
             return Result<PersonResponseDto>.NotFound("Person not found.");
+        }
 
         person.FirstName = dto.FirstName;
         person.LastName = dto.LastName;
@@ -207,31 +209,33 @@ public class PersonService(
     /// <inheritdoc />
     public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
-        var person = await _personRepository.Query()
+        Person? person = await _personRepository.Query()
             .Include(p => p.Addresses.Where(a => !a.IsDeleted))
             .Include(p => p.Contacts.Where(c => !c.IsDeleted))
             .Include(p => p.Documents.Where(d => !d.IsDeleted))
             .FirstOrDefaultAsync(p => p.DisplayId == displayId, cancellationToken);
 
         if (person == null)
+        {
             return Result.NotFound("Person not found.");
+        }
 
         // Cascade soft delete to related addresses
-        foreach (var address in person.Addresses)
+        foreach (Address address in person.Addresses)
         {
             address.ModifiedBy = deletedBy;
             await _addressRepository.DeleteAsync(address, cancellationToken);
         }
 
         // Cascade soft delete to related contacts
-        foreach (var contact in person.Contacts)
+        foreach (Contact contact in person.Contacts)
         {
             contact.ModifiedBy = deletedBy;
             await _contactRepository.DeleteAsync(contact, cancellationToken);
         }
 
         // Cascade soft delete to related documents
-        foreach (var document in person.Documents)
+        foreach (Document document in person.Documents)
         {
             document.ModifiedBy = deletedBy;
             await _documentRepository.DeleteAsync(document, cancellationToken);

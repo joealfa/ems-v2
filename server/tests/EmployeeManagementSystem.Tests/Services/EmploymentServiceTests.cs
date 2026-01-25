@@ -7,6 +7,7 @@ using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Domain.Enums;
 using EmployeeManagementSystem.Tests.Helpers;
 using Moq;
+using System.Reflection;
 
 namespace EmployeeManagementSystem.Tests.Services;
 
@@ -47,14 +48,14 @@ public class EmploymentServiceTests
     public async Task GetByDisplayIdAsync_WhenEmploymentExists_ReturnsEmploymentResponseDto()
     {
         // Arrange
-        var displayId = 100000000001L;
-        var employment = CreateTestEmployment(displayId);
+        long displayId = 100000000001L;
+        Employment employment = CreateTestEmployment(displayId);
 
-        var employments = new List<Employment> { employment }.BuildMockQueryable();
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        IQueryable<Employment> employments = new List<Employment> { employment }.BuildMockQueryable();
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
 
         // Act
-        var result = await _employmentService.GetByDisplayIdAsync(displayId);
+        Result<EmploymentResponseDto> result = await _employmentService.GetByDisplayIdAsync(displayId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -66,12 +67,12 @@ public class EmploymentServiceTests
     public async Task GetByDisplayIdAsync_WhenEmploymentDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var displayId = 999999999999L;
-        var employments = new List<Employment>().BuildMockQueryable();
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        long displayId = 999999999999L;
+        IQueryable<Employment> employments = new List<Employment>().BuildMockQueryable();
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
 
         // Act
-        var result = await _employmentService.GetByDisplayIdAsync(displayId);
+        Result<EmploymentResponseDto> result = await _employmentService.GetByDisplayIdAsync(displayId);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -86,18 +87,18 @@ public class EmploymentServiceTests
     public async Task GetPagedAsync_ReturnsPagedResult()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10 };
-        var employments = new List<Employment>
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10 };
+        IQueryable<Employment> employments = new List<Employment>
         {
             CreateTestEmployment(100000000001L),
             CreateTestEmployment(100000000002L),
             CreateTestEmployment(100000000003L)
         }.BuildMockQueryable();
 
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
 
         // Act
-        var result = await _employmentService.GetPagedAsync(query);
+        PagedResult<EmploymentListDto> result = await _employmentService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -109,18 +110,18 @@ public class EmploymentServiceTests
     public async Task GetPagedAsync_WithSearchTerm_FiltersResults()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10, SearchTerm = "John" };
-        var employments = new List<Employment>
+        PaginationQuery query = new() { PageNumber = 1, PageSize = 10, SearchTerm = "John" };
+        IQueryable<Employment> employments = new List<Employment>
         {
             CreateTestEmployment(100000000001L, personFirstName: "John", personLastName: "Doe"),
             CreateTestEmployment(100000000002L, personFirstName: "Jane", personLastName: "Smith"),
             CreateTestEmployment(100000000003L, personFirstName: "Bob", personLastName: "Johnson")
         }.BuildMockQueryable();
 
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
 
         // Act
-        var result = await _employmentService.GetPagedAsync(query);
+        PagedResult<EmploymentListDto> result = await _employmentService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -131,8 +132,8 @@ public class EmploymentServiceTests
     public async Task GetPagedAsync_WithPagination_ReturnsCorrectPage()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 2, PageSize = 2 };
-        var employments = new List<Employment>
+        PaginationQuery query = new() { PageNumber = 2, PageSize = 2 };
+        IQueryable<Employment> employments = new List<Employment>
         {
             CreateTestEmployment(100000000001L, personFirstName: "Alice", personLastName: "Anderson"),
             CreateTestEmployment(100000000002L, personFirstName: "Bob", personLastName: "Brown"),
@@ -140,10 +141,10 @@ public class EmploymentServiceTests
             CreateTestEmployment(100000000004L, personFirstName: "David", personLastName: "Davis")
         }.BuildMockQueryable();
 
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
 
         // Act
-        var result = await _employmentService.GetPagedAsync(query);
+        PagedResult<EmploymentListDto> result = await _employmentService.GetPagedAsync(query);
 
         // Assert
         Assert.NotNull(result);
@@ -160,29 +161,29 @@ public class EmploymentServiceTests
     public async Task CreateAsync_WithValidData_ReturnsCreatedEmployment()
     {
         // Arrange
-        var person = CreateTestPerson(100000000001L);
-        var position = CreateTestPosition(200000000001L);
-        var salaryGrade = CreateTestSalaryGrade(300000000001L);
-        var item = CreateTestItem(400000000001L);
+        Person person = CreateTestPerson(100000000001L);
+        Position position = CreateTestPosition(200000000001L);
+        SalaryGrade salaryGrade = CreateTestSalaryGrade(300000000001L);
+        Item item = CreateTestItem(400000000001L);
 
-        _personRepositoryMock
+        _ = _personRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(person.DisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(person);
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(position.DisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(position);
-        _salaryGradeRepositoryMock
+        _ = _salaryGradeRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(salaryGrade.DisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(salaryGrade);
-        _itemRepositoryMock
+        _ = _itemRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(item.DisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(item);
 
-        _employmentRepositoryMock
+        _ = _employmentRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Employment>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Employment e, CancellationToken _) => e);
 
-        var createDto = new CreateEmploymentDto
+        CreateEmploymentDto createDto = new()
         {
             PersonDisplayId = person.DisplayId,
             PositionDisplayId = position.DisplayId,
@@ -195,7 +196,7 @@ public class EmploymentServiceTests
         };
 
         // Act
-        var result = await _employmentService.CreateAsync(createDto, "TestUser");
+        Result<EmploymentResponseDto> result = await _employmentService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -211,11 +212,11 @@ public class EmploymentServiceTests
     public async Task CreateAsync_WhenPersonNotFound_ReturnsBadRequest()
     {
         // Arrange
-        _personRepositoryMock
+        _ = _personRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Person?)null);
 
-        var createDto = new CreateEmploymentDto
+        CreateEmploymentDto createDto = new()
         {
             PersonDisplayId = 999999999999L,
             PositionDisplayId = 200000000001L,
@@ -227,7 +228,7 @@ public class EmploymentServiceTests
         };
 
         // Act
-        var result = await _employmentService.CreateAsync(createDto, "TestUser");
+        Result<EmploymentResponseDto> result = await _employmentService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -238,16 +239,16 @@ public class EmploymentServiceTests
     public async Task CreateAsync_WhenPositionNotFound_ReturnsBadRequest()
     {
         // Arrange
-        var person = CreateTestPerson(100000000001L);
+        Person person = CreateTestPerson(100000000001L);
 
-        _personRepositoryMock
+        _ = _personRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(person.DisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(person);
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Position?)null);
 
-        var createDto = new CreateEmploymentDto
+        CreateEmploymentDto createDto = new()
         {
             PersonDisplayId = person.DisplayId,
             PositionDisplayId = 999999999999L,
@@ -259,7 +260,7 @@ public class EmploymentServiceTests
         };
 
         // Act
-        var result = await _employmentService.CreateAsync(createDto, "TestUser");
+        Result<EmploymentResponseDto> result = await _employmentService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -270,32 +271,32 @@ public class EmploymentServiceTests
     public async Task CreateAsync_WithSchools_CreatesEmploymentWithSchoolAssignments()
     {
         // Arrange
-        var person = CreateTestPerson(100000000001L);
-        var position = CreateTestPosition(200000000001L);
-        var salaryGrade = CreateTestSalaryGrade(300000000001L);
-        var item = CreateTestItem(400000000001L);
-        var school = CreateTestSchool(500000000001L);
+        Person person = CreateTestPerson(100000000001L);
+        Position position = CreateTestPosition(200000000001L);
+        SalaryGrade salaryGrade = CreateTestSalaryGrade(300000000001L);
+        Item item = CreateTestItem(400000000001L);
+        School school = CreateTestSchool(500000000001L);
 
-        _personRepositoryMock
+        _ = _personRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(person.DisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(person);
-        _positionRepositoryMock
+        _ = _positionRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(position.DisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(position);
-        _salaryGradeRepositoryMock
+        _ = _salaryGradeRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(salaryGrade.DisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(salaryGrade);
-        _itemRepositoryMock
+        _ = _itemRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(item.DisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(item);
-        _schoolRepositoryMock
+        _ = _schoolRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(school.DisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(school);
 
-        _employmentRepositoryMock
+        _ = _employmentRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Employment>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Employment e, CancellationToken _) => e);
-        _employmentSchoolRepositoryMock
+        _ = _employmentSchoolRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<EmploymentSchool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((EmploymentSchool es, CancellationToken _) =>
             {
@@ -304,7 +305,7 @@ public class EmploymentServiceTests
                 return es;
             });
 
-        var createDto = new CreateEmploymentDto
+        CreateEmploymentDto createDto = new()
         {
             PersonDisplayId = person.DisplayId,
             PositionDisplayId = position.DisplayId,
@@ -325,12 +326,12 @@ public class EmploymentServiceTests
         };
 
         // Act
-        var result = await _employmentService.CreateAsync(createDto, "TestUser");
+        Result<EmploymentResponseDto> result = await _employmentService.CreateAsync(createDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value);
-        Assert.Single(result.Value.Schools);
+        _ = Assert.Single(result.Value.Schools);
         _employmentSchoolRepositoryMock.Verify(r => r.AddAsync(It.IsAny<EmploymentSchool>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -342,18 +343,18 @@ public class EmploymentServiceTests
     public async Task DeleteAsync_WhenEmploymentExists_DeletesSuccessfully()
     {
         // Arrange
-        var displayId = 100000000001L;
-        var employment = CreateTestEmployment(displayId);
+        long displayId = 100000000001L;
+        Employment employment = CreateTestEmployment(displayId);
         employment.EmploymentSchools = [];
 
-        var employments = new List<Employment> { employment }.BuildMockQueryable();
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
-        _employmentRepositoryMock
+        IQueryable<Employment> employments = new List<Employment> { employment }.BuildMockQueryable();
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        _ = _employmentRepositoryMock
             .Setup(r => r.DeleteAsync(It.IsAny<Employment>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _employmentService.DeleteAsync(displayId, "TestUser");
+        Result result = await _employmentService.DeleteAsync(displayId, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -364,12 +365,12 @@ public class EmploymentServiceTests
     public async Task DeleteAsync_WhenEmploymentDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        var displayId = 999999999999L;
-        var employments = new List<Employment>().BuildMockQueryable();
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        long displayId = 999999999999L;
+        IQueryable<Employment> employments = new List<Employment>().BuildMockQueryable();
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
 
         // Act
-        var result = await _employmentService.DeleteAsync(displayId, "TestUser");
+        Result result = await _employmentService.DeleteAsync(displayId, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -380,9 +381,9 @@ public class EmploymentServiceTests
     public async Task DeleteAsync_WithSchoolAssignments_CascadeDeletesSchools()
     {
         // Arrange
-        var displayId = 100000000001L;
-        var employment = CreateTestEmployment(displayId);
-        var employmentSchool = new EmploymentSchool
+        long displayId = 100000000001L;
+        Employment employment = CreateTestEmployment(displayId);
+        EmploymentSchool employmentSchool = new()
         {
             EmploymentId = employment.Id,
             SchoolId = Guid.NewGuid(),
@@ -393,17 +394,17 @@ public class EmploymentServiceTests
         };
         employment.EmploymentSchools = [employmentSchool];
 
-        var employments = new List<Employment> { employment }.BuildMockQueryable();
-        _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
-        _employmentRepositoryMock
+        IQueryable<Employment> employments = new List<Employment> { employment }.BuildMockQueryable();
+        _ = _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
+        _ = _employmentRepositoryMock
             .Setup(r => r.DeleteAsync(It.IsAny<Employment>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        _employmentSchoolRepositoryMock
+        _ = _employmentSchoolRepositoryMock
             .Setup(r => r.DeleteAsync(It.IsAny<EmploymentSchool>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _employmentService.DeleteAsync(displayId, "TestUser");
+        Result result = await _employmentService.DeleteAsync(displayId, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -419,22 +420,22 @@ public class EmploymentServiceTests
     public async Task AddSchoolAssignmentAsync_WithValidData_ReturnsCreatedSchoolAssignment()
     {
         // Arrange
-        var employmentDisplayId = 100000000001L;
-        var schoolDisplayId = 500000000001L;
-        var employment = CreateTestEmployment(employmentDisplayId);
-        var school = CreateTestSchool(schoolDisplayId);
+        long employmentDisplayId = 100000000001L;
+        long schoolDisplayId = 500000000001L;
+        Employment employment = CreateTestEmployment(employmentDisplayId);
+        School school = CreateTestSchool(schoolDisplayId);
 
-        _employmentRepositoryMock
+        _ = _employmentRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(employmentDisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(employment);
-        _schoolRepositoryMock
+        _ = _schoolRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(schoolDisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(school);
-        _employmentSchoolRepositoryMock
+        _ = _employmentSchoolRepositoryMock
             .Setup(r => r.AddAsync(It.IsAny<EmploymentSchool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((EmploymentSchool es, CancellationToken _) => es);
 
-        var createDto = new CreateEmploymentSchoolDto
+        CreateEmploymentSchoolDto createDto = new()
         {
             SchoolDisplayId = schoolDisplayId,
             StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
@@ -442,7 +443,7 @@ public class EmploymentServiceTests
         };
 
         // Act
-        var result = await _employmentService.AddSchoolAssignmentAsync(employmentDisplayId, createDto, "TestUser");
+        Result<EmploymentSchoolResponseDto> result = await _employmentService.AddSchoolAssignmentAsync(employmentDisplayId, createDto, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -455,11 +456,11 @@ public class EmploymentServiceTests
     public async Task AddSchoolAssignmentAsync_WhenEmploymentNotFound_ReturnsNotFound()
     {
         // Arrange
-        _employmentRepositoryMock
+        _ = _employmentRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Employment?)null);
 
-        var createDto = new CreateEmploymentSchoolDto
+        CreateEmploymentSchoolDto createDto = new()
         {
             SchoolDisplayId = 500000000001L,
             StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
@@ -467,7 +468,7 @@ public class EmploymentServiceTests
         };
 
         // Act
-        var result = await _employmentService.AddSchoolAssignmentAsync(999999999999L, createDto, "TestUser");
+        Result<EmploymentSchoolResponseDto> result = await _employmentService.AddSchoolAssignmentAsync(999999999999L, createDto, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -478,17 +479,17 @@ public class EmploymentServiceTests
     public async Task AddSchoolAssignmentAsync_WhenSchoolNotFound_ReturnsNotFound()
     {
         // Arrange
-        var employmentDisplayId = 100000000001L;
-        var employment = CreateTestEmployment(employmentDisplayId);
+        long employmentDisplayId = 100000000001L;
+        Employment employment = CreateTestEmployment(employmentDisplayId);
 
-        _employmentRepositoryMock
+        _ = _employmentRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(employmentDisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(employment);
-        _schoolRepositoryMock
+        _ = _schoolRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((School?)null);
 
-        var createDto = new CreateEmploymentSchoolDto
+        CreateEmploymentSchoolDto createDto = new()
         {
             SchoolDisplayId = 999999999999L,
             StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
@@ -496,7 +497,7 @@ public class EmploymentServiceTests
         };
 
         // Act
-        var result = await _employmentService.AddSchoolAssignmentAsync(employmentDisplayId, createDto, "TestUser");
+        Result<EmploymentSchoolResponseDto> result = await _employmentService.AddSchoolAssignmentAsync(employmentDisplayId, createDto, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -511,8 +512,8 @@ public class EmploymentServiceTests
     public async Task RemoveSchoolAssignmentAsync_WhenAssignmentExists_RemovesSuccessfully()
     {
         // Arrange
-        var employmentSchoolDisplayId = 600000000001L;
-        var employmentSchool = new EmploymentSchool
+        long employmentSchoolDisplayId = 600000000001L;
+        EmploymentSchool employmentSchool = new()
         {
             EmploymentId = Guid.NewGuid(),
             SchoolId = Guid.NewGuid(),
@@ -523,15 +524,15 @@ public class EmploymentServiceTests
         };
         SetDisplayId(employmentSchool, employmentSchoolDisplayId);
 
-        _employmentSchoolRepositoryMock
+        _ = _employmentSchoolRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(employmentSchoolDisplayId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(employmentSchool);
-        _employmentSchoolRepositoryMock
+        _ = _employmentSchoolRepositoryMock
             .Setup(r => r.DeleteAsync(It.IsAny<EmploymentSchool>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _employmentService.RemoveSchoolAssignmentAsync(employmentSchoolDisplayId, "TestUser");
+        Result result = await _employmentService.RemoveSchoolAssignmentAsync(employmentSchoolDisplayId, "TestUser");
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -542,12 +543,12 @@ public class EmploymentServiceTests
     public async Task RemoveSchoolAssignmentAsync_WhenAssignmentDoesNotExist_ReturnsNotFound()
     {
         // Arrange
-        _employmentSchoolRepositoryMock
+        _ = _employmentSchoolRepositoryMock
             .Setup(r => r.GetByDisplayIdAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((EmploymentSchool?)null);
 
         // Act
-        var result = await _employmentService.RemoveSchoolAssignmentAsync(999999999999L, "TestUser");
+        Result result = await _employmentService.RemoveSchoolAssignmentAsync(999999999999L, "TestUser");
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -563,12 +564,12 @@ public class EmploymentServiceTests
         string personFirstName = "Test",
         string personLastName = "Person")
     {
-        var person = CreateTestPerson(100000000000L + displayId % 1000, personFirstName, personLastName);
-        var position = CreateTestPosition(200000000001L);
-        var salaryGrade = CreateTestSalaryGrade(300000000001L);
-        var item = CreateTestItem(400000000001L);
+        Person person = CreateTestPerson(100000000000L + (displayId % 1000), personFirstName, personLastName);
+        Position position = CreateTestPosition(200000000001L);
+        SalaryGrade salaryGrade = CreateTestSalaryGrade(300000000001L);
+        Item item = CreateTestItem(400000000001L);
 
-        var employment = new Employment
+        Employment employment = new()
         {
             DepEdId = $"DEPED-{displayId}",
             AppointmentStatus = AppointmentStatus.Original,
@@ -595,7 +596,7 @@ public class EmploymentServiceTests
 
     private static Person CreateTestPerson(long displayId, string firstName = "Test", string lastName = "Person")
     {
-        var person = new Person
+        Person person = new()
         {
             FirstName = firstName,
             LastName = lastName,
@@ -613,7 +614,7 @@ public class EmploymentServiceTests
 
     private static Position CreateTestPosition(long displayId)
     {
-        var position = new Position
+        Position position = new()
         {
             TitleName = "Teacher I",
             CreatedBy = "System",
@@ -627,7 +628,7 @@ public class EmploymentServiceTests
 
     private static SalaryGrade CreateTestSalaryGrade(long displayId)
     {
-        var salaryGrade = new SalaryGrade
+        SalaryGrade salaryGrade = new()
         {
             SalaryGradeName = "SG-11",
             Step = 1,
@@ -643,7 +644,7 @@ public class EmploymentServiceTests
 
     private static Item CreateTestItem(long displayId)
     {
-        var item = new Item
+        Item item = new()
         {
             ItemName = "Item-001",
             CreatedBy = "System",
@@ -657,7 +658,7 @@ public class EmploymentServiceTests
 
     private static School CreateTestSchool(long displayId)
     {
-        var school = new School
+        School school = new()
         {
             SchoolName = "Test Elementary School",
             CreatedBy = "System",
@@ -671,7 +672,7 @@ public class EmploymentServiceTests
 
     private static void SetDisplayId<T>(T entity, long displayId) where T : BaseEntity
     {
-        var displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
+        PropertyInfo? displayIdProperty = typeof(BaseEntity).GetProperty("DisplayId");
         displayIdProperty?.SetValue(entity, displayId);
     }
 

@@ -27,7 +27,7 @@ public class SchoolService(
     /// <inheritdoc />
     public async Task<Result<SchoolResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
-        var school = await _schoolRepository.Query()
+        School? school = await _schoolRepository.Query()
             .Include(s => s.Addresses.Where(a => !a.IsDeleted))
             .Include(s => s.Contacts.Where(c => !c.IsDeleted))
             .FirstOrDefaultAsync(s => s.DisplayId == displayId, cancellationToken);
@@ -38,21 +38,21 @@ public class SchoolService(
     /// <inheritdoc />
     public async Task<PagedResult<SchoolListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
-        var queryable = _schoolRepository.Query();
+        IQueryable<School> queryable = _schoolRepository.Query();
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            var searchTerm = query.SearchTerm.ToLower();
+            string searchTerm = query.SearchTerm.ToLower();
             queryable = queryable.Where(s => s.SchoolName.ToLower().Contains(searchTerm));
         }
 
-        var totalCount = await queryable.CountAsync(cancellationToken);
+        int totalCount = await queryable.CountAsync(cancellationToken);
 
         queryable = query.SortDescending
             ? queryable.OrderByDescending(s => s.SchoolName)
             : queryable.OrderBy(s => s.SchoolName);
 
-        var items = await queryable
+        List<SchoolListDto> items = await queryable
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(s => new SchoolListDto
@@ -79,20 +79,20 @@ public class SchoolService(
     /// <inheritdoc />
     public async Task<Result<SchoolResponseDto>> CreateAsync(CreateSchoolDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
-        var school = new School
+        School school = new()
         {
             SchoolName = dto.SchoolName,
             CreatedBy = createdBy
         };
 
-        await _schoolRepository.AddAsync(school, cancellationToken);
+        _ = await _schoolRepository.AddAsync(school, cancellationToken);
 
         // Add addresses if provided
         if (dto.Addresses != null && dto.Addresses.Count > 0)
         {
-            foreach (var addressDto in dto.Addresses)
+            foreach (CreateAddressDto addressDto in dto.Addresses)
             {
-                var address = new Address
+                Address address = new()
                 {
                     Address1 = addressDto.Address1,
                     Address2 = addressDto.Address2,
@@ -107,7 +107,7 @@ public class SchoolService(
                     SchoolId = school.Id,
                     CreatedBy = createdBy
                 };
-                await _addressRepository.AddAsync(address, cancellationToken);
+                _ = await _addressRepository.AddAsync(address, cancellationToken);
                 school.Addresses.Add(address);
             }
         }
@@ -115,9 +115,9 @@ public class SchoolService(
         // Add contacts if provided
         if (dto.Contacts != null && dto.Contacts.Count > 0)
         {
-            foreach (var contactDto in dto.Contacts)
+            foreach (CreateContactDto contactDto in dto.Contacts)
             {
-                var contact = new Contact
+                Contact contact = new()
                 {
                     Mobile = contactDto.Mobile,
                     LandLine = contactDto.LandLine,
@@ -127,7 +127,7 @@ public class SchoolService(
                     SchoolId = school.Id,
                     CreatedBy = createdBy
                 };
-                await _contactRepository.AddAsync(contact, cancellationToken);
+                _ = await _contactRepository.AddAsync(contact, cancellationToken);
                 school.Contacts.Add(contact);
             }
         }
@@ -138,13 +138,15 @@ public class SchoolService(
     /// <inheritdoc />
     public async Task<Result<SchoolResponseDto>> UpdateAsync(long displayId, UpdateSchoolDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
-        var school = await _schoolRepository.Query()
+        School? school = await _schoolRepository.Query()
             .Include(s => s.Addresses.Where(a => !a.IsDeleted))
             .Include(s => s.Contacts.Where(c => !c.IsDeleted))
             .FirstOrDefaultAsync(s => s.DisplayId == displayId, cancellationToken);
 
         if (school == null)
+        {
             return Result<SchoolResponseDto>.NotFound("School not found.");
+        }
 
         school.SchoolName = dto.SchoolName;
         school.IsActive = dto.IsActive;
@@ -158,31 +160,33 @@ public class SchoolService(
     /// <inheritdoc />
     public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
-        var school = await _schoolRepository.Query()
+        School? school = await _schoolRepository.Query()
             .Include(s => s.Addresses.Where(a => !a.IsDeleted))
             .Include(s => s.Contacts.Where(c => !c.IsDeleted))
             .Include(s => s.EmploymentSchools.Where(es => !es.IsDeleted))
             .FirstOrDefaultAsync(s => s.DisplayId == displayId, cancellationToken);
 
         if (school == null)
+        {
             return Result.NotFound("School not found.");
+        }
 
         // Cascade soft delete to related addresses
-        foreach (var address in school.Addresses)
+        foreach (Address address in school.Addresses)
         {
             address.ModifiedBy = deletedBy;
             await _addressRepository.DeleteAsync(address, cancellationToken);
         }
 
         // Cascade soft delete to related contacts
-        foreach (var contact in school.Contacts)
+        foreach (Contact contact in school.Contacts)
         {
             contact.ModifiedBy = deletedBy;
             await _contactRepository.DeleteAsync(contact, cancellationToken);
         }
 
         // Cascade soft delete to related employment schools
-        foreach (var employmentSchool in school.EmploymentSchools)
+        foreach (EmploymentSchool employmentSchool in school.EmploymentSchools)
         {
             employmentSchool.ModifiedBy = deletedBy;
             await _employmentSchoolRepository.DeleteAsync(employmentSchool, cancellationToken);
