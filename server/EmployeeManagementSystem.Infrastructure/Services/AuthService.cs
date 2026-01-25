@@ -224,7 +224,6 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
 
         user.RefreshTokens.Add(newRefreshToken);
         user.LastLoginOn = DateTime.UtcNow;
-        user.ModifiedOn = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
 

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using EmployeeManagementSystem.Api.Models;
 using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs.Document;
 using Microsoft.AspNetCore.Mvc;
@@ -146,30 +147,22 @@ public abstract class ApiControllerBase : ControllerBase
     /// </summary>
     private ActionResult<T> ToErrorResult<T>(FailureType failureType, string? error)
     {
-        return failureType switch
-        {
-            FailureType.NotFound => NotFound(new { error = error ?? "Resource not found." }),
-            FailureType.BadRequest => BadRequest(new { error = error ?? "Invalid request." }),
-            FailureType.Unauthorized => Unauthorized(new { error = error ?? "Unauthorized." }),
-            FailureType.Conflict => Conflict(new { error = error ?? "Conflict occurred." }),
-            FailureType.InternalError => StatusCode(500, new { error = error ?? "An internal error occurred." }),
-            _ => BadRequest(new { error = error ?? "An error occurred." })
-        };
+        return ToErrorResult(failureType, error) as ActionResult<T> ?? BadRequest(ApiErrorResponse.BadRequest(error));
     }
 
     /// <summary>
     /// Creates an error IActionResult based on the failure type.
     /// </summary>
-    private IActionResult ToErrorResult(FailureType failureType, string? error)
+    private ObjectResult ToErrorResult(FailureType failureType, string? error)
     {
         return failureType switch
         {
-            FailureType.NotFound => NotFound(new { error = error ?? "Resource not found." }),
-            FailureType.BadRequest => BadRequest(new { error = error ?? "Invalid request." }),
-            FailureType.Unauthorized => Unauthorized(new { error = error ?? "Unauthorized." }),
-            FailureType.Conflict => Conflict(new { error = error ?? "Conflict occurred." }),
-            FailureType.InternalError => StatusCode(500, new { error = error ?? "An internal error occurred." }),
-            _ => BadRequest(new { error = error ?? "An error occurred." })
+            FailureType.NotFound => NotFound(ApiErrorResponse.NotFound(error)),
+            FailureType.BadRequest => BadRequest(ApiErrorResponse.BadRequest(error)),
+            FailureType.Unauthorized => Unauthorized(ApiErrorResponse.Unauthorized(error)),
+            FailureType.Conflict => Conflict(ApiErrorResponse.Conflict(error)),
+            FailureType.InternalError => StatusCode(500, ApiErrorResponse.InternalError(error)),
+            _ => BadRequest(ApiErrorResponse.BadRequest(error))
         };
     }
 }

@@ -133,8 +133,7 @@ public class EmploymentService(
             PositionId = position.Id,
             SalaryGradeId = salaryGrade.Id,
             ItemId = item.Id,
-            CreatedBy = createdBy,
-            CreatedOn = DateTime.UtcNow
+            CreatedBy = createdBy
         };
 
         await _employmentRepository.AddAsync(employment, cancellationToken);
@@ -155,8 +154,7 @@ public class EmploymentService(
                     StartDate = schoolDto.StartDate,
                     EndDate = schoolDto.EndDate,
                     IsCurrent = schoolDto.IsCurrent,
-                    CreatedBy = createdBy,
-                    CreatedOn = DateTime.UtcNow
+                    CreatedBy = createdBy
                 };
                 await _employmentSchoolRepository.AddAsync(employmentSchool, cancellationToken);
                 employment.EmploymentSchools.Add(employmentSchool);
@@ -214,7 +212,6 @@ public class EmploymentService(
         employment.ItemId = item.Id;
         employment.IsActive = dto.IsActive;
         employment.ModifiedBy = modifiedBy;
-        employment.ModifiedOn = DateTime.UtcNow;
 
         await _employmentRepository.UpdateAsync(employment, cancellationToken);
 
@@ -240,13 +237,11 @@ public class EmploymentService(
         foreach (var employmentSchool in employment.EmploymentSchools)
         {
             employmentSchool.ModifiedBy = deletedBy;
-            employmentSchool.ModifiedOn = DateTime.UtcNow;
             await _employmentSchoolRepository.DeleteAsync(employmentSchool, cancellationToken);
         }
 
         // Soft delete the employment
         employment.ModifiedBy = deletedBy;
-        employment.ModifiedOn = DateTime.UtcNow;
         await _employmentRepository.DeleteAsync(employment, cancellationToken);
         return Result.Success();
     }
@@ -269,8 +264,7 @@ public class EmploymentService(
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
             IsCurrent = dto.IsCurrent,
-            CreatedBy = createdBy,
-            CreatedOn = DateTime.UtcNow
+            CreatedBy = createdBy
         };
 
         await _employmentSchoolRepository.AddAsync(employmentSchool, cancellationToken);
@@ -297,7 +291,6 @@ public class EmploymentService(
             return Result.NotFound("Employment school assignment not found.");
 
         employmentSchool.ModifiedBy = deletedBy;
-        employmentSchool.ModifiedOn = DateTime.UtcNow;
         await _employmentSchoolRepository.DeleteAsync(employmentSchool, cancellationToken);
         return Result.Success();
     }

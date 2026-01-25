@@ -79,8 +79,7 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
             Description = dto.Description,
             Step = dto.Step,
             MonthlySalary = dto.MonthlySalary,
-            CreatedBy = createdBy,
-            CreatedOn = DateTime.UtcNow
+            CreatedBy = createdBy
         };
 
         await _salaryGradeRepository.AddAsync(salaryGrade, cancellationToken);
@@ -101,7 +100,6 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
         salaryGrade.MonthlySalary = dto.MonthlySalary;
         salaryGrade.IsActive = dto.IsActive;
         salaryGrade.ModifiedBy = modifiedBy;
-        salaryGrade.ModifiedOn = DateTime.UtcNow;
 
         await _salaryGradeRepository.UpdateAsync(salaryGrade, cancellationToken);
 
@@ -116,7 +114,6 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
             return Result.NotFound("Salary grade not found.");
 
         salaryGrade.ModifiedBy = deletedBy;
-        salaryGrade.ModifiedOn = DateTime.UtcNow;
         await _salaryGradeRepository.DeleteAsync(salaryGrade, cancellationToken);
         return Result.Success();
     }

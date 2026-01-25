@@ -175,8 +175,7 @@ public class DocumentService(
             ContainerName = DocumentsContainer,
             Description = dto.Description,
             PersonId = person.Id,
-            CreatedBy = createdBy,
-            CreatedOn = DateTime.UtcNow
+            CreatedBy = createdBy
         };
 
         await _documentRepository.AddAsync(document, cancellationToken);
@@ -206,7 +205,6 @@ public class DocumentService(
 
         document.Description = dto.Description;
         document.ModifiedBy = modifiedBy;
-        document.ModifiedOn = DateTime.UtcNow;
 
         await _documentRepository.UpdateAsync(document, cancellationToken);
 
@@ -269,7 +267,6 @@ public class DocumentService(
 
         // Soft delete the document record
         document.ModifiedBy = deletedBy;
-        document.ModifiedOn = DateTime.UtcNow;
         await _documentRepository.DeleteAsync(document, cancellationToken);
 
         return Result.Success();
@@ -312,7 +309,6 @@ public class DocumentService(
 
         person.ProfileImageUrl = blobUrl;
         person.ModifiedBy = modifiedBy;
-        person.ModifiedOn = DateTime.UtcNow;
 
         await _personRepository.UpdateAsync(person, cancellationToken);
 
@@ -341,7 +337,6 @@ public class DocumentService(
 
         person.ProfileImageUrl = null;
         person.ModifiedBy = modifiedBy;
-        person.ModifiedOn = DateTime.UtcNow;
 
         await _personRepository.UpdateAsync(person, cancellationToken);
 

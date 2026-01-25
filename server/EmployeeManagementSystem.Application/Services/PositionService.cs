@@ -75,8 +75,7 @@ public class PositionService(IRepository<Position> positionRepository) : IPositi
         {
             TitleName = dto.TitleName,
             Description = dto.Description,
-            CreatedBy = createdBy,
-            CreatedOn = DateTime.UtcNow
+            CreatedBy = createdBy
         };
 
         await _positionRepository.AddAsync(position, cancellationToken);
@@ -95,7 +94,6 @@ public class PositionService(IRepository<Position> positionRepository) : IPositi
         position.Description = dto.Description;
         position.IsActive = dto.IsActive;
         position.ModifiedBy = modifiedBy;
-        position.ModifiedOn = DateTime.UtcNow;
 
         await _positionRepository.UpdateAsync(position, cancellationToken);
 
@@ -110,7 +108,6 @@ public class PositionService(IRepository<Position> positionRepository) : IPositi
             return Result.NotFound("Position not found.");
 
         position.ModifiedBy = deletedBy;
-        position.ModifiedOn = DateTime.UtcNow;
         await _positionRepository.DeleteAsync(position, cancellationToken);
         return Result.Success();
     }

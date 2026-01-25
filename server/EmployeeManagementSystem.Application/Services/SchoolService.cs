@@ -82,8 +82,7 @@ public class SchoolService(
         var school = new School
         {
             SchoolName = dto.SchoolName,
-            CreatedBy = createdBy,
-            CreatedOn = DateTime.UtcNow
+            CreatedBy = createdBy
         };
 
         await _schoolRepository.AddAsync(school, cancellationToken);
@@ -106,8 +105,7 @@ public class SchoolService(
                     IsPermanent = addressDto.IsPermanent,
                     AddressType = addressDto.AddressType,
                     SchoolId = school.Id,
-                    CreatedBy = createdBy,
-                    CreatedOn = DateTime.UtcNow
+                    CreatedBy = createdBy
                 };
                 await _addressRepository.AddAsync(address, cancellationToken);
                 school.Addresses.Add(address);
@@ -127,8 +125,7 @@ public class SchoolService(
                     Email = contactDto.Email,
                     ContactType = contactDto.ContactType,
                     SchoolId = school.Id,
-                    CreatedBy = createdBy,
-                    CreatedOn = DateTime.UtcNow
+                    CreatedBy = createdBy
                 };
                 await _contactRepository.AddAsync(contact, cancellationToken);
                 school.Contacts.Add(contact);
@@ -152,7 +149,6 @@ public class SchoolService(
         school.SchoolName = dto.SchoolName;
         school.IsActive = dto.IsActive;
         school.ModifiedBy = modifiedBy;
-        school.ModifiedOn = DateTime.UtcNow;
 
         await _schoolRepository.UpdateAsync(school, cancellationToken);
 
@@ -175,7 +171,6 @@ public class SchoolService(
         foreach (var address in school.Addresses)
         {
             address.ModifiedBy = deletedBy;
-            address.ModifiedOn = DateTime.UtcNow;
             await _addressRepository.DeleteAsync(address, cancellationToken);
         }
 
@@ -183,7 +178,6 @@ public class SchoolService(
         foreach (var contact in school.Contacts)
         {
             contact.ModifiedBy = deletedBy;
-            contact.ModifiedOn = DateTime.UtcNow;
             await _contactRepository.DeleteAsync(contact, cancellationToken);
         }
 
@@ -191,13 +185,11 @@ public class SchoolService(
         foreach (var employmentSchool in school.EmploymentSchools)
         {
             employmentSchool.ModifiedBy = deletedBy;
-            employmentSchool.ModifiedOn = DateTime.UtcNow;
             await _employmentSchoolRepository.DeleteAsync(employmentSchool, cancellationToken);
         }
 
         // Soft delete the school
         school.ModifiedBy = deletedBy;
-        school.ModifiedOn = DateTime.UtcNow;
         await _schoolRepository.DeleteAsync(school, cancellationToken);
         return Result.Success();
     }

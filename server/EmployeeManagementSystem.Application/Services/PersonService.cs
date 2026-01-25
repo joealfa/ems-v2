@@ -127,8 +127,7 @@ public class PersonService(
             DateOfBirth = dto.DateOfBirth,
             Gender = dto.Gender,
             CivilStatus = dto.CivilStatus,
-            CreatedBy = createdBy,
-            CreatedOn = DateTime.UtcNow
+            CreatedBy = createdBy
         };
 
         await _personRepository.AddAsync(person, cancellationToken);
@@ -151,8 +150,7 @@ public class PersonService(
                     IsPermanent = addressDto.IsPermanent,
                     AddressType = addressDto.AddressType,
                     PersonId = person.Id,
-                    CreatedBy = createdBy,
-                    CreatedOn = DateTime.UtcNow
+                    CreatedBy = createdBy
                 };
                 await _addressRepository.AddAsync(address, cancellationToken);
                 person.Addresses.Add(address);
@@ -172,8 +170,7 @@ public class PersonService(
                     Email = contactDto.Email,
                     ContactType = contactDto.ContactType,
                     PersonId = person.Id,
-                    CreatedBy = createdBy,
-                    CreatedOn = DateTime.UtcNow
+                    CreatedBy = createdBy
                 };
                 await _contactRepository.AddAsync(contact, cancellationToken);
                 person.Contacts.Add(contact);
@@ -201,7 +198,6 @@ public class PersonService(
         person.Gender = dto.Gender;
         person.CivilStatus = dto.CivilStatus;
         person.ModifiedBy = modifiedBy;
-        person.ModifiedOn = DateTime.UtcNow;
 
         await _personRepository.UpdateAsync(person, cancellationToken);
 
@@ -224,7 +220,6 @@ public class PersonService(
         foreach (var address in person.Addresses)
         {
             address.ModifiedBy = deletedBy;
-            address.ModifiedOn = DateTime.UtcNow;
             await _addressRepository.DeleteAsync(address, cancellationToken);
         }
 
@@ -232,7 +227,6 @@ public class PersonService(
         foreach (var contact in person.Contacts)
         {
             contact.ModifiedBy = deletedBy;
-            contact.ModifiedOn = DateTime.UtcNow;
             await _contactRepository.DeleteAsync(contact, cancellationToken);
         }
 
@@ -240,13 +234,11 @@ public class PersonService(
         foreach (var document in person.Documents)
         {
             document.ModifiedBy = deletedBy;
-            document.ModifiedOn = DateTime.UtcNow;
             await _documentRepository.DeleteAsync(document, cancellationToken);
         }
 
         // Soft delete the person
         person.ModifiedBy = deletedBy;
-        person.ModifiedOn = DateTime.UtcNow;
         await _personRepository.DeleteAsync(person, cancellationToken);
         return Result.Success();
     }

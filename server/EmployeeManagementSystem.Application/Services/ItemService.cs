@@ -78,8 +78,7 @@ public class ItemService(IRepository<Item> itemRepository) : IItemService
         {
             ItemName = dto.ItemName,
             Description = dto.Description,
-            CreatedBy = createdBy,
-            CreatedOn = DateTime.UtcNow
+            CreatedBy = createdBy
         };
 
         await _itemRepository.AddAsync(item, cancellationToken);
@@ -98,7 +97,6 @@ public class ItemService(IRepository<Item> itemRepository) : IItemService
         item.Description = dto.Description;
         item.IsActive = dto.IsActive;
         item.ModifiedBy = modifiedBy;
-        item.ModifiedOn = DateTime.UtcNow;
 
         await _itemRepository.UpdateAsync(item, cancellationToken);
 
@@ -113,9 +111,8 @@ public class ItemService(IRepository<Item> itemRepository) : IItemService
             return Result.NotFound($"Item with ID {displayId} not found.");
 
         item.ModifiedBy = deletedBy;
-        item.ModifiedOn = DateTime.UtcNow;
         await _itemRepository.DeleteAsync(item, cancellationToken);
-        
+
         return Result.Success();
     }
 
