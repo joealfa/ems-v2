@@ -116,7 +116,7 @@ const SchoolFormPage = () => {
         <Heading size="lg">
           {isEditMode ? 'Edit School' : 'Add New School'}
         </Heading>
-        <Button variant="outline" onClick={() => navigate('/schools')}>
+        <Button variant="outline" onClick={() => navigate(-1)}>
           Cancel
         </Button>
       </Flex>
@@ -158,7 +158,7 @@ const SchoolFormPage = () => {
         </Card.Root>
 
         <Flex justify="flex-end" mt={6} gap={4}>
-          <Button variant="outline" onClick={() => navigate('/schools')}>
+          <Button variant="outline" onClick={() => navigate(-1)}>
             Cancel
           </Button>
           <Button type="submit" colorPalette="blue" loading={saving}>

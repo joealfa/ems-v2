@@ -137,7 +137,7 @@ const SalaryGradeFormPage = () => {
         <Heading size="lg">
           {isEditMode ? 'Edit Salary Grade' : 'Add New Salary Grade'}
         </Heading>
-        <Button variant="outline" onClick={() => navigate('/salary-grades')}>
+        <Button variant="outline" onClick={() => navigate(-1)}>
           Cancel
         </Button>
       </Flex>
@@ -226,7 +226,7 @@ const SalaryGradeFormPage = () => {
         </Card.Root>
 
         <Flex justify="flex-end" mt={6} gap={4}>
-          <Button variant="outline" onClick={() => navigate('/salary-grades')}>
+          <Button variant="outline" onClick={() => navigate(-1)}>
             Cancel
           </Button>
           <Button type="submit" colorPalette="blue" loading={saving}>

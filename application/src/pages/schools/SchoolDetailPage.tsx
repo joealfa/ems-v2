@@ -91,7 +91,11 @@ const SchoolDetailPage = () => {
           </Button>
           <Button
             colorPalette="blue"
-            onClick={() => navigate(`/schools/${displayId}/edit`)}
+            onClick={() =>
+              navigate(`/schools/${displayId}/edit`, {
+                state: { fromView: true },
+              })
+            }
           >
             Edit
           </Button>

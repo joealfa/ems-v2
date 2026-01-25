@@ -125,7 +125,7 @@ const PositionFormPage = () => {
         <Heading size="lg">
           {isEditMode ? 'Edit Position' : 'Add New Position'}
         </Heading>
-        <Button variant="outline" onClick={() => navigate('/positions')}>
+        <Button variant="outline" onClick={() => navigate(-1)}>
           Cancel
         </Button>
       </Flex>
@@ -177,7 +177,7 @@ const PositionFormPage = () => {
         </Card.Root>
 
         <Flex justify="flex-end" mt={6} gap={4}>
-          <Button variant="outline" onClick={() => navigate('/positions')}>
+          <Button variant="outline" onClick={() => navigate(-1)}>
             Cancel
           </Button>
           <Button type="submit" colorPalette="blue" loading={saving}>

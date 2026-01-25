@@ -89,7 +89,11 @@ const ItemDetailPage = () => {
           </Button>
           <Button
             colorPalette="blue"
-            onClick={() => navigate(`/items/${displayId}/edit`)}
+            onClick={() =>
+              navigate(`/items/${displayId}/edit`, {
+                state: { fromView: true },
+              })
+            }
           >
             Edit
           </Button>

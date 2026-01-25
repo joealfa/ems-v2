@@ -101,7 +101,11 @@ const SalaryGradeDetailPage = () => {
           </Button>
           <Button
             colorPalette="blue"
-            onClick={() => navigate(`/salary-grades/${displayId}/edit`)}
+            onClick={() =>
+              navigate(`/salary-grades/${displayId}/edit`, {
+                state: { fromView: true },
+              })
+            }
           >
             Edit
           </Button>

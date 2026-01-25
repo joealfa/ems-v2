@@ -222,7 +222,7 @@ const EmploymentFormPage = () => {
         <Heading size="lg">
           {isEditMode ? 'Edit Employment' : 'Add New Employment'}
         </Heading>
-        <Button variant="outline" onClick={() => navigate('/employments')}>
+        <Button variant="outline" onClick={() => navigate(-1)}>
           Cancel
         </Button>
       </Flex>
@@ -540,7 +540,7 @@ const EmploymentFormPage = () => {
         </Stack>
 
         <Flex justify="flex-end" mt={6} gap={4}>
-          <Button variant="outline" onClick={() => navigate('/employments')}>
+          <Button variant="outline" onClick={() => navigate(-1)}>
             Cancel
           </Button>
           <Button type="submit" colorPalette="blue" loading={saving}>

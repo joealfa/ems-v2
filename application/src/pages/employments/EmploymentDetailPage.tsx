@@ -106,7 +106,11 @@ const EmploymentDetailPage = () => {
           </Button>
           <Button
             colorPalette="blue"
-            onClick={() => navigate(`/employments/${displayId}/edit`)}
+            onClick={() =>
+              navigate(`/employments/${displayId}/edit`, {
+                state: { fromView: true },
+              })
+            }
           >
             Edit
           </Button>

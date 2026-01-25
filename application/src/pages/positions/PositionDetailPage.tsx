@@ -91,7 +91,11 @@ const PositionDetailPage = () => {
           </Button>
           <Button
             colorPalette="blue"
-            onClick={() => navigate(`/positions/${displayId}/edit`)}
+            onClick={() =>
+              navigate(`/positions/${displayId}/edit`, {
+                state: { fromView: true },
+              })
+            }
           >
             Edit
           </Button>

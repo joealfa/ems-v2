@@ -115,7 +115,7 @@ const ItemFormPage = () => {
     <Box maxW="800px">
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">{isEditMode ? 'Edit Item' : 'Add New Item'}</Heading>
-        <Button variant="outline" onClick={() => navigate('/items')}>
+        <Button variant="outline" onClick={() => navigate(-1)}>
           Cancel
         </Button>
       </Flex>
@@ -167,7 +167,7 @@ const ItemFormPage = () => {
         </Card.Root>
 
         <Flex justify="flex-end" mt={6} gap={4}>
-          <Button variant="outline" onClick={() => navigate('/items')}>
+          <Button variant="outline" onClick={() => navigate(-1)}>
             Cancel
           </Button>
           <Button type="submit" colorPalette="blue" loading={saving}>

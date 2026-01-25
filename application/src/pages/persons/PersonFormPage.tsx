@@ -501,7 +501,7 @@ const PersonFormPage = () => {
         <Heading size="lg">
           {isEditMode ? 'Edit Person' : 'Add New Person'}
         </Heading>
-        <Button variant="outline" onClick={() => navigate('/persons')}>
+        <Button variant="outline" onClick={() => navigate(-1)}>
           Cancel
         </Button>
       </Flex>
@@ -1203,7 +1203,7 @@ const PersonFormPage = () => {
 
           {/* Submit Buttons */}
           <Flex justify="flex-end" gap={4}>
-            <Button variant="outline" onClick={() => navigate('/persons')}>
+            <Button variant="outline" onClick={() => navigate(-1)}>
               Cancel
             </Button>
             <Button type="submit" colorPalette="blue" loading={saving}>
