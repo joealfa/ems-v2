@@ -1,4 +1,4 @@
-@EmployeeManagementSystem.Api_HostAddress = http://localhost:5031
+@EmployeeManagementSystem.Api_HostAddress = https://localhost:7009
 
 ###############################################################################
 # AUTHENTICATION API

@@ -133,14 +133,16 @@ builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IReportsService, ReportsService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+// Get CORS configuration
+string[] allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? throw new InvalidOperationException("Cors:AllowedOrigins is not configured");
+
 // Configure CORS
-// WARNING: This policy is for development only. 
-// TODO: Restrict to specific origins before production deployment.
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowedHosts", policy =>
     {
-        _ = policy.WithOrigins("http://localhost:5173", "https://localhost:7009")
+        _ = policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();

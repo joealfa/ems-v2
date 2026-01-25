@@ -88,8 +88,14 @@ public static class DataSeeder
     /// <param name="context">The database context.</param>
     public static async Task SeedAsync(ApplicationDbContext context)
     {
-        // Only seed if the database is empty
-        if (await context.Schools.AnyAsync())
+        // Only seed if ALL tables are empty
+        if (await context.Schools.AnyAsync() ||
+            await context.Positions.AnyAsync() ||
+            await context.SalaryGrades.AnyAsync() ||
+            await context.Items.AnyAsync() ||
+            await context.Persons.AnyAsync() ||
+            await context.Employments.AnyAsync() ||
+            await context.EmploymentSchools.AnyAsync())
         {
             return;
         }
