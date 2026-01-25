@@ -105,7 +105,7 @@ const EmploymentFormPage = () => {
             1000
           ),
           positionsApi.apiV1PositionsGet(1, 1000),
-          salaryGradesApi.apiV1SalaryGradesGet(1, 1000),
+          salaryGradesApi.apiV1SalarygradesGet(1, 1000),
           itemsApi.apiV1ItemsGet(1, 1000),
         ]);
       setPersons(personsRes.data.items || []);

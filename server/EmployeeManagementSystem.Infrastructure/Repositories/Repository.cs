@@ -82,9 +82,39 @@ public class Repository<T>(ApplicationDbContext context) : IRepository<T> where 
     /// <inheritdoc />
     public virtual async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
     {
-        await _dbSet.AddAsync(entity, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-        return entity;
+        const int maxRetries = 3;
+        var attempt = 0;
+
+        while (true)
+        {
+            try
+            {
+                await _dbSet.AddAsync(entity, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
+                return entity;
+            }
+            catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex) && attempt < maxRetries)
+            {
+                attempt++;
+                // Detach the entity and regenerate DisplayId
+                _context.Entry(entity).State = EntityState.Detached;
+                entity.RegenerateDisplayId();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks if the exception is caused by a unique constraint violation on DisplayId.
+    /// </summary>
+    private static bool IsUniqueConstraintViolation(DbUpdateException ex)
+    {
+        // Check for SQL Server unique constraint violation (error 2601 or 2627)
+        // Also check the message for DisplayId to ensure it's the right constraint
+        var message = ex.InnerException?.Message ?? ex.Message;
+        return message.Contains("unique", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("duplicate", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("2601") ||
+               message.Contains("2627");
     }
 
     /// <inheritdoc />

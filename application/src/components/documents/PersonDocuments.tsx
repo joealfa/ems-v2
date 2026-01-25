@@ -36,12 +36,11 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
   const loadDocuments = async () => {
     setLoading(true);
     try {
-      const response =
-        await documentsApi.apiV1PersonsDisplayIdDocumentsGet(
-          personDisplayId,
-          1,
-          100
-        );
+      const response = await documentsApi.apiV1PersonsDisplayIdDocumentsGet(
+        personDisplayId,
+        1,
+        100
+      );
       setDocuments(response.data.items || []);
     } catch (err) {
       console.error('Error loading documents:', err);

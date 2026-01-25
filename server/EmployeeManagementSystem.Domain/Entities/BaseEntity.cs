@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using EmployeeManagementSystem.Domain.Common;
 
 namespace EmployeeManagementSystem.Domain.Entities;
 
@@ -7,10 +8,6 @@ namespace EmployeeManagementSystem.Domain.Entities;
 /// </summary>
 public abstract class BaseEntity : AuditableEntity
 {
-    private static readonly Random _random = new();
-    private const long MinDisplayId = 100000000000L; // 12-digit minimum
-    private const long MaxDisplayId = 999999999999L; // 12-digit maximum
-
     /// <summary>
     /// Gets or sets the internal unique identifier for the entity.
     /// This is for internal use only and should not be exposed via API.
@@ -20,8 +17,8 @@ public abstract class BaseEntity : AuditableEntity
 
     /// <summary>
     /// Gets the public-facing display identifier (12-digit number).
-    /// This is a randomly generated unique identifier.
-    /// Uniqueness is enforced via database unique constraint.
+    /// Generated using Snowflake-style algorithm for guaranteed uniqueness.
+    /// Uniqueness is also enforced via database unique constraint.
     /// </summary>
     public long DisplayId { get; private set; }
 
@@ -44,22 +41,16 @@ public abstract class BaseEntity : AuditableEntity
     protected BaseEntity()
     {
         Id = Guid.NewGuid();
-        DisplayId = GenerateRandomDisplayId();
+        DisplayId = SnowflakeIdGenerator.GenerateId();
         CreatedOn = DateTime.UtcNow;
     }
 
     /// <summary>
-    /// Generates a random 12-digit display identifier.
+    /// Regenerates the DisplayId with a new unique value.
+    /// Used for retry logic when a collision occurs.
     /// </summary>
-    /// <returns>A random 12-digit number.</returns>
-    private static long GenerateRandomDisplayId()
+    public void RegenerateDisplayId()
     {
-        // Generate a random 12-digit number between 100000000000 and 999999999999
-        byte[] buffer = new byte[8];
-        _random.NextBytes(buffer);
-        long randomValue = BitConverter.ToInt64(buffer, 0);
-        
-        // Ensure positive and within 12-digit range
-        return MinDisplayId + (Math.Abs(randomValue) % (MaxDisplayId - MinDisplayId + 1));
+        DisplayId = SnowflakeIdGenerator.GenerateId();
     }
 }

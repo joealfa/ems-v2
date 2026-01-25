@@ -190,12 +190,11 @@ const PersonFormPage = () => {
     if (!displayId) return;
     setLoadingDocuments(true);
     try {
-      const response =
-        await documentsApi.apiV1PersonsDisplayIdDocumentsGet(
-          Number(displayId),
-          1,
-          100
-        );
+      const response = await documentsApi.apiV1PersonsDisplayIdDocumentsGet(
+        Number(displayId),
+        1,
+        100
+      );
       setDocuments(response.data.items || []);
     } catch (err) {
       console.error('Error loading documents:', err);
