@@ -10,17 +10,12 @@ namespace EmployeeManagementSystem.Application.Services;
 /// <summary>
 /// Service implementation for item operations.
 /// </summary>
-public class ItemService : IItemService
+/// <remarks>
+/// Initializes a new instance of the <see cref="ItemService"/> class.
+/// </remarks>
+public class ItemService(IRepository<Item> itemRepository) : IItemService
 {
-    private readonly IRepository<Item> _itemRepository;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ItemService"/> class.
-    /// </summary>
-    public ItemService(IRepository<Item> itemRepository)
-    {
-        _itemRepository = itemRepository;
-    }
+    private readonly IRepository<Item> _itemRepository = itemRepository;
 
     /// <inheritdoc />
     public async Task<Result<ItemResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)

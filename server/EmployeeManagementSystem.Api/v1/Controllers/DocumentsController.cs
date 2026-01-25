@@ -11,11 +11,16 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// <summary>
 /// API controller for managing person documents.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="DocumentsController"/> class.
+/// </remarks>
+[ApiController]
+[Route("api/v1/Persons/{displayId:long}/[controller]")]
+[Produces("application/json")]
 [Authorize]
-[Route("api/v1/Persons/{displayId:long}/documents")]
-public class DocumentsController : ApiControllerBase
+public class DocumentsController(IDocumentService documentService) : ApiControllerBase
 {
-    private readonly IDocumentService _documentService;
+    private readonly IDocumentService _documentService = documentService;
 
     private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -38,14 +43,6 @@ public class DocumentsController : ApiControllerBase
 
     private const long MaxFileSizeBytes = 50 * 1024 * 1024; // 50 MB
     private const long MaxImageSizeBytes = 5 * 1024 * 1024; // 5 MB
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DocumentsController"/> class.
-    /// </summary>
-    public DocumentsController(IDocumentService documentService)
-    {
-        _documentService = documentService;
-    }
 
     /// <summary>
     /// Gets a paginated list of documents for a person.

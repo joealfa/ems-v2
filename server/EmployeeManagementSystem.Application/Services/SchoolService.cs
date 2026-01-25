@@ -10,27 +10,19 @@ namespace EmployeeManagementSystem.Application.Services;
 /// <summary>
 /// Service implementation for school operations.
 /// </summary>
-public class SchoolService : ISchoolService
+/// <remarks>
+/// Initializes a new instance of the <see cref="SchoolService"/> class.
+/// </remarks>
+public class SchoolService(
+    IRepository<School> schoolRepository,
+    IRepository<Address> addressRepository,
+    IRepository<Contact> contactRepository,
+    IRepository<EmploymentSchool> employmentSchoolRepository) : ISchoolService
 {
-    private readonly IRepository<School> _schoolRepository;
-    private readonly IRepository<Address> _addressRepository;
-    private readonly IRepository<Contact> _contactRepository;
-    private readonly IRepository<EmploymentSchool> _employmentSchoolRepository;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SchoolService"/> class.
-    /// </summary>
-    public SchoolService(
-        IRepository<School> schoolRepository,
-        IRepository<Address> addressRepository,
-        IRepository<Contact> contactRepository,
-        IRepository<EmploymentSchool> employmentSchoolRepository)
-    {
-        _schoolRepository = schoolRepository;
-        _addressRepository = addressRepository;
-        _contactRepository = contactRepository;
-        _employmentSchoolRepository = employmentSchoolRepository;
-    }
+    private readonly IRepository<School> _schoolRepository = schoolRepository;
+    private readonly IRepository<Address> _addressRepository = addressRepository;
+    private readonly IRepository<Contact> _contactRepository = contactRepository;
+    private readonly IRepository<EmploymentSchool> _employmentSchoolRepository = employmentSchoolRepository;
 
     /// <inheritdoc />
     public async Task<Result<SchoolResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)

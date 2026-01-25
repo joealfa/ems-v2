@@ -47,7 +47,7 @@ const SalaryGradesPage = () => {
           const sortDescending = sortModel?.sort === 'desc';
 
           try {
-            const response = await salaryGradesApi.apiV1SalaryGradesGet(
+            const response = await salaryGradesApi.apiV1SalarygradesGet(
               pageNumber,
               pageSize,
               debouncedSearchTerm || undefined,
@@ -184,7 +184,7 @@ const SalaryGradesPage = () => {
           const sortDescending = sortModel?.sort === 'desc';
 
           try {
-            const response = await salaryGradesApi.apiV1SalaryGradesGet(
+            const response = await salaryGradesApi.apiV1SalarygradesGet(
               pageNumber,
               pageSize,
               debouncedSearchTerm || undefined,

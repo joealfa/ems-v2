@@ -11,21 +11,16 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// <summary>
 /// API controller for managing schools.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="SchoolsController"/> class.
+/// </remarks>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
 [Authorize]
-public class SchoolsController : ApiControllerBase
+public class SchoolsController(ISchoolService schoolService) : ApiControllerBase
 {
-    private readonly ISchoolService _schoolService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SchoolsController"/> class.
-    /// </summary>
-    public SchoolsController(ISchoolService schoolService)
-    {
-        _schoolService = schoolService;
-    }
+    private readonly ISchoolService _schoolService = schoolService;
 
     /// <summary>
     /// Gets a paginated list of schools.
@@ -73,9 +68,6 @@ public class SchoolsController : ApiControllerBase
         [FromBody] CreateSchoolDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _schoolService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
@@ -96,9 +88,6 @@ public class SchoolsController : ApiControllerBase
         [FromBody] UpdateSchoolDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _schoolService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }

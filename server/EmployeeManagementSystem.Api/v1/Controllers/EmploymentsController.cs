@@ -11,21 +11,16 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// <summary>
 /// API controller for managing employments.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="EmploymentsController"/> class.
+/// </remarks>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
 [Authorize]
-public class EmploymentsController : ApiControllerBase
+public class EmploymentsController(IEmploymentService employmentService) : ApiControllerBase
 {
-    private readonly IEmploymentService _employmentService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EmploymentsController"/> class.
-    /// </summary>
-    public EmploymentsController(IEmploymentService employmentService)
-    {
-        _employmentService = employmentService;
-    }
+    private readonly IEmploymentService _employmentService = employmentService;
 
     /// <summary>
     /// Gets a paginated list of employments.
@@ -73,9 +68,6 @@ public class EmploymentsController : ApiControllerBase
         [FromBody] CreateEmploymentDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _employmentService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
@@ -96,9 +88,6 @@ public class EmploymentsController : ApiControllerBase
         [FromBody] UpdateEmploymentDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _employmentService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }
@@ -136,9 +125,6 @@ public class EmploymentsController : ApiControllerBase
         [FromBody] CreateEmploymentSchoolDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _employmentService.AddSchoolAssignmentAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }

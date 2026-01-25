@@ -313,15 +313,15 @@ public class EmploymentServiceTests
             AppointmentStatus = AppointmentStatus.Original,
             EmploymentStatus = EmploymentStatus.Regular,
             Eligibility = Eligibility.CivilServiceProfessional,
-            Schools = new List<CreateEmploymentSchoolDto>
-            {
+            Schools =
+            [
                 new CreateEmploymentSchoolDto
                 {
                     SchoolDisplayId = school.DisplayId,
                     StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
                     IsCurrent = true
                 }
-            }
+            ]
         };
 
         // Act
@@ -344,7 +344,7 @@ public class EmploymentServiceTests
         // Arrange
         var displayId = 100000000001L;
         var employment = CreateTestEmployment(displayId);
-        employment.EmploymentSchools = new List<EmploymentSchool>();
+        employment.EmploymentSchools = [];
 
         var employments = new List<Employment> { employment }.BuildMockQueryable();
         _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
@@ -391,7 +391,7 @@ public class EmploymentServiceTests
             CreatedBy = "System",
             CreatedOn = DateTime.UtcNow
         };
-        employment.EmploymentSchools = new List<EmploymentSchool> { employmentSchool };
+        employment.EmploymentSchools = [employmentSchool];
 
         var employments = new List<Employment> { employment }.BuildMockQueryable();
         _employmentRepositoryMock.Setup(r => r.Query()).Returns(employments);
@@ -583,7 +583,7 @@ public class EmploymentServiceTests
             SalaryGrade = salaryGrade,
             ItemId = item.Id,
             Item = item,
-            EmploymentSchools = new List<EmploymentSchool>(),
+            EmploymentSchools = [],
             CreatedBy = "System",
             CreatedOn = DateTime.UtcNow
         };

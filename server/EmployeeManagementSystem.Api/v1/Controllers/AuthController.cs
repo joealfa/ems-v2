@@ -8,20 +8,15 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// <summary>
 /// API controller for authentication operations.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="AuthController"/> class.
+/// </remarks>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
-public class AuthController : ControllerBase
+public class AuthController(IAuthService authService) : ControllerBase
 {
-    private readonly IAuthService _authService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AuthController"/> class.
-    /// </summary>
-    public AuthController(IAuthService authService)
-    {
-        _authService = authService;
-    }
+    private readonly IAuthService _authService = authService;
 
     /// <summary>
     /// Authenticates a user using Google OAuth2 ID token.

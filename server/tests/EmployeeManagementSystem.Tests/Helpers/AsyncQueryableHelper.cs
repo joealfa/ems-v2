@@ -35,14 +35,9 @@ internal class TestAsyncEnumerable<T> : EnumerableQuery<T>, IAsyncEnumerable<T>,
     IQueryProvider IQueryable.Provider => new TestAsyncQueryProvider<T>(this);
 }
 
-internal class TestAsyncEnumerator<T> : IAsyncEnumerator<T>
+internal class TestAsyncEnumerator<T>(IEnumerator<T> inner) : IAsyncEnumerator<T>
 {
-    private readonly IEnumerator<T> _inner;
-
-    public TestAsyncEnumerator(IEnumerator<T> inner)
-    {
-        _inner = inner;
-    }
+    private readonly IEnumerator<T> _inner = inner;
 
     public T Current => _inner.Current;
 
@@ -58,14 +53,9 @@ internal class TestAsyncEnumerator<T> : IAsyncEnumerator<T>
     }
 }
 
-internal class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
+internal class TestAsyncQueryProvider<TEntity>(IQueryProvider inner) : IAsyncQueryProvider
 {
-    private readonly IQueryProvider _inner;
-
-    public TestAsyncQueryProvider(IQueryProvider inner)
-    {
-        _inner = inner;
-    }
+    private readonly IQueryProvider _inner = inner;
 
     public IQueryable CreateQuery(Expression expression)
     {

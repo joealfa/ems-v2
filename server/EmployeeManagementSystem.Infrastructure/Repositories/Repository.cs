@@ -10,19 +10,13 @@ namespace EmployeeManagementSystem.Infrastructure.Repositories;
 /// Generic repository implementation for data access operations.
 /// </summary>
 /// <typeparam name="T">The entity type.</typeparam>
-public class Repository<T> : IRepository<T> where T : BaseEntity
+/// <remarks>
+/// Initializes a new instance of the <see cref="Repository{T}"/> class.
+/// </remarks>
+public class Repository<T>(ApplicationDbContext context) : IRepository<T> where T : BaseEntity
 {
-    protected readonly ApplicationDbContext _context;
-    protected readonly DbSet<T> _dbSet;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Repository{T}"/> class.
-    /// </summary>
-    public Repository(ApplicationDbContext context)
-    {
-        _context = context;
-        _dbSet = context.Set<T>();
-    }
+    protected readonly ApplicationDbContext _context = context;
+    protected readonly DbSet<T> _dbSet = context.Set<T>();
 
     /// <inheritdoc />
     public virtual async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

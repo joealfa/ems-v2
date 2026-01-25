@@ -37,18 +37,18 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
     return {
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} documentDisplayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete: async (personDisplayId: number, documentDisplayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'personDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete', 'personDisplayId', personDisplayId)
+        apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete: async (displayId: number, documentDisplayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'displayId' is not null or undefined
+            assertParamExists('apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete', 'displayId', displayId)
             // verify required parameter 'documentDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete', 'documentDisplayId', documentDisplayId)
-            const localVarPath = `/api/v1/persons/{personDisplayId}/documents/{documentDisplayId}`
-                .replace(`{${"personDisplayId"}}`, encodeURIComponent(String(personDisplayId)))
+            assertParamExists('apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete', 'documentDisplayId', documentDisplayId)
+            const localVarPath = `/api/v1/persons/{displayId}/documents/{documentDisplayId}`
+                .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)))
                 .replace(`{${"documentDisplayId"}}`, encodeURIComponent(String(documentDisplayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -78,18 +78,18 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} documentDisplayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDownloadGet: async (personDisplayId: number, documentDisplayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'personDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDownloadGet', 'personDisplayId', personDisplayId)
+        apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDownloadGet: async (displayId: number, documentDisplayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'displayId' is not null or undefined
+            assertParamExists('apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDownloadGet', 'displayId', displayId)
             // verify required parameter 'documentDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDownloadGet', 'documentDisplayId', documentDisplayId)
-            const localVarPath = `/api/v1/persons/{personDisplayId}/documents/{documentDisplayId}/download`
-                .replace(`{${"personDisplayId"}}`, encodeURIComponent(String(personDisplayId)))
+            assertParamExists('apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDownloadGet', 'documentDisplayId', documentDisplayId)
+            const localVarPath = `/api/v1/persons/{displayId}/documents/{documentDisplayId}/download`
+                .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)))
                 .replace(`{${"documentDisplayId"}}`, encodeURIComponent(String(documentDisplayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -119,18 +119,18 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} documentDisplayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdGet: async (personDisplayId: number, documentDisplayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'personDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdGet', 'personDisplayId', personDisplayId)
+        apiV1PersonsDisplayIdDocumentsDocumentDisplayIdGet: async (displayId: number, documentDisplayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'displayId' is not null or undefined
+            assertParamExists('apiV1PersonsDisplayIdDocumentsDocumentDisplayIdGet', 'displayId', displayId)
             // verify required parameter 'documentDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdGet', 'documentDisplayId', documentDisplayId)
-            const localVarPath = `/api/v1/persons/{personDisplayId}/documents/{documentDisplayId}`
-                .replace(`{${"personDisplayId"}}`, encodeURIComponent(String(personDisplayId)))
+            assertParamExists('apiV1PersonsDisplayIdDocumentsDocumentDisplayIdGet', 'documentDisplayId', documentDisplayId)
+            const localVarPath = `/api/v1/persons/{displayId}/documents/{documentDisplayId}`
+                .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)))
                 .replace(`{${"documentDisplayId"}}`, encodeURIComponent(String(documentDisplayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -160,19 +160,19 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} documentDisplayId 
          * @param {UpdateDocumentDto} [updateDocumentDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdPut: async (personDisplayId: number, documentDisplayId: number, updateDocumentDto?: UpdateDocumentDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'personDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdPut', 'personDisplayId', personDisplayId)
+        apiV1PersonsDisplayIdDocumentsDocumentDisplayIdPut: async (displayId: number, documentDisplayId: number, updateDocumentDto?: UpdateDocumentDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'displayId' is not null or undefined
+            assertParamExists('apiV1PersonsDisplayIdDocumentsDocumentDisplayIdPut', 'displayId', displayId)
             // verify required parameter 'documentDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdPut', 'documentDisplayId', documentDisplayId)
-            const localVarPath = `/api/v1/persons/{personDisplayId}/documents/{documentDisplayId}`
-                .replace(`{${"personDisplayId"}}`, encodeURIComponent(String(personDisplayId)))
+            assertParamExists('apiV1PersonsDisplayIdDocumentsDocumentDisplayIdPut', 'documentDisplayId', documentDisplayId)
+            const localVarPath = `/api/v1/persons/{displayId}/documents/{documentDisplayId}`
+                .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)))
                 .replace(`{${"documentDisplayId"}}`, encodeURIComponent(String(documentDisplayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -205,7 +205,7 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} [pageNumber] 
          * @param {number} [pageSize] 
          * @param {string} [searchTerm] 
@@ -214,11 +214,11 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsGet: async (personDisplayId: number, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'personDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsGet', 'personDisplayId', personDisplayId)
-            const localVarPath = `/api/v1/persons/{personDisplayId}/documents`
-                .replace(`{${"personDisplayId"}}`, encodeURIComponent(String(personDisplayId)));
+        apiV1PersonsDisplayIdDocumentsGet: async (displayId: number, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'displayId' is not null or undefined
+            assertParamExists('apiV1PersonsDisplayIdDocumentsGet', 'displayId', displayId)
+            const localVarPath = `/api/v1/persons/{displayId}/documents`
+                .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -267,17 +267,17 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {File} [file] 
          * @param {string} [description] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsPost: async (personDisplayId: number, file?: File, description?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'personDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsPost', 'personDisplayId', personDisplayId)
-            const localVarPath = `/api/v1/persons/{personDisplayId}/documents`
-                .replace(`{${"personDisplayId"}}`, encodeURIComponent(String(personDisplayId)));
+        apiV1PersonsDisplayIdDocumentsPost: async (displayId: number, file?: File, description?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'displayId' is not null or undefined
+            assertParamExists('apiV1PersonsDisplayIdDocumentsPost', 'displayId', displayId)
+            const localVarPath = `/api/v1/persons/{displayId}/documents`
+                .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -318,15 +318,15 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete: async (personDisplayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'personDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete', 'personDisplayId', personDisplayId)
-            const localVarPath = `/api/v1/persons/{personDisplayId}/documents/profile-image`
-                .replace(`{${"personDisplayId"}}`, encodeURIComponent(String(personDisplayId)));
+        apiV1PersonsDisplayIdDocumentsProfileImageDelete: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'displayId' is not null or undefined
+            assertParamExists('apiV1PersonsDisplayIdDocumentsProfileImageDelete', 'displayId', displayId)
+            const localVarPath = `/api/v1/persons/{displayId}/documents/profile-image`
+                .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -355,15 +355,15 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsProfileImageGet: async (personDisplayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'personDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsProfileImageGet', 'personDisplayId', personDisplayId)
-            const localVarPath = `/api/v1/persons/{personDisplayId}/documents/profile-image`
-                .replace(`{${"personDisplayId"}}`, encodeURIComponent(String(personDisplayId)));
+        apiV1PersonsDisplayIdDocumentsProfileImageGet: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'displayId' is not null or undefined
+            assertParamExists('apiV1PersonsDisplayIdDocumentsProfileImageGet', 'displayId', displayId)
+            const localVarPath = `/api/v1/persons/{displayId}/documents/profile-image`
+                .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -392,16 +392,16 @@ export const DocumentsApiAxiosParamCreator = function (configuration?: Configura
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {File} [file] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsProfileImagePost: async (personDisplayId: number, file?: File, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'personDisplayId' is not null or undefined
-            assertParamExists('apiV1PersonsPersonDisplayIdDocumentsProfileImagePost', 'personDisplayId', personDisplayId)
-            const localVarPath = `/api/v1/persons/{personDisplayId}/documents/profile-image`
-                .replace(`{${"personDisplayId"}}`, encodeURIComponent(String(personDisplayId)));
+        apiV1PersonsDisplayIdDocumentsProfileImagePost: async (displayId: number, file?: File, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'displayId' is not null or undefined
+            assertParamExists('apiV1PersonsDisplayIdDocumentsProfileImagePost', 'displayId', displayId)
+            const localVarPath = `/api/v1/persons/{displayId}/documents/profile-image`
+                .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -448,60 +448,60 @@ export const DocumentsApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} documentDisplayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete(personDisplayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete(personDisplayId, documentDisplayId, options);
+        async apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete(displayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete(displayId, documentDisplayId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} documentDisplayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDownloadGet(personDisplayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<File>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDownloadGet(personDisplayId, documentDisplayId, options);
+        async apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDownloadGet(displayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<File>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDownloadGet(displayId, documentDisplayId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDownloadGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDownloadGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} documentDisplayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdGet(personDisplayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DocumentResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdGet(personDisplayId, documentDisplayId, options);
+        async apiV1PersonsDisplayIdDocumentsDocumentDisplayIdGet(displayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DocumentResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdGet(displayId, documentDisplayId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} documentDisplayId 
          * @param {UpdateDocumentDto} [updateDocumentDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdPut(personDisplayId: number, documentDisplayId: number, updateDocumentDto?: UpdateDocumentDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DocumentResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdPut(personDisplayId, documentDisplayId, updateDocumentDto, options);
+        async apiV1PersonsDisplayIdDocumentsDocumentDisplayIdPut(displayId: number, documentDisplayId: number, updateDocumentDto?: UpdateDocumentDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DocumentResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdPut(displayId, documentDisplayId, updateDocumentDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdPut']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdPut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} [pageNumber] 
          * @param {number} [pageSize] 
          * @param {string} [searchTerm] 
@@ -510,61 +510,61 @@ export const DocumentsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PersonsPersonDisplayIdDocumentsGet(personDisplayId: number, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DocumentListDtoPagedResult>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsPersonDisplayIdDocumentsGet(personDisplayId, pageNumber, pageSize, searchTerm, sortBy, sortDescending, options);
+        async apiV1PersonsDisplayIdDocumentsGet(displayId: number, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DocumentListDtoPagedResult>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsDisplayIdDocumentsGet(displayId, pageNumber, pageSize, searchTerm, sortBy, sortDescending, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsPersonDisplayIdDocumentsGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsDisplayIdDocumentsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {File} [file] 
          * @param {string} [description] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PersonsPersonDisplayIdDocumentsPost(personDisplayId: number, file?: File, description?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DocumentResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsPersonDisplayIdDocumentsPost(personDisplayId, file, description, options);
+        async apiV1PersonsDisplayIdDocumentsPost(displayId: number, file?: File, description?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DocumentResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsDisplayIdDocumentsPost(displayId, file, description, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsPersonDisplayIdDocumentsPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsDisplayIdDocumentsPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete(personDisplayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete(personDisplayId, options);
+        async apiV1PersonsDisplayIdDocumentsProfileImageDelete(displayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsDisplayIdDocumentsProfileImageDelete(displayId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsDisplayIdDocumentsProfileImageDelete']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PersonsPersonDisplayIdDocumentsProfileImageGet(personDisplayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<File>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsPersonDisplayIdDocumentsProfileImageGet(personDisplayId, options);
+        async apiV1PersonsDisplayIdDocumentsProfileImageGet(displayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<File>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsDisplayIdDocumentsProfileImageGet(displayId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsPersonDisplayIdDocumentsProfileImageGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsDisplayIdDocumentsProfileImageGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {File} [file] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(personDisplayId: number, file?: File, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(personDisplayId, file, options);
+        async apiV1PersonsDisplayIdDocumentsProfileImagePost(displayId: number, file?: File, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsDisplayIdDocumentsProfileImagePost(displayId, file, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsPersonDisplayIdDocumentsProfileImagePost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DocumentsApi.apiV1PersonsDisplayIdDocumentsProfileImagePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -579,48 +579,48 @@ export const DocumentsApiFactory = function (configuration?: Configuration, base
     return {
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} documentDisplayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete(personDisplayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete(personDisplayId, documentDisplayId, options).then((request) => request(axios, basePath));
+        apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete(displayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete(displayId, documentDisplayId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} documentDisplayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDownloadGet(personDisplayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig): AxiosPromise<File> {
-            return localVarFp.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDownloadGet(personDisplayId, documentDisplayId, options).then((request) => request(axios, basePath));
+        apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDownloadGet(displayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig): AxiosPromise<File> {
+            return localVarFp.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDownloadGet(displayId, documentDisplayId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} documentDisplayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdGet(personDisplayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig): AxiosPromise<DocumentResponseDto> {
-            return localVarFp.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdGet(personDisplayId, documentDisplayId, options).then((request) => request(axios, basePath));
+        apiV1PersonsDisplayIdDocumentsDocumentDisplayIdGet(displayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig): AxiosPromise<DocumentResponseDto> {
+            return localVarFp.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdGet(displayId, documentDisplayId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} documentDisplayId 
          * @param {UpdateDocumentDto} [updateDocumentDto] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdPut(personDisplayId: number, documentDisplayId: number, updateDocumentDto?: UpdateDocumentDto, options?: RawAxiosRequestConfig): AxiosPromise<DocumentResponseDto> {
-            return localVarFp.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdPut(personDisplayId, documentDisplayId, updateDocumentDto, options).then((request) => request(axios, basePath));
+        apiV1PersonsDisplayIdDocumentsDocumentDisplayIdPut(displayId: number, documentDisplayId: number, updateDocumentDto?: UpdateDocumentDto, options?: RawAxiosRequestConfig): AxiosPromise<DocumentResponseDto> {
+            return localVarFp.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdPut(displayId, documentDisplayId, updateDocumentDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {number} [pageNumber] 
          * @param {number} [pageSize] 
          * @param {string} [searchTerm] 
@@ -629,47 +629,47 @@ export const DocumentsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsGet(personDisplayId: number, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<DocumentListDtoPagedResult> {
-            return localVarFp.apiV1PersonsPersonDisplayIdDocumentsGet(personDisplayId, pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(axios, basePath));
+        apiV1PersonsDisplayIdDocumentsGet(displayId: number, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<DocumentListDtoPagedResult> {
+            return localVarFp.apiV1PersonsDisplayIdDocumentsGet(displayId, pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {File} [file] 
          * @param {string} [description] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsPost(personDisplayId: number, file?: File, description?: string, options?: RawAxiosRequestConfig): AxiosPromise<DocumentResponseDto> {
-            return localVarFp.apiV1PersonsPersonDisplayIdDocumentsPost(personDisplayId, file, description, options).then((request) => request(axios, basePath));
+        apiV1PersonsDisplayIdDocumentsPost(displayId: number, file?: File, description?: string, options?: RawAxiosRequestConfig): AxiosPromise<DocumentResponseDto> {
+            return localVarFp.apiV1PersonsDisplayIdDocumentsPost(displayId, file, description, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete(personDisplayId: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete(personDisplayId, options).then((request) => request(axios, basePath));
+        apiV1PersonsDisplayIdDocumentsProfileImageDelete(displayId: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiV1PersonsDisplayIdDocumentsProfileImageDelete(displayId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsProfileImageGet(personDisplayId: number, options?: RawAxiosRequestConfig): AxiosPromise<File> {
-            return localVarFp.apiV1PersonsPersonDisplayIdDocumentsProfileImageGet(personDisplayId, options).then((request) => request(axios, basePath));
+        apiV1PersonsDisplayIdDocumentsProfileImageGet(displayId: number, options?: RawAxiosRequestConfig): AxiosPromise<File> {
+            return localVarFp.apiV1PersonsDisplayIdDocumentsProfileImageGet(displayId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {number} personDisplayId 
+         * @param {number} displayId 
          * @param {File} [file] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(personDisplayId: number, file?: File, options?: RawAxiosRequestConfig): AxiosPromise<string> {
-            return localVarFp.apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(personDisplayId, file, options).then((request) => request(axios, basePath));
+        apiV1PersonsDisplayIdDocumentsProfileImagePost(displayId: number, file?: File, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.apiV1PersonsDisplayIdDocumentsProfileImagePost(displayId, file, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -683,56 +683,56 @@ export const DocumentsApiFactory = function (configuration?: Configuration, base
 export class DocumentsApi extends BaseAPI {
     /**
      * 
-     * @param {number} personDisplayId 
+     * @param {number} displayId 
      * @param {number} documentDisplayId 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DocumentsApi
      */
-    public apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete(personDisplayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig) {
-        return DocumentsApiFp(this.configuration).apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete(personDisplayId, documentDisplayId, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete(displayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig) {
+        return DocumentsApiFp(this.configuration).apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete(displayId, documentDisplayId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {number} personDisplayId 
+     * @param {number} displayId 
      * @param {number} documentDisplayId 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DocumentsApi
      */
-    public apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDownloadGet(personDisplayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig) {
-        return DocumentsApiFp(this.configuration).apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDownloadGet(personDisplayId, documentDisplayId, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDownloadGet(displayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig) {
+        return DocumentsApiFp(this.configuration).apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDownloadGet(displayId, documentDisplayId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {number} personDisplayId 
+     * @param {number} displayId 
      * @param {number} documentDisplayId 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DocumentsApi
      */
-    public apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdGet(personDisplayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig) {
-        return DocumentsApiFp(this.configuration).apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdGet(personDisplayId, documentDisplayId, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PersonsDisplayIdDocumentsDocumentDisplayIdGet(displayId: number, documentDisplayId: number, options?: RawAxiosRequestConfig) {
+        return DocumentsApiFp(this.configuration).apiV1PersonsDisplayIdDocumentsDocumentDisplayIdGet(displayId, documentDisplayId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {number} personDisplayId 
+     * @param {number} displayId 
      * @param {number} documentDisplayId 
      * @param {UpdateDocumentDto} [updateDocumentDto] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DocumentsApi
      */
-    public apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdPut(personDisplayId: number, documentDisplayId: number, updateDocumentDto?: UpdateDocumentDto, options?: RawAxiosRequestConfig) {
-        return DocumentsApiFp(this.configuration).apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdPut(personDisplayId, documentDisplayId, updateDocumentDto, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PersonsDisplayIdDocumentsDocumentDisplayIdPut(displayId: number, documentDisplayId: number, updateDocumentDto?: UpdateDocumentDto, options?: RawAxiosRequestConfig) {
+        return DocumentsApiFp(this.configuration).apiV1PersonsDisplayIdDocumentsDocumentDisplayIdPut(displayId, documentDisplayId, updateDocumentDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {number} personDisplayId 
+     * @param {number} displayId 
      * @param {number} [pageNumber] 
      * @param {number} [pageSize] 
      * @param {string} [searchTerm] 
@@ -742,55 +742,55 @@ export class DocumentsApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof DocumentsApi
      */
-    public apiV1PersonsPersonDisplayIdDocumentsGet(personDisplayId: number, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig) {
-        return DocumentsApiFp(this.configuration).apiV1PersonsPersonDisplayIdDocumentsGet(personDisplayId, pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PersonsDisplayIdDocumentsGet(displayId: number, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig) {
+        return DocumentsApiFp(this.configuration).apiV1PersonsDisplayIdDocumentsGet(displayId, pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {number} personDisplayId 
+     * @param {number} displayId 
      * @param {File} [file] 
      * @param {string} [description] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DocumentsApi
      */
-    public apiV1PersonsPersonDisplayIdDocumentsPost(personDisplayId: number, file?: File, description?: string, options?: RawAxiosRequestConfig) {
-        return DocumentsApiFp(this.configuration).apiV1PersonsPersonDisplayIdDocumentsPost(personDisplayId, file, description, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PersonsDisplayIdDocumentsPost(displayId: number, file?: File, description?: string, options?: RawAxiosRequestConfig) {
+        return DocumentsApiFp(this.configuration).apiV1PersonsDisplayIdDocumentsPost(displayId, file, description, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {number} personDisplayId 
+     * @param {number} displayId 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DocumentsApi
      */
-    public apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete(personDisplayId: number, options?: RawAxiosRequestConfig) {
-        return DocumentsApiFp(this.configuration).apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete(personDisplayId, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PersonsDisplayIdDocumentsProfileImageDelete(displayId: number, options?: RawAxiosRequestConfig) {
+        return DocumentsApiFp(this.configuration).apiV1PersonsDisplayIdDocumentsProfileImageDelete(displayId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {number} personDisplayId 
+     * @param {number} displayId 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DocumentsApi
      */
-    public apiV1PersonsPersonDisplayIdDocumentsProfileImageGet(personDisplayId: number, options?: RawAxiosRequestConfig) {
-        return DocumentsApiFp(this.configuration).apiV1PersonsPersonDisplayIdDocumentsProfileImageGet(personDisplayId, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PersonsDisplayIdDocumentsProfileImageGet(displayId: number, options?: RawAxiosRequestConfig) {
+        return DocumentsApiFp(this.configuration).apiV1PersonsDisplayIdDocumentsProfileImageGet(displayId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {number} personDisplayId 
+     * @param {number} displayId 
      * @param {File} [file] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DocumentsApi
      */
-    public apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(personDisplayId: number, file?: File, options?: RawAxiosRequestConfig) {
-        return DocumentsApiFp(this.configuration).apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(personDisplayId, file, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PersonsDisplayIdDocumentsProfileImagePost(displayId: number, file?: File, options?: RawAxiosRequestConfig) {
+        return DocumentsApiFp(this.configuration).apiV1PersonsDisplayIdDocumentsProfileImagePost(displayId, file, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

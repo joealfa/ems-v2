@@ -39,7 +39,7 @@ const ProfileImageUpload = ({
     setError(null);
 
     try {
-      await documentsApi.apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(
+      await documentsApi.apiV1PersonsDisplayIdDocumentsProfileImagePost(
         personDisplayId,
         file
       );
@@ -64,7 +64,7 @@ const ProfileImageUpload = ({
     setError(null);
 
     try {
-      await documentsApi.apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete(
+      await documentsApi.apiV1PersonsDisplayIdDocumentsProfileImageDelete(
         personDisplayId
       );
       onImageUpdated();

@@ -10,27 +10,19 @@ namespace EmployeeManagementSystem.Application.Services;
 /// <summary>
 /// Service implementation for person operations.
 /// </summary>
-public class PersonService : IPersonService
+/// <remarks>
+/// Initializes a new instance of the <see cref="PersonService"/> class.
+/// </remarks>
+public class PersonService(
+    IRepository<Person> personRepository,
+    IRepository<Address> addressRepository,
+    IRepository<Contact> contactRepository,
+    IRepository<Document> documentRepository) : IPersonService
 {
-    private readonly IRepository<Person> _personRepository;
-    private readonly IRepository<Address> _addressRepository;
-    private readonly IRepository<Contact> _contactRepository;
-    private readonly IRepository<Document> _documentRepository;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="PersonService"/> class.
-    /// </summary>
-    public PersonService(
-        IRepository<Person> personRepository,
-        IRepository<Address> addressRepository,
-        IRepository<Contact> contactRepository,
-        IRepository<Document> documentRepository)
-    {
-        _personRepository = personRepository;
-        _addressRepository = addressRepository;
-        _contactRepository = contactRepository;
-        _documentRepository = documentRepository;
-    }
+    private readonly IRepository<Person> _personRepository = personRepository;
+    private readonly IRepository<Address> _addressRepository = addressRepository;
+    private readonly IRepository<Contact> _contactRepository = contactRepository;
+    private readonly IRepository<Document> _documentRepository = documentRepository;
 
     /// <inheritdoc />
     public async Task<Result<PersonResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)

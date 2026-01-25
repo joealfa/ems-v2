@@ -42,7 +42,7 @@ const SalaryGradeDetailPage = () => {
     if (!displayId) return;
     setLoading(true);
     try {
-      const response = await salaryGradesApi.apiV1SalaryGradesDisplayIdGet(
+      const response = await salaryGradesApi.apiV1SalarygradesDisplayIdGet(
         Number(displayId)
       );
       setSalaryGrade(response.data);
@@ -62,7 +62,7 @@ const SalaryGradeDetailPage = () => {
       return;
     setDeleting(true);
     try {
-      await salaryGradesApi.apiV1SalaryGradesDisplayIdDelete(Number(displayId));
+      await salaryGradesApi.apiV1SalarygradesDisplayIdDelete(Number(displayId));
       navigate('/salary-grades');
     } catch (err) {
       console.error('Error deleting salary grade:', err);

@@ -11,21 +11,16 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// <summary>
 /// API controller for managing salary grades.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="SalaryGradesController"/> class.
+/// </remarks>
 [ApiController]
-[Authorize]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
-public class SalaryGradesController : ApiControllerBase
+[Authorize]
+public class SalaryGradesController(ISalaryGradeService salaryGradeService) : ApiControllerBase
 {
-    private readonly ISalaryGradeService _salaryGradeService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SalaryGradesController"/> class.
-    /// </summary>
-    public SalaryGradesController(ISalaryGradeService salaryGradeService)
-    {
-        _salaryGradeService = salaryGradeService;
-    }
+    private readonly ISalaryGradeService _salaryGradeService = salaryGradeService;
 
     /// <summary>
     /// Gets a paginated list of salary grades.
@@ -73,9 +68,6 @@ public class SalaryGradesController : ApiControllerBase
         [FromBody] CreateSalaryGradeDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _salaryGradeService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
@@ -96,9 +88,6 @@ public class SalaryGradesController : ApiControllerBase
         [FromBody] UpdateSalaryGradeDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _salaryGradeService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }

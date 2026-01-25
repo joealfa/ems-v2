@@ -37,7 +37,7 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
     setLoading(true);
     try {
       const response =
-        await documentsApi.apiV1PersonsPersonDisplayIdDocumentsGet(
+        await documentsApi.apiV1PersonsDisplayIdDocumentsGet(
           personDisplayId,
           1,
           100
@@ -69,7 +69,7 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
 
     for (const file of selectedFiles) {
       try {
-        await documentsApi.apiV1PersonsPersonDisplayIdDocumentsPost(
+        await documentsApi.apiV1PersonsDisplayIdDocumentsPost(
           personDisplayId,
           file,
           description || undefined
@@ -123,7 +123,7 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
       return;
 
     try {
-      await documentsApi.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete(
+      await documentsApi.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete(
         personDisplayId,
         documentDisplayId
       );

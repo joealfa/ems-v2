@@ -10,17 +10,12 @@ namespace EmployeeManagementSystem.Application.Services;
 /// <summary>
 /// Service implementation for salary grade operations.
 /// </summary>
-public class SalaryGradeService : ISalaryGradeService
+/// <remarks>
+/// Initializes a new instance of the <see cref="SalaryGradeService"/> class.
+/// </remarks>
+public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) : ISalaryGradeService
 {
-    private readonly IRepository<SalaryGrade> _salaryGradeRepository;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SalaryGradeService"/> class.
-    /// </summary>
-    public SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository)
-    {
-        _salaryGradeRepository = salaryGradeRepository;
-    }
+    private readonly IRepository<SalaryGrade> _salaryGradeRepository = salaryGradeRepository;
 
     /// <inheritdoc />
     public async Task<Result<SalaryGradeResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)

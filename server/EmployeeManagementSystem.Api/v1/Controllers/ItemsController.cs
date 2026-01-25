@@ -10,19 +10,16 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// <summary>
 /// API controller for managing items.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="ItemsController"/> class.
+/// </remarks>
+[ApiController]
 [Route("api/v1/[controller]")]
+[Produces("application/json")]
 [Authorize]
-public class ItemsController : ApiControllerBase
+public class ItemsController(IItemService itemService) : ApiControllerBase
 {
-    private readonly IItemService _itemService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ItemsController"/> class.
-    /// </summary>
-    public ItemsController(IItemService itemService)
-    {
-        _itemService = itemService;
-    }
+    private readonly IItemService _itemService = itemService;
 
     /// <summary>
     /// Gets a paginated list of items.

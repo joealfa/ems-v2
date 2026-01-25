@@ -61,7 +61,7 @@ const SalaryGradeFormPage = () => {
     if (!displayId) return;
     setLoading(true);
     try {
-      const response = await salaryGradesApi.apiV1SalaryGradesDisplayIdGet(
+      const response = await salaryGradesApi.apiV1SalarygradesDisplayIdGet(
         Number(displayId)
       );
       const salaryGrade: SalaryGradeResponseDto = response.data;
@@ -101,7 +101,7 @@ const SalaryGradeFormPage = () => {
           monthlySalary: formData.monthlySalary,
           isActive: formData.isActive,
         };
-        await salaryGradesApi.apiV1SalaryGradesDisplayIdPut(
+        await salaryGradesApi.apiV1SalarygradesDisplayIdPut(
           Number(displayId),
           updateDto
         );
@@ -112,7 +112,7 @@ const SalaryGradeFormPage = () => {
           step: formData.step,
           monthlySalary: formData.monthlySalary,
         };
-        await salaryGradesApi.apiV1SalaryGradesPost(createDto);
+        await salaryGradesApi.apiV1SalarygradesPost(createDto);
       }
       navigate('/salary-grades');
     } catch (err) {

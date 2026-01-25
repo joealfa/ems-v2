@@ -10,17 +10,12 @@ namespace EmployeeManagementSystem.Application.Services;
 /// <summary>
 /// Service implementation for position operations.
 /// </summary>
-public class PositionService : IPositionService
+/// <remarks>
+/// Initializes a new instance of the <see cref="PositionService"/> class.
+/// </remarks>
+public class PositionService(IRepository<Position> positionRepository) : IPositionService
 {
-    private readonly IRepository<Position> _positionRepository;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="PositionService"/> class.
-    /// </summary>
-    public PositionService(IRepository<Position> positionRepository)
-    {
-        _positionRepository = positionRepository;
-    }
+    private readonly IRepository<Position> _positionRepository = positionRepository;
 
     /// <inheritdoc />
     public async Task<Result<PositionResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)

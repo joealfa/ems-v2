@@ -46,7 +46,7 @@ export const PositionsApiAxiosParamCreator = function (configuration?: Configura
         apiV1PositionsDisplayIdDelete: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
             assertParamExists('apiV1PositionsDisplayIdDelete', 'displayId', displayId)
-            const localVarPath = `/api/v1/Positions/{displayId}`
+            const localVarPath = `/api/v1/positions/{displayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -83,7 +83,7 @@ export const PositionsApiAxiosParamCreator = function (configuration?: Configura
         apiV1PositionsDisplayIdGet: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
             assertParamExists('apiV1PositionsDisplayIdGet', 'displayId', displayId)
-            const localVarPath = `/api/v1/Positions/{displayId}`
+            const localVarPath = `/api/v1/positions/{displayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -121,7 +121,7 @@ export const PositionsApiAxiosParamCreator = function (configuration?: Configura
         apiV1PositionsDisplayIdPut: async (displayId: number, updatePositionDto?: UpdatePositionDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
             assertParamExists('apiV1PositionsDisplayIdPut', 'displayId', displayId)
-            const localVarPath = `/api/v1/Positions/{displayId}`
+            const localVarPath = `/api/v1/positions/{displayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -163,7 +163,7 @@ export const PositionsApiAxiosParamCreator = function (configuration?: Configura
          * @throws {RequiredError}
          */
         apiV1PositionsGet: async (pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v1/Positions`;
+            const localVarPath = `/api/v1/positions`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -217,7 +217,7 @@ export const PositionsApiAxiosParamCreator = function (configuration?: Configura
          * @throws {RequiredError}
          */
         apiV1PositionsPost: async (createPositionDto?: CreatePositionDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v1/Positions`;
+            const localVarPath = `/api/v1/positions`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;

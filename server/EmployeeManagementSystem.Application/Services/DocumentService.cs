@@ -11,11 +11,17 @@ namespace EmployeeManagementSystem.Application.Services;
 /// <summary>
 /// Service implementation for document operations.
 /// </summary>
-public class DocumentService : IDocumentService
+/// <remarks>
+/// Initializes a new instance of the <see cref="DocumentService"/> class.
+/// </remarks>
+public class DocumentService(
+    IRepository<Document> documentRepository,
+    IRepository<Person> personRepository,
+    IBlobStorageService blobStorageService) : IDocumentService
 {
-    private readonly IRepository<Document> _documentRepository;
-    private readonly IRepository<Person> _personRepository;
-    private readonly IBlobStorageService _blobStorageService;
+    private readonly IRepository<Document> _documentRepository = documentRepository;
+    private readonly IRepository<Person> _personRepository = personRepository;
+    private readonly IBlobStorageService _blobStorageService = blobStorageService;
 
     private const string DocumentsContainer = "documents";
     private const string ProfileImagesContainer = "profile-images";
@@ -43,19 +49,6 @@ public class DocumentService : IDocumentService
     {
         ".jpg", ".jpeg", ".png"
     };
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DocumentService"/> class.
-    /// </summary>
-    public DocumentService(
-        IRepository<Document> documentRepository,
-        IRepository<Person> personRepository,
-        IBlobStorageService blobStorageService)
-    {
-        _documentRepository = documentRepository;
-        _personRepository = personRepository;
-        _blobStorageService = blobStorageService;
-    }
 
     /// <inheritdoc />
     public async Task<Result<DocumentResponseDto>> GetByDisplayIdAsync(

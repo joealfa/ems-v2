@@ -191,7 +191,7 @@ const PersonFormPage = () => {
     setLoadingDocuments(true);
     try {
       const response =
-        await documentsApi.apiV1PersonsPersonDisplayIdDocumentsGet(
+        await documentsApi.apiV1PersonsDisplayIdDocumentsGet(
           Number(displayId),
           1,
           100
@@ -269,7 +269,7 @@ const PersonFormPage = () => {
     setError(null);
 
     try {
-      await documentsApi.apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(
+      await documentsApi.apiV1PersonsDisplayIdDocumentsProfileImagePost(
         Number(displayId),
         file
       );
@@ -295,7 +295,7 @@ const PersonFormPage = () => {
 
     setUploadingImage(true);
     try {
-      await documentsApi.apiV1PersonsPersonDisplayIdDocumentsProfileImageDelete(
+      await documentsApi.apiV1PersonsDisplayIdDocumentsProfileImageDelete(
         Number(displayId)
       );
       setProfileImageUrl(null);
@@ -326,7 +326,7 @@ const PersonFormPage = () => {
 
     for (const file of selectedDocumentFiles) {
       try {
-        await documentsApi.apiV1PersonsPersonDisplayIdDocumentsPost(
+        await documentsApi.apiV1PersonsDisplayIdDocumentsPost(
           Number(displayId),
           file,
           documentDescription || undefined
@@ -377,7 +377,7 @@ const PersonFormPage = () => {
       return;
 
     try {
-      await documentsApi.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDelete(
+      await documentsApi.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete(
         Number(displayId),
         documentDisplayId
       );

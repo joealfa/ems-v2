@@ -58,5 +58,5 @@ public class User : AuditableEntity
     /// <summary>
     /// Gets or sets the collection of refresh tokens associated with this user.
     /// </summary>
-    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
 }

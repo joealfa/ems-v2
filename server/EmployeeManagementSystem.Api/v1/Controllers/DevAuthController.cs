@@ -13,17 +13,12 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/dev/[controller]")]
+[Produces("application/json")]
 [ApiExplorerSettings(GroupName = "development")]
-public class DevAuthController : ControllerBase
+public class DevAuthController(IConfiguration configuration, ILogger<DevAuthController> logger) : ControllerBase
 {
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<DevAuthController> _logger;
-
-    public DevAuthController(IConfiguration configuration, ILogger<DevAuthController> logger)
-    {
-        _configuration = configuration;
-        _logger = logger;
-    }
+    private readonly IConfiguration _configuration = configuration;
+    private readonly ILogger<DevAuthController> _logger = logger;
 
     /// <summary>
     /// Generates a development JWT token for testing purposes.
@@ -45,13 +40,13 @@ public class DevAuthController : ControllerBase
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Email, email),
-                new Claim(ClaimTypes.Name, name),
-                new Claim("sub", userId),
-                new Claim("email", email),
-                new Claim("name", name),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new(ClaimTypes.NameIdentifier, userId),
+                new(ClaimTypes.Email, email),
+                new(ClaimTypes.Name, name),
+                new("sub", userId),
+                new("email", email),
+                new("name", name),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             var jwtConfig = _configuration.GetSection("Authentication:Jwt");

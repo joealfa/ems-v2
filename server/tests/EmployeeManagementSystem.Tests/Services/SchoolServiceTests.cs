@@ -248,9 +248,9 @@ public class SchoolServiceTests
         // Arrange
         var displayId = 123456789012L;
         var school = CreateTestSchool(displayId, "Test School");
-        school.Addresses = new List<Address>();
-        school.Contacts = new List<Contact>();
-        school.EmploymentSchools = new List<EmploymentSchool>();
+        school.Addresses = [];
+        school.Contacts = [];
+        school.EmploymentSchools = [];
 
         var schools = new List<School> { school }.BuildMockQueryable();
         _schoolRepositoryMock.Setup(r => r.Query()).Returns(schools);

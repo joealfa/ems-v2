@@ -6,16 +6,12 @@ namespace EmployeeManagementSystem.Infrastructure.Data;
 /// <summary>
 /// The main database context for the Employee Management System.
 /// </summary>
-public class ApplicationDbContext : DbContext
+/// <remarks>
+/// Initializes a new instance of the <see cref="ApplicationDbContext"/> class.
+/// </remarks>
+/// <param name="options">The database context options.</param>
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ApplicationDbContext"/> class.
-    /// </summary>
-    /// <param name="options">The database context options.</param>
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
-    {
-    }
 
     /// <summary>
     /// Gets or sets the Persons DbSet.

@@ -11,21 +11,16 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// <summary>
 /// API controller for managing persons.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="PersonsController"/> class.
+/// </remarks>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
 [Authorize]
-public class PersonsController : ApiControllerBase
+public class PersonsController(IPersonService personService) : ApiControllerBase
 {
-    private readonly IPersonService _personService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="PersonsController"/> class.
-    /// </summary>
-    public PersonsController(IPersonService personService)
-    {
-        _personService = personService;
-    }
+    private readonly IPersonService _personService = personService;
 
     /// <summary>
     /// Gets a paginated list of persons.
@@ -73,9 +68,6 @@ public class PersonsController : ApiControllerBase
         [FromBody] CreatePersonDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _personService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
@@ -96,9 +88,6 @@ public class PersonsController : ApiControllerBase
         [FromBody] UpdatePersonDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _personService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }

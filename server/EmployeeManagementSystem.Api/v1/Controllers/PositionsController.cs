@@ -11,21 +11,16 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// <summary>
 /// API controller for managing positions.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="PositionsController"/> class.
+/// </remarks>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
 [Authorize]
-public class PositionsController : ApiControllerBase
+public class PositionsController(IPositionService positionService) : ApiControllerBase
 {
-    private readonly IPositionService _positionService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="PositionsController"/> class.
-    /// </summary>
-    public PositionsController(IPositionService positionService)
-    {
-        _positionService = positionService;
-    }
+    private readonly IPositionService _positionService = positionService;
 
     /// <summary>
     /// Gets a paginated list of positions.
@@ -73,9 +68,6 @@ public class PositionsController : ApiControllerBase
         [FromBody] CreatePositionDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _positionService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, result.Value?.DisplayId ?? 0);
     }
@@ -96,9 +88,6 @@ public class PositionsController : ApiControllerBase
         [FromBody] UpdatePositionDto dto,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _positionService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }

@@ -46,7 +46,7 @@ export const ItemsApiAxiosParamCreator = function (configuration?: Configuration
         apiV1ItemsDisplayIdDelete: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
             assertParamExists('apiV1ItemsDisplayIdDelete', 'displayId', displayId)
-            const localVarPath = `/api/v1/Items/{displayId}`
+            const localVarPath = `/api/v1/items/{displayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -83,7 +83,7 @@ export const ItemsApiAxiosParamCreator = function (configuration?: Configuration
         apiV1ItemsDisplayIdGet: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
             assertParamExists('apiV1ItemsDisplayIdGet', 'displayId', displayId)
-            const localVarPath = `/api/v1/Items/{displayId}`
+            const localVarPath = `/api/v1/items/{displayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -121,7 +121,7 @@ export const ItemsApiAxiosParamCreator = function (configuration?: Configuration
         apiV1ItemsDisplayIdPut: async (displayId: number, updateItemDto?: UpdateItemDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
             assertParamExists('apiV1ItemsDisplayIdPut', 'displayId', displayId)
-            const localVarPath = `/api/v1/Items/{displayId}`
+            const localVarPath = `/api/v1/items/{displayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -163,7 +163,7 @@ export const ItemsApiAxiosParamCreator = function (configuration?: Configuration
          * @throws {RequiredError}
          */
         apiV1ItemsGet: async (pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v1/Items`;
+            const localVarPath = `/api/v1/items`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -217,7 +217,7 @@ export const ItemsApiAxiosParamCreator = function (configuration?: Configuration
          * @throws {RequiredError}
          */
         apiV1ItemsPost: async (createItemDto?: CreateItemDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v1/Items`;
+            const localVarPath = `/api/v1/items`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;

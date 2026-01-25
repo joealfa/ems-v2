@@ -50,7 +50,7 @@ export const EmploymentsApiAxiosParamCreator = function (configuration?: Configu
         apiV1EmploymentsDisplayIdDelete: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
             assertParamExists('apiV1EmploymentsDisplayIdDelete', 'displayId', displayId)
-            const localVarPath = `/api/v1/Employments/{displayId}`
+            const localVarPath = `/api/v1/employments/{displayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -87,7 +87,7 @@ export const EmploymentsApiAxiosParamCreator = function (configuration?: Configu
         apiV1EmploymentsDisplayIdGet: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
             assertParamExists('apiV1EmploymentsDisplayIdGet', 'displayId', displayId)
-            const localVarPath = `/api/v1/Employments/{displayId}`
+            const localVarPath = `/api/v1/employments/{displayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -125,7 +125,7 @@ export const EmploymentsApiAxiosParamCreator = function (configuration?: Configu
         apiV1EmploymentsDisplayIdPut: async (displayId: number, updateEmploymentDto?: UpdateEmploymentDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
             assertParamExists('apiV1EmploymentsDisplayIdPut', 'displayId', displayId)
-            const localVarPath = `/api/v1/Employments/{displayId}`
+            const localVarPath = `/api/v1/employments/{displayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -166,7 +166,7 @@ export const EmploymentsApiAxiosParamCreator = function (configuration?: Configu
         apiV1EmploymentsDisplayIdSchoolsPost: async (displayId: number, createEmploymentSchoolDto?: CreateEmploymentSchoolDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
             assertParamExists('apiV1EmploymentsDisplayIdSchoolsPost', 'displayId', displayId)
-            const localVarPath = `/api/v1/Employments/{displayId}/schools`
+            const localVarPath = `/api/v1/employments/{displayId}/schools`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -209,7 +209,7 @@ export const EmploymentsApiAxiosParamCreator = function (configuration?: Configu
             assertParamExists('apiV1EmploymentsDisplayIdSchoolsSchoolAssignmentDisplayIdDelete', 'displayId', displayId)
             // verify required parameter 'schoolAssignmentDisplayId' is not null or undefined
             assertParamExists('apiV1EmploymentsDisplayIdSchoolsSchoolAssignmentDisplayIdDelete', 'schoolAssignmentDisplayId', schoolAssignmentDisplayId)
-            const localVarPath = `/api/v1/Employments/{displayId}/schools/{schoolAssignmentDisplayId}`
+            const localVarPath = `/api/v1/employments/{displayId}/schools/{schoolAssignmentDisplayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)))
                 .replace(`{${"schoolAssignmentDisplayId"}}`, encodeURIComponent(String(schoolAssignmentDisplayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -249,7 +249,7 @@ export const EmploymentsApiAxiosParamCreator = function (configuration?: Configu
          * @throws {RequiredError}
          */
         apiV1EmploymentsGet: async (pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v1/Employments`;
+            const localVarPath = `/api/v1/employments`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -303,7 +303,7 @@ export const EmploymentsApiAxiosParamCreator = function (configuration?: Configu
          * @throws {RequiredError}
          */
         apiV1EmploymentsPost: async (createEmploymentDto?: CreateEmploymentDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v1/Employments`;
+            const localVarPath = `/api/v1/employments`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;

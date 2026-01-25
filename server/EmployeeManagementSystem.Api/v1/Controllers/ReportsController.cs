@@ -1,5 +1,6 @@
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeManagementSystem.Api.v1.Controllers;
@@ -7,20 +8,16 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// <summary>
 /// API controller for reports and statistics.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="ReportsController"/> class.
+/// </remarks>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
-public class ReportsController : ControllerBase
+[Authorize]
+public class ReportsController(IReportsService reportsService) : ControllerBase
 {
-    private readonly IReportsService _reportsService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ReportsController"/> class.
-    /// </summary>
-    public ReportsController(IReportsService reportsService)
-    {
-        _reportsService = reportsService;
-    }
+    private readonly IReportsService _reportsService = reportsService;
 
     /// <summary>
     /// Gets dashboard statistics including counts of persons, employments, schools, and positions.

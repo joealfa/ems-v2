@@ -18,20 +18,14 @@ namespace EmployeeManagementSystem.Infrastructure.Services;
 /// <summary>
 /// Service for handling authentication operations using Google OAuth2 and JWT.
 /// </summary>
-public class AuthService : IAuthService
+/// <remarks>
+/// Initializes a new instance of the <see cref="AuthService"/> class.
+/// </remarks>
+public class AuthService(ApplicationDbContext context, IConfiguration configuration) : IAuthService
 {
-    private readonly ApplicationDbContext _context;
-    private readonly IConfiguration _configuration;
+    private readonly ApplicationDbContext _context = context;
+    private readonly IConfiguration _configuration = configuration;
     private static readonly HttpClient _httpClient = new();
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AuthService"/> class.
-    /// </summary>
-    public AuthService(ApplicationDbContext context, IConfiguration configuration)
-    {
-        _context = context;
-        _configuration = configuration;
-    }
 
     /// <inheritdoc />
     public async Task<AuthResponseDto> AuthenticateWithGoogleAsync(string idToken, string ipAddress)

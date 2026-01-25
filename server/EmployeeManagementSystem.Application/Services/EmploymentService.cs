@@ -10,36 +10,25 @@ namespace EmployeeManagementSystem.Application.Services;
 /// <summary>
 /// Service implementation for employment operations.
 /// </summary>
-public class EmploymentService : IEmploymentService
+/// <remarks>
+/// Initializes a new instance of the <see cref="EmploymentService"/> class.
+/// </remarks>
+public class EmploymentService(
+    IRepository<Employment> employmentRepository,
+    IRepository<EmploymentSchool> employmentSchoolRepository,
+    IRepository<Person> personRepository,
+    IRepository<Position> positionRepository,
+    IRepository<SalaryGrade> salaryGradeRepository,
+    IRepository<Item> itemRepository,
+    IRepository<School> schoolRepository) : IEmploymentService
 {
-    private readonly IRepository<Employment> _employmentRepository;
-    private readonly IRepository<EmploymentSchool> _employmentSchoolRepository;
-    private readonly IRepository<Person> _personRepository;
-    private readonly IRepository<Position> _positionRepository;
-    private readonly IRepository<SalaryGrade> _salaryGradeRepository;
-    private readonly IRepository<Item> _itemRepository;
-    private readonly IRepository<School> _schoolRepository;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EmploymentService"/> class.
-    /// </summary>
-    public EmploymentService(
-        IRepository<Employment> employmentRepository,
-        IRepository<EmploymentSchool> employmentSchoolRepository,
-        IRepository<Person> personRepository,
-        IRepository<Position> positionRepository,
-        IRepository<SalaryGrade> salaryGradeRepository,
-        IRepository<Item> itemRepository,
-        IRepository<School> schoolRepository)
-    {
-        _employmentRepository = employmentRepository;
-        _employmentSchoolRepository = employmentSchoolRepository;
-        _personRepository = personRepository;
-        _positionRepository = positionRepository;
-        _salaryGradeRepository = salaryGradeRepository;
-        _itemRepository = itemRepository;
-        _schoolRepository = schoolRepository;
-    }
+    private readonly IRepository<Employment> _employmentRepository = employmentRepository;
+    private readonly IRepository<EmploymentSchool> _employmentSchoolRepository = employmentSchoolRepository;
+    private readonly IRepository<Person> _personRepository = personRepository;
+    private readonly IRepository<Position> _positionRepository = positionRepository;
+    private readonly IRepository<SalaryGrade> _salaryGradeRepository = salaryGradeRepository;
+    private readonly IRepository<Item> _itemRepository = itemRepository;
+    private readonly IRepository<School> _schoolRepository = schoolRepository;
 
     /// <inheritdoc />
     public async Task<Result<EmploymentResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)

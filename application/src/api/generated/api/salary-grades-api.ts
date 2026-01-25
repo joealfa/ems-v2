@@ -43,10 +43,10 @@ export const SalaryGradesApiAxiosParamCreator = function (configuration?: Config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SalaryGradesDisplayIdDelete: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiV1SalarygradesDisplayIdDelete: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
-            assertParamExists('apiV1SalaryGradesDisplayIdDelete', 'displayId', displayId)
-            const localVarPath = `/api/v1/SalaryGrades/{displayId}`
+            assertParamExists('apiV1SalarygradesDisplayIdDelete', 'displayId', displayId)
+            const localVarPath = `/api/v1/salarygrades/{displayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -80,10 +80,10 @@ export const SalaryGradesApiAxiosParamCreator = function (configuration?: Config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SalaryGradesDisplayIdGet: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiV1SalarygradesDisplayIdGet: async (displayId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
-            assertParamExists('apiV1SalaryGradesDisplayIdGet', 'displayId', displayId)
-            const localVarPath = `/api/v1/SalaryGrades/{displayId}`
+            assertParamExists('apiV1SalarygradesDisplayIdGet', 'displayId', displayId)
+            const localVarPath = `/api/v1/salarygrades/{displayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -118,10 +118,10 @@ export const SalaryGradesApiAxiosParamCreator = function (configuration?: Config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SalaryGradesDisplayIdPut: async (displayId: number, updateSalaryGradeDto?: UpdateSalaryGradeDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiV1SalarygradesDisplayIdPut: async (displayId: number, updateSalaryGradeDto?: UpdateSalaryGradeDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'displayId' is not null or undefined
-            assertParamExists('apiV1SalaryGradesDisplayIdPut', 'displayId', displayId)
-            const localVarPath = `/api/v1/SalaryGrades/{displayId}`
+            assertParamExists('apiV1SalarygradesDisplayIdPut', 'displayId', displayId)
+            const localVarPath = `/api/v1/salarygrades/{displayId}`
                 .replace(`{${"displayId"}}`, encodeURIComponent(String(displayId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -162,8 +162,8 @@ export const SalaryGradesApiAxiosParamCreator = function (configuration?: Config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SalaryGradesGet: async (pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v1/SalaryGrades`;
+        apiV1SalarygradesGet: async (pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/salarygrades`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -216,8 +216,8 @@ export const SalaryGradesApiAxiosParamCreator = function (configuration?: Config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SalaryGradesPost: async (createSalaryGradeDto?: CreateSalaryGradeDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v1/SalaryGrades`;
+        apiV1SalarygradesPost: async (createSalaryGradeDto?: CreateSalaryGradeDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/salarygrades`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -263,10 +263,10 @@ export const SalaryGradesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1SalaryGradesDisplayIdDelete(displayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SalaryGradesDisplayIdDelete(displayId, options);
+        async apiV1SalarygradesDisplayIdDelete(displayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SalarygradesDisplayIdDelete(displayId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SalaryGradesApi.apiV1SalaryGradesDisplayIdDelete']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SalaryGradesApi.apiV1SalarygradesDisplayIdDelete']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -275,10 +275,10 @@ export const SalaryGradesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1SalaryGradesDisplayIdGet(displayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SalaryGradeResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SalaryGradesDisplayIdGet(displayId, options);
+        async apiV1SalarygradesDisplayIdGet(displayId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SalaryGradeResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SalarygradesDisplayIdGet(displayId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SalaryGradesApi.apiV1SalaryGradesDisplayIdGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SalaryGradesApi.apiV1SalarygradesDisplayIdGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -288,10 +288,10 @@ export const SalaryGradesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1SalaryGradesDisplayIdPut(displayId: number, updateSalaryGradeDto?: UpdateSalaryGradeDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SalaryGradeResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SalaryGradesDisplayIdPut(displayId, updateSalaryGradeDto, options);
+        async apiV1SalarygradesDisplayIdPut(displayId: number, updateSalaryGradeDto?: UpdateSalaryGradeDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SalaryGradeResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SalarygradesDisplayIdPut(displayId, updateSalaryGradeDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SalaryGradesApi.apiV1SalaryGradesDisplayIdPut']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SalaryGradesApi.apiV1SalarygradesDisplayIdPut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -304,10 +304,10 @@ export const SalaryGradesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1SalaryGradesGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SalaryGradeResponseDtoPagedResult>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SalaryGradesGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options);
+        async apiV1SalarygradesGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SalaryGradeResponseDtoPagedResult>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SalarygradesGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SalaryGradesApi.apiV1SalaryGradesGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SalaryGradesApi.apiV1SalarygradesGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -316,10 +316,10 @@ export const SalaryGradesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1SalaryGradesPost(createSalaryGradeDto?: CreateSalaryGradeDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SalaryGradeResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SalaryGradesPost(createSalaryGradeDto, options);
+        async apiV1SalarygradesPost(createSalaryGradeDto?: CreateSalaryGradeDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SalaryGradeResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SalarygradesPost(createSalaryGradeDto, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SalaryGradesApi.apiV1SalaryGradesPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SalaryGradesApi.apiV1SalarygradesPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -338,8 +338,8 @@ export const SalaryGradesApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SalaryGradesDisplayIdDelete(displayId: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV1SalaryGradesDisplayIdDelete(displayId, options).then((request) => request(axios, basePath));
+        apiV1SalarygradesDisplayIdDelete(displayId: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiV1SalarygradesDisplayIdDelete(displayId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -347,8 +347,8 @@ export const SalaryGradesApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SalaryGradesDisplayIdGet(displayId: number, options?: RawAxiosRequestConfig): AxiosPromise<SalaryGradeResponseDto> {
-            return localVarFp.apiV1SalaryGradesDisplayIdGet(displayId, options).then((request) => request(axios, basePath));
+        apiV1SalarygradesDisplayIdGet(displayId: number, options?: RawAxiosRequestConfig): AxiosPromise<SalaryGradeResponseDto> {
+            return localVarFp.apiV1SalarygradesDisplayIdGet(displayId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -357,8 +357,8 @@ export const SalaryGradesApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SalaryGradesDisplayIdPut(displayId: number, updateSalaryGradeDto?: UpdateSalaryGradeDto, options?: RawAxiosRequestConfig): AxiosPromise<SalaryGradeResponseDto> {
-            return localVarFp.apiV1SalaryGradesDisplayIdPut(displayId, updateSalaryGradeDto, options).then((request) => request(axios, basePath));
+        apiV1SalarygradesDisplayIdPut(displayId: number, updateSalaryGradeDto?: UpdateSalaryGradeDto, options?: RawAxiosRequestConfig): AxiosPromise<SalaryGradeResponseDto> {
+            return localVarFp.apiV1SalarygradesDisplayIdPut(displayId, updateSalaryGradeDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -370,8 +370,8 @@ export const SalaryGradesApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SalaryGradesGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<SalaryGradeResponseDtoPagedResult> {
-            return localVarFp.apiV1SalaryGradesGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(axios, basePath));
+        apiV1SalarygradesGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<SalaryGradeResponseDtoPagedResult> {
+            return localVarFp.apiV1SalarygradesGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -379,8 +379,8 @@ export const SalaryGradesApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SalaryGradesPost(createSalaryGradeDto?: CreateSalaryGradeDto, options?: RawAxiosRequestConfig): AxiosPromise<SalaryGradeResponseDto> {
-            return localVarFp.apiV1SalaryGradesPost(createSalaryGradeDto, options).then((request) => request(axios, basePath));
+        apiV1SalarygradesPost(createSalaryGradeDto?: CreateSalaryGradeDto, options?: RawAxiosRequestConfig): AxiosPromise<SalaryGradeResponseDto> {
+            return localVarFp.apiV1SalarygradesPost(createSalaryGradeDto, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -399,8 +399,8 @@ export class SalaryGradesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof SalaryGradesApi
      */
-    public apiV1SalaryGradesDisplayIdDelete(displayId: number, options?: RawAxiosRequestConfig) {
-        return SalaryGradesApiFp(this.configuration).apiV1SalaryGradesDisplayIdDelete(displayId, options).then((request) => request(this.axios, this.basePath));
+    public apiV1SalarygradesDisplayIdDelete(displayId: number, options?: RawAxiosRequestConfig) {
+        return SalaryGradesApiFp(this.configuration).apiV1SalarygradesDisplayIdDelete(displayId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -410,8 +410,8 @@ export class SalaryGradesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof SalaryGradesApi
      */
-    public apiV1SalaryGradesDisplayIdGet(displayId: number, options?: RawAxiosRequestConfig) {
-        return SalaryGradesApiFp(this.configuration).apiV1SalaryGradesDisplayIdGet(displayId, options).then((request) => request(this.axios, this.basePath));
+    public apiV1SalarygradesDisplayIdGet(displayId: number, options?: RawAxiosRequestConfig) {
+        return SalaryGradesApiFp(this.configuration).apiV1SalarygradesDisplayIdGet(displayId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -422,8 +422,8 @@ export class SalaryGradesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof SalaryGradesApi
      */
-    public apiV1SalaryGradesDisplayIdPut(displayId: number, updateSalaryGradeDto?: UpdateSalaryGradeDto, options?: RawAxiosRequestConfig) {
-        return SalaryGradesApiFp(this.configuration).apiV1SalaryGradesDisplayIdPut(displayId, updateSalaryGradeDto, options).then((request) => request(this.axios, this.basePath));
+    public apiV1SalarygradesDisplayIdPut(displayId: number, updateSalaryGradeDto?: UpdateSalaryGradeDto, options?: RawAxiosRequestConfig) {
+        return SalaryGradesApiFp(this.configuration).apiV1SalarygradesDisplayIdPut(displayId, updateSalaryGradeDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -437,8 +437,8 @@ export class SalaryGradesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof SalaryGradesApi
      */
-    public apiV1SalaryGradesGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig) {
-        return SalaryGradesApiFp(this.configuration).apiV1SalaryGradesGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(this.axios, this.basePath));
+    public apiV1SalarygradesGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig) {
+        return SalaryGradesApiFp(this.configuration).apiV1SalarygradesGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -448,8 +448,8 @@ export class SalaryGradesApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof SalaryGradesApi
      */
-    public apiV1SalaryGradesPost(createSalaryGradeDto?: CreateSalaryGradeDto, options?: RawAxiosRequestConfig) {
-        return SalaryGradesApiFp(this.configuration).apiV1SalaryGradesPost(createSalaryGradeDto, options).then((request) => request(this.axios, this.basePath));
+    public apiV1SalarygradesPost(createSalaryGradeDto?: CreateSalaryGradeDto, options?: RawAxiosRequestConfig) {
+        return SalaryGradesApiFp(this.configuration).apiV1SalarygradesPost(createSalaryGradeDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

@@ -273,9 +273,9 @@ public class PersonServiceTests
         // Arrange
         var displayId = 123456789012L;
         var person = CreateTestPerson(displayId);
-        person.Addresses = new List<Address>();
-        person.Contacts = new List<Contact>();
-        person.Documents = new List<Document>();
+        person.Addresses = [];
+        person.Contacts = [];
+        person.Documents = [];
 
         var persons = new List<Person> { person }.BuildMockQueryable();
         _personRepositoryMock.Setup(r => r.Query()).Returns(persons);
