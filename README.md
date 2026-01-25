@@ -58,7 +58,7 @@ ems-v2/
 - **Document Storage** - Upload and manage documents with Azure Blob Storage
 - **Item Inventory** - Track items and inventory
 - **Reports** - Generate various reports
-- **Authentication** - Secure login with JWT tokens
+- **Authentication** - Secure login with JWT tokens and HttpOnly cookies for refresh tokens
 
 ## Getting Started
 
@@ -98,6 +98,14 @@ After making changes to the backend API, regenerate the frontend API client:
 cd application
 npm run generate-api
 ```
+
+## API Standards
+
+The API follows REST best practices:
+- **Lowercase URLs** - All API routes use lowercase (e.g., `/api/v1/persons`, `/api/v1/salarygrades`)
+- **Versioning** - URL-based versioning (currently v1)
+- **Secure Authentication** - JWT access tokens with HttpOnly cookies for refresh tokens
+- **OpenAPI/Swagger** - Complete API documentation and client generation
 
 ## Project Guidelines
 

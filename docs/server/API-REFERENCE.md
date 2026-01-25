@@ -14,6 +14,8 @@ This document provides complete API endpoint documentation for the EMS backend.
 The API uses URL-based versioning:
 - Current version: `v1`
 - Base path: `/api/v1/{resource}`
+- **URL Convention**: All routes use lowercase following REST API best practices
+  - Examples: `/api/v1/persons`, `/api/v1/employments`, `/api/v1/salarygrades`
 
 ---
 
@@ -26,6 +28,14 @@ All API endpoints (except `/api/v1/auth/*`) require JWT Bearer authentication.
 ```
 Authorization: Bearer <jwt_access_token>
 ```
+
+### Token Storage
+
+- **Access Token**: Short-lived (15 minutes), sent in Authorization header
+- **Refresh Token**: Long-lived (7 days), stored as HttpOnly cookie
+  - Cookie name: `refreshToken`
+  - Attributes: `HttpOnly`, `Secure`, `SameSite=Strict`
+  - Automatically sent by browser with requests
 
 ---
 
@@ -128,38 +138,37 @@ Content-Type: application/json
 
 ### Refresh Token
 
-Exchanges a valid refresh token for a new access token.
+Exchanges a valid refresh token for a new access token. The refresh token is automatically sent via HttpOnly cookie.
 
 ```http
 POST /api/v1/auth/refresh
-Content-Type: application/json
+Cookie: refreshToken=<refresh_token_value>
 ```
 
-**Request Body**:
+**Request Body**: Empty (refresh token sent via cookie)
+
+**Response**: `AuthResponseDto`
 ```json
 {
-  "refreshToken": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4="
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresOn": "2026-01-25T12:15:00Z",
+  "user": { ... }
 }
 ```
 
-**Response**: `AuthResponseDto`
+**Note**: The refresh token cookie is automatically refreshed (new 7-day expiration).
 
 ### Revoke Token
 
-Revokes a refresh token (logout).
+Revokes a refresh token (logout). The refresh token is automatically sent via HttpOnly cookie.
 
 ```http
 POST /api/v1/auth/revoke
-Content-Type: application/json
 Authorization: Bearer <access_token>
+Cookie: refreshToken=<refresh_token_value>
 ```
 
-**Request Body**:
-```json
-{
-  "refreshToken": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4="
-}
-```
+**Request Body**: Empty (refresh token sent via cookie)
 
 **Response**: `200 OK`
 ```json
@@ -167,6 +176,8 @@ Authorization: Bearer <access_token>
   "message": "Token revoked"
 }
 ```
+
+**Note**: The refresh token cookie is cleared by the server.
 
 ### Get Current User
 
@@ -484,12 +495,12 @@ DELETE /api/v1/positions/{displayId}
 
 ## Salary Grades API
 
-**Base Path**: `/api/v1/salary-grades`
+**Base Path**: `/api/v1/salarygrades`
 
 ### Get All Salary Grades
 
 ```http
-GET /api/v1/salary-grades
+GET /api/v1/salarygrades
 ```
 
 **Response**: `PagedResult<SalaryGradeResponseDto>`
@@ -497,7 +508,7 @@ GET /api/v1/salary-grades
 ### Get Salary Grade by DisplayId
 
 ```http
-GET /api/v1/salary-grades/{displayId}
+GET /api/v1/salarygrades/{displayId}
 ```
 
 **Response**: `SalaryGradeResponseDto`
@@ -505,7 +516,7 @@ GET /api/v1/salary-grades/{displayId}
 ### Create Salary Grade
 
 ```http
-POST /api/v1/salary-grades
+POST /api/v1/salarygrades
 Content-Type: application/json
 ```
 
@@ -525,7 +536,7 @@ Content-Type: application/json
 ### Update Salary Grade
 
 ```http
-PUT /api/v1/salary-grades/{displayId}
+PUT /api/v1/salarygrades/{displayId}
 Content-Type: application/json
 ```
 
@@ -534,7 +545,7 @@ Content-Type: application/json
 ### Delete Salary Grade
 
 ```http
-DELETE /api/v1/salary-grades/{displayId}
+DELETE /api/v1/salarygrades/{displayId}
 ```
 
 **Response**: `204 No Content`
@@ -600,12 +611,14 @@ DELETE /api/v1/items/{displayId}
 
 ## Documents API
 
-**Base Path**: `/api/v1/persons/{personDisplayId}/documents`
+**Base Path**: `/api/v1/persons/{displayId}/documents`
+
+**Note**: The `displayId` parameter refers to the person's display ID.
 
 ### Get All Documents for Person
 
 ```http
-GET /api/v1/persons/{personDisplayId}/documents
+GET /api/v1/persons/{displayId}/documents
 ```
 
 **Response**: `PagedResult<DocumentListDto>`
@@ -613,7 +626,7 @@ GET /api/v1/persons/{personDisplayId}/documents
 ### Get Document by DisplayId
 
 ```http
-GET /api/v1/persons/{personDisplayId}/documents/{documentDisplayId}
+GET /api/v1/persons/{displayId}/documents/{documentDisplayId}
 ```
 
 **Response**: `DocumentResponseDto`
@@ -621,7 +634,7 @@ GET /api/v1/persons/{personDisplayId}/documents/{documentDisplayId}
 ### Upload Document
 
 ```http
-POST /api/v1/persons/{personDisplayId}/documents
+POST /api/v1/persons/{displayId}/documents
 Content-Type: multipart/form-data
 ```
 
@@ -639,7 +652,7 @@ Content-Type: multipart/form-data
 ### Update Document Metadata
 
 ```http
-PUT /api/v1/persons/{personDisplayId}/documents/{documentDisplayId}
+PUT /api/v1/persons/{displayId}/documents/{documentDisplayId}
 Content-Type: application/json
 ```
 
@@ -656,7 +669,7 @@ Content-Type: application/json
 ### Download Document
 
 ```http
-GET /api/v1/persons/{personDisplayId}/documents/{documentDisplayId}/download
+GET /api/v1/persons/{displayId}/documents/{documentDisplayId}/download
 ```
 
 **Response**: File stream with appropriate content type
@@ -664,7 +677,7 @@ GET /api/v1/persons/{personDisplayId}/documents/{documentDisplayId}/download
 ### Delete Document
 
 ```http
-DELETE /api/v1/persons/{personDisplayId}/documents/{documentDisplayId}
+DELETE /api/v1/persons/{displayId}/documents/{documentDisplayId}
 ```
 
 **Response**: `204 No Content`
@@ -672,7 +685,7 @@ DELETE /api/v1/persons/{personDisplayId}/documents/{documentDisplayId}
 ### Upload Profile Image
 
 ```http
-POST /api/v1/persons/{personDisplayId}/documents/profile-image
+POST /api/v1/persons/{displayId}/documents/profile-image
 Content-Type: multipart/form-data
 ```
 
@@ -693,7 +706,7 @@ Content-Type: multipart/form-data
 ### Delete Profile Image
 
 ```http
-DELETE /api/v1/persons/{personDisplayId}/documents/profile-image
+DELETE /api/v1/persons/{displayId}/documents/profile-image
 ```
 
 **Response**: `204 No Content`

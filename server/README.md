@@ -65,6 +65,7 @@ The backend follows Clean Architecture with the following layers:
 - Handles HTTP requests/responses
 - API versioning (v1, v2)
 - Swagger/OpenAPI documentation
+- Uses lowercase routes for REST API best practices
 
 **Controllers (v1):**
 - `AuthController` - Authentication endpoints
@@ -134,6 +135,14 @@ Once running, access Swagger UI at: `https://localhost:5001/swagger`
 - **Microsoft.AspNetCore.OpenApi** - OpenAPI support
 - **Swashbuckle.AspNetCore** - Swagger documentation
 - **Microsoft.EntityFrameworkCore** - ORM
+
+## Modern C# Features
+
+The codebase leverages modern C# 12+ features:
+- **Primary Constructors** - Used in all controllers and services for cleaner dependency injection
+- **Collection Expressions** - Simplified collection initialization
+- **Lowercase URLs** - Configured routing for REST API best practices
+- **Record Types** - Used for DTOs and immutable data structures
 
 ## Configuration
 

@@ -203,6 +203,61 @@ server/
 
 ## Coding Standards
 
+### Modern C# Features
+
+The codebase uses modern C# 12+ features:
+
+**Primary Constructors** (C# 12):
+```csharp
+// Modern approach - used in all controllers and services
+public class PersonService(IRepository<Person> repository) : IPersonService
+{
+    public async Task<PersonResponseDto?> GetByDisplayIdAsync(long displayId)
+    {
+        var person = await repository.GetByDisplayIdAsync(displayId);
+        return person?.MapToResponseDto();
+    }
+}
+```
+
+**Collection Expressions** (C# 12):
+```csharp
+// Modern collection initialization
+var items = [item1, item2, item3];
+var numbers = [1, 2, 3, 4, 5];
+```
+
+**Record Types** (C# 9+):
+```csharp
+// Used for DTOs and immutable data
+public record PersonResponseDto
+{
+    public long DisplayId { get; init; }
+    public string FirstName { get; init; } = string.Empty;
+    public string LastName { get; init; } = string.Empty;
+}
+```
+
+### API Routes
+
+All API routes follow REST conventions with lowercase URLs:
+- `/api/v1/persons`
+- `/api/v1/employments`
+- `/api/v1/salarygrades` (single word, no hyphens)
+- `/api/v1/schools`
+- `/api/v1/positions`
+- `/api/v1/items`
+- `/api/v1/reports`
+
+This is configured in `Program.cs`:
+```csharp
+builder.Services.AddRouting(options =>
+{
+    options.LowercaseUrls = true;
+    options.LowercaseQueryStrings = false;
+});
+```
+
 ### Naming Conventions
 
 |      Type      | Convention  |       Example         |

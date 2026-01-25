@@ -108,6 +108,13 @@ npm run preview
 - Accessible components using Chakra-UI
 - Use AG Grid for displaying tabular data with sorting, filtering, and pagination
 
+## Security
+
+- **Access Tokens** - Stored in localStorage for API authorization (short-lived)
+- **Refresh Tokens** - Stored as HttpOnly cookies for enhanced security (long-lived)
+- **Automatic Token Refresh** - Axios interceptors handle token expiration seamlessly
+- **CSRF Protection** - SameSite cookie policy prevents cross-site attacks
+
 ## API Integration
 
 The application uses an auto-generated API client from the backend's OpenAPI specification. To regenerate the client after API changes:
@@ -117,3 +124,5 @@ npm run generate-api
 ```
 
 The generated client is located in `src/api/generated/`.
+
+**Note**: The API uses lowercase routes (e.g., `/api/v1/persons`, `/api/v1/salarygrades`) following REST API conventions.

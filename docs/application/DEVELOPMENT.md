@@ -316,6 +316,63 @@ const fetchData = async (): Promise<MyDto[]> => {
 
 ---
 
+## Authentication & Security
+
+### Token Storage
+
+The application uses a dual-token system:
+
+**Access Tokens (localStorage)**:
+- Short-lived (15 minutes)
+- Used for API authorization
+- Stored in `localStorage` with key `accessToken`
+
+**Refresh Tokens (HttpOnly Cookies)**:
+- Long-lived (7 days)
+- Automatically sent by browser
+- Cannot be accessed by JavaScript (XSS protection)
+- Set by backend with `HttpOnly`, `Secure`, and `SameSite=Strict` flags
+
+### Authentication Flow
+
+```typescript
+// 1. Login - Google OAuth
+const { accessToken, user } = await authApi.apiV1AuthGooglePost({ idToken });
+localStorage.setItem('accessToken', accessToken);
+localStorage.setItem('user', JSON.stringify(user));
+// Refresh token automatically stored as HttpOnly cookie by backend
+
+// 2. API Requests - Automatic via interceptor
+axiosInstance.interceptors.request.use((config) => {
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// 3. Token Refresh - Automatic on 401
+// Refresh token sent automatically via cookie
+const { accessToken } = await axiosInstance.post('/api/v1/auth/refresh');
+localStorage.setItem('accessToken', accessToken);
+
+// 4. Logout
+await axiosInstance.post('/api/v1/auth/revoke');
+localStorage.clear();
+// Backend clears refresh token cookie
+```
+
+### Security Best Practices
+
+- ✅ Never store refresh tokens in `localStorage`
+- ✅ Use `withCredentials: true` for cookie-based auth
+- ✅ Clear all auth data on logout
+- ✅ Validate token expiration before API calls
+- ❌ Don't log or expose tokens in console
+- ❌ Don't store sensitive data in state or localStorage
+
+---
+
 ## Debugging
 
 ### Browser DevTools

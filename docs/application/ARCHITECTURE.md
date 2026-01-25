@@ -83,6 +83,42 @@ This pattern is repeated for all entities (schools, positions, salary-grades, it
                         │  ID Token    │────▶│  JWT Tokens │
                         │  from Google │     │  & User Info│
                         └──────────────┘     └─────────────┘
+                                                    │
+                                                    ▼
+                        ┌──────────────────────────────────┐
+                        │  Access Token → localStorage     │
+                        │  Refresh Token → HttpOnly Cookie │
+                        │  User Info → localStorage        │
+                        └──────────────────────────────────┘
+```
+
+### Token Management
+
+**Access Tokens**:
+- Stored in `localStorage` with key `accessToken`
+- Short-lived (15 minutes)
+- Sent in `Authorization: Bearer <token>` header
+- Used for all API requests
+
+**Refresh Tokens**:
+- Stored as HttpOnly cookies (name: `refreshToken`)
+- Long-lived (7 days)
+- Automatically sent by browser
+- Cannot be accessed by JavaScript (XSS protection)
+- Cookie attributes: `HttpOnly`, `Secure`, `SameSite=Strict`
+
+**Token Refresh Flow**:
+```
+API Request → 401 Unauthorized → Interceptor
+    │                              │
+    ▼                              ▼
+Wait for Refresh ◀── Refresh Token API Call
+    │                  (Cookie auto-sent)
+    ▼                              │
+New Access Token ◀─────────────────┘
+    │
+    ▼
+Retry Original Request
 ```
 
 ### Route Parameters

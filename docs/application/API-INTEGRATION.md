@@ -47,6 +47,35 @@ The EMS frontend uses **OpenAPI Generator** to automatically generate TypeScript
 
 ---
 
+## Authentication Security
+
+The application uses a dual-token authentication system:
+
+### Access Tokens
+- **Storage**: `localStorage`
+- **Lifetime**: Short-lived (15 minutes)
+- **Purpose**: API authorization via `Authorization: Bearer <token>` header
+- **Risk**: Exposed to XSS, but limited damage due to short lifetime
+
+### Refresh Tokens
+- **Storage**: HttpOnly cookies
+- **Lifetime**: Long-lived (7 days)
+- **Purpose**: Obtain new access tokens without re-authentication
+- **Security Features**:
+  - `HttpOnly`: JavaScript cannot access (XSS protection)
+  - `Secure`: HTTPS only
+  - `SameSite=Strict`: CSRF protection
+  - Automatically sent by browser with requests
+
+### Why This Approach?
+
+1. **Access tokens in localStorage**: Required for making API calls with custom headers
+2. **Refresh tokens in cookies**: Maximum security for long-lived credentials
+3. **Automatic refresh**: Seamless token renewal via axios interceptors
+4. **No token exposure**: Refresh tokens never touch JavaScript code
+
+---
+
 ## Configuration
 
 ### Base Configuration
@@ -67,6 +96,7 @@ export const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable sending cookies with requests
 });
 
 // API configuration for generated clients
@@ -75,7 +105,6 @@ export const apiConfiguration = new Configuration({
 });
 
 const ACCESS_TOKEN_KEY = 'accessToken';
-const REFRESH_TOKEN_KEY = 'refreshToken';
 
 // Request interceptor for adding auth tokens
 axiosInstance.interceptors.request.use(
@@ -98,27 +127,23 @@ axiosInstance.interceptors.response.use(
     // Handle 401 Unauthorized with automatic token refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
       // Skip refresh for auth endpoints
-      if (originalRequest.url?.includes('/Auth/')) {
+      if (originalRequest.url?.includes('/auth/')) {
         return Promise.reject(error);
       }
 
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 
-      if (refreshToken) {
-        try {
-          const response = await axiosInstance.post('/api/v1/Auth/refresh', {
-            refreshToken,
-          });
-          const { accessToken } = response.data;
-          localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          return axiosInstance(originalRequest);
-        } catch {
-          // Refresh failed, redirect to login
-          localStorage.clear();
-          window.location.href = '/login';
-        }
+      try {
+        // Refresh token is sent automatically via HttpOnly cookie
+        const response = await axiosInstance.post('/api/v1/auth/refresh');
+        const { accessToken } = response.data;
+        localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return axiosInstance(originalRequest);
+      } catch {
+        // Refresh failed, redirect to login
+        localStorage.clear();
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);
@@ -180,7 +205,7 @@ This command:
 | `EmploymentsApi`  | `/api/v1/employments`            | Employment CRUD operations   |
 | `SchoolsApi`      | `/api/v1/schools`                | School CRUD operations       |
 | `PositionsApi`    | `/api/v1/positions`              | Position CRUD operations     |
-| `SalaryGradesApi` | `/api/v1/salary-grades`          | Salary grade CRUD operations |
+| `SalaryGradesApi` | `/api/v1/salarygrades`           | Salary grade CRUD operations |
 | `ItemsApi`        | `/api/v1/items`                  | Item CRUD operations         |
 | `DocumentsApi`    | `/api/v1/persons/{id}/documents` | Document management          |
 | `ReportsApi`      | `/api/v1/reports`                | Dashboard statistics         |
