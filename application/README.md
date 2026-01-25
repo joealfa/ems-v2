@@ -4,24 +4,50 @@ Modern desktop and web application built with React, TypeScript, and Vite.
 
 ## Technology Stack
 
-- **React** - UI framework
+- **React 19** - UI framework
 - **TypeScript** - Static typing
 - **Vite** - Build tool and dev server
-- **Radix-UI** - Component library
+- **Chakra-UI** - Component library
+- **AG Grid** - Data grid component
 - **Axios** - HTTP client for API communication
-- **CSS** - Styling
+- **React Router** - Client-side routing
+- **OpenAPI Generator** - Auto-generated API client
 
 ## Project Structure
 
 ```
 application/
 ├── src/
+│   ├── api/              # API client and configuration
+│   │   ├── config.ts     # Axios configuration
+│   │   ├── generated/    # Auto-generated API client from OpenAPI
+│   │   └── index.ts      # API exports
+│   ├── assets/           # Static assets (images, fonts, etc.)
 │   ├── components/       # Reusable UI components
-│   ├── App.tsx          # Main application component
-│   ├── main.tsx         # Application entry point
-│   └── ...
-├── public/              # Static assets
-└── package.json         # Dependencies and scripts
+│   │   ├── auth/         # Authentication components
+│   │   ├── documents/    # Document-related components
+│   │   ├── layout/       # Layout components
+│   │   └── ui/           # Generic UI components
+│   ├── contexts/         # React context providers
+│   │   └── AuthContext.tsx
+│   ├── hooks/            # Custom React hooks
+│   │   ├── useAuth.ts
+│   │   └── useDebounce.ts
+│   ├── pages/            # Page components
+│   │   ├── Dashboard.tsx
+│   │   ├── LoginPage.tsx
+│   │   ├── employments/
+│   │   ├── items/
+│   │   ├── persons/
+│   │   ├── positions/
+│   │   ├── salary-grades/
+│   │   └── schools/
+│   ├── theme/            # Chakra-UI theme configuration
+│   ├── App.tsx           # Main application component
+│   ├── main.tsx          # Application entry point
+│   └── index.css         # Global styles
+├── public/               # Static assets served at root
+└── package.json          # Dependencies and scripts
 ```
 
 ## Getting Started
@@ -53,6 +79,19 @@ npm run build
 npm run preview
 ```
 
+## Available Scripts
+
+
+| Script                 | Description                           |
+|------------------------|---------------------------------------|
+| `npm run dev`          | Start development server              |
+| `npm run build`        | Build for production                  |
+| `npm run preview`      | Preview production build              |
+| `npm run lint`         | Run ESLint                            |
+| `npm run format`       | Format code with Prettier             |
+| `npm run format:check` | Check code formatting                 |
+| `npm run generate-api` | Generate API client from OpenAPI spec |
+
 ## Coding Standards
 
 - Use semicolons at the end of each statement
@@ -67,30 +106,14 @@ npm run preview
 - Light and dark mode support via toggle
 - Responsive layout
 - Accessible components using Chakra-UI
+- Use AG Grid for displaying tabular data with sorting, filtering, and pagination
 
 ## API Integration
 
-Coming soon...
-import reactDom from 'eslint-plugin-react-dom'
+The application uses an auto-generated API client from the backend's OpenAPI specification. To regenerate the client after API changes:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run generate-api
 ```
+
+The generated client is located in `src/api/generated/`.
