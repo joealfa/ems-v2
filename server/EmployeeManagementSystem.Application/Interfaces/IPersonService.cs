@@ -17,7 +17,7 @@ public interface IPersonService
     /// <summary>
     /// Gets a paginated list of persons.
     /// </summary>
-    Task<PagedResult<PersonListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default);
+    Task<PagedResult<PersonListDto>> GetPagedAsync(PersonPaginationQuery query, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a new person.

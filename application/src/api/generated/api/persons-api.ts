@@ -154,6 +154,10 @@ export const PersonsApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {ApiV1PersonsGetGenderEnum} [gender] 
+         * @param {ApiV1PersonsGetCivilStatusEnum} [civilStatus] 
+         * @param {string} [displayIdFilter] 
+         * @param {string} [fullNameFilter] 
          * @param {number} [pageNumber] 
          * @param {number} [pageSize] 
          * @param {string} [searchTerm] 
@@ -162,7 +166,7 @@ export const PersonsApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsGet: async (pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiV1PersonsGet: async (gender?: ApiV1PersonsGetGenderEnum, civilStatus?: ApiV1PersonsGetCivilStatusEnum, displayIdFilter?: string, fullNameFilter?: string, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/v1/Persons`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -178,6 +182,22 @@ export const PersonsApiAxiosParamCreator = function (configuration?: Configurati
             // authentication Bearer required
             // http bearer authentication required
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (gender !== undefined) {
+                localVarQueryParameter['Gender'] = gender;
+            }
+
+            if (civilStatus !== undefined) {
+                localVarQueryParameter['CivilStatus'] = civilStatus;
+            }
+
+            if (displayIdFilter !== undefined) {
+                localVarQueryParameter['DisplayIdFilter'] = displayIdFilter;
+            }
+
+            if (fullNameFilter !== undefined) {
+                localVarQueryParameter['FullNameFilter'] = fullNameFilter;
+            }
 
             if (pageNumber !== undefined) {
                 localVarQueryParameter['PageNumber'] = pageNumber;
@@ -296,6 +316,10 @@ export const PersonsApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {ApiV1PersonsGetGenderEnum} [gender] 
+         * @param {ApiV1PersonsGetCivilStatusEnum} [civilStatus] 
+         * @param {string} [displayIdFilter] 
+         * @param {string} [fullNameFilter] 
          * @param {number} [pageNumber] 
          * @param {number} [pageSize] 
          * @param {string} [searchTerm] 
@@ -304,8 +328,8 @@ export const PersonsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1PersonsGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonListDtoPagedResult>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options);
+        async apiV1PersonsGet(gender?: ApiV1PersonsGetGenderEnum, civilStatus?: ApiV1PersonsGetCivilStatusEnum, displayIdFilter?: string, fullNameFilter?: string, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonListDtoPagedResult>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1PersonsGet(gender, civilStatus, displayIdFilter, fullNameFilter, pageNumber, pageSize, searchTerm, sortBy, sortDescending, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonsApi.apiV1PersonsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -362,6 +386,10 @@ export const PersonsApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
+         * @param {ApiV1PersonsGetGenderEnum} [gender] 
+         * @param {ApiV1PersonsGetCivilStatusEnum} [civilStatus] 
+         * @param {string} [displayIdFilter] 
+         * @param {string} [fullNameFilter] 
          * @param {number} [pageNumber] 
          * @param {number} [pageSize] 
          * @param {string} [searchTerm] 
@@ -370,8 +398,8 @@ export const PersonsApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1PersonsGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<PersonListDtoPagedResult> {
-            return localVarFp.apiV1PersonsGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(axios, basePath));
+        apiV1PersonsGet(gender?: ApiV1PersonsGetGenderEnum, civilStatus?: ApiV1PersonsGetCivilStatusEnum, displayIdFilter?: string, fullNameFilter?: string, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<PersonListDtoPagedResult> {
+            return localVarFp.apiV1PersonsGet(gender, civilStatus, displayIdFilter, fullNameFilter, pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -428,6 +456,10 @@ export class PersonsApi extends BaseAPI {
 
     /**
      * 
+     * @param {ApiV1PersonsGetGenderEnum} [gender] 
+     * @param {ApiV1PersonsGetCivilStatusEnum} [civilStatus] 
+     * @param {string} [displayIdFilter] 
+     * @param {string} [fullNameFilter] 
      * @param {number} [pageNumber] 
      * @param {number} [pageSize] 
      * @param {string} [searchTerm] 
@@ -437,8 +469,8 @@ export class PersonsApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof PersonsApi
      */
-    public apiV1PersonsGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig) {
-        return PersonsApiFp(this.configuration).apiV1PersonsGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(this.axios, this.basePath));
+    public apiV1PersonsGet(gender?: ApiV1PersonsGetGenderEnum, civilStatus?: ApiV1PersonsGetCivilStatusEnum, displayIdFilter?: string, fullNameFilter?: string, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig) {
+        return PersonsApiFp(this.configuration).apiV1PersonsGet(gender, civilStatus, displayIdFilter, fullNameFilter, pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -453,3 +485,23 @@ export class PersonsApi extends BaseAPI {
     }
 }
 
+/**
+ * @export
+ */
+export const ApiV1PersonsGetGenderEnum = {
+    Male: 'Male',
+    Female: 'Female'
+} as const;
+export type ApiV1PersonsGetGenderEnum = typeof ApiV1PersonsGetGenderEnum[keyof typeof ApiV1PersonsGetGenderEnum];
+/**
+ * @export
+ */
+export const ApiV1PersonsGetCivilStatusEnum = {
+    Single: 'Single',
+    Married: 'Married',
+    SoloParent: 'SoloParent',
+    Widow: 'Widow',
+    Separated: 'Separated',
+    Other: 'Other'
+} as const;
+export type ApiV1PersonsGetCivilStatusEnum = typeof ApiV1PersonsGetCivilStatusEnum[keyof typeof ApiV1PersonsGetCivilStatusEnum];

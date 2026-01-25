@@ -47,11 +47,15 @@ const Sidebar = () => {
     <Box
       as="nav"
       w="250px"
-      minH="100vh"
+      h="100vh"
+      position="fixed"
+      top={0}
+      left={0}
       bg="bg.panel"
       borderRight="1px solid"
       borderColor="border.muted"
       p={4}
+      overflowY="auto"
     >
       <Box mb={8}>
         <Text fontSize="xl" fontWeight="bold" color="fg">

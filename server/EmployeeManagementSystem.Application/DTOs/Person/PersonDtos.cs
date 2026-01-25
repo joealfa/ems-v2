@@ -187,3 +187,29 @@ public class PersonListDto : BaseResponseDto
     /// </summary>
     public string? ProfileImageUrl { get; init; }
 }
+
+/// <summary>
+/// Query parameters for person pagination with column filtering support.
+/// </summary>
+public class PersonPaginationQuery : PaginationQuery
+{
+    /// <summary>
+    /// Gets or sets the gender filter.
+    /// </summary>
+    public Gender? Gender { get; set; }
+
+    /// <summary>
+    /// Gets or sets the civil status filter.
+    /// </summary>
+    public CivilStatus? CivilStatus { get; set; }
+
+    /// <summary>
+    /// Gets or sets the display ID filter (contains search).
+    /// </summary>
+    public string? DisplayIdFilter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the full name filter (contains search).
+    /// </summary>
+    public string? FullNameFilter { get; set; }
+}

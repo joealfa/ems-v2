@@ -22,7 +22,7 @@ const config = defineConfig({
       colors: {
         bg: {
           DEFAULT: {
-            value: { _light: '{colors.gray.100}', _dark: '{colors.gray.800}' },
+            value: { _light: '{colors.gray.100}', _dark: '#242424' },
           },
           muted: {
             value: { _light: '{colors.gray.200}', _dark: '{colors.gray.700}' },

@@ -10,6 +10,77 @@ namespace EmployeeManagementSystem.Infrastructure.Data;
 public static class DataSeeder
 {
     private const string SystemUser = "System";
+    private const int PersonCount = 5000;
+    private static readonly Random Random = new(42); // Fixed seed for reproducibility
+
+    // Filipino first names
+    private static readonly string[] MaleFirstNames =
+    [
+        "Juan", "Pedro", "Jose", "Carlos", "Miguel", "Antonio", "Roberto", "Ricardo", "Eduardo", "Fernando",
+        "Rafael", "Manuel", "Francisco", "Alejandro", "Gabriel", "Luis", "Marco", "Paolo", "Andres", "Ramon",
+        "Ernesto", "Alfredo", "Vicente", "Domingo", "Reynaldo", "Armando", "Leonardo", "Rolando", "Benjamin", "Romeo",
+        "Danilo", "Orlando", "Virgilio", "Mariano", "Nestor", "Rodolfo", "Arturo", "Renato", "Felix", "Sergio",
+        "Jaime", "Teodoro", "Gregorio", "Ismael", "Leandro", "Marcelo", "Noel", "Oscar", "Patricio", "Quintin",
+        "Rodel", "Salvador", "Tomas", "Ulysses", "Victor", "William", "Xavier", "Yosef", "Zeno", "Adrian",
+        "Bryan", "Christian", "Dennis", "Elmer", "Francis", "Gerald", "Harold", "Ivan", "Jerome", "Kenneth",
+        "Larry", "Michael", "Nathan", "Oliver", "Patrick", "Quincy", "Ronald", "Stephen", "Timothy", "Vincent"
+    ];
+
+    private static readonly string[] FemaleFirstNames =
+    [
+        "Maria", "Ana", "Rosa", "Elena", "Carmen", "Lucia", "Teresa", "Josefina", "Guadalupe", "Patricia",
+        "Gloria", "Esperanza", "Dolores", "Beatriz", "Cristina", "Diana", "Estela", "Francisca", "Gabriela", "Helena",
+        "Isabel", "Julia", "Katherine", "Leonora", "Margarita", "Norma", "Olivia", "Pilar", "Regina", "Sofia",
+        "Valentina", "Yolanda", "Zenaida", "Adelaida", "Barbara", "Cecilia", "Daniela", "Evelyn", "Felicia", "Geraldine",
+        "Herminia", "Imelda", "Jasmine", "Karen", "Lourdes", "Maribel", "Natividad", "Ophelia", "Paulina", "Queenie",
+        "Rosalinda", "Stephanie", "Theresa", "Ursula", "Veronica", "Wendy", "Ximena", "Yvonne", "Zoe", "Angela",
+        "Bernadette", "Charlene", "Desiree", "Emily", "Florence", "Grace", "Hannah", "Irene", "Jennifer", "Katrina",
+        "Liza", "Michelle", "Nicole", "Paula", "Rachel", "Sarah", "Trisha", "Uma", "Vivian", "Wanda"
+    ];
+
+    private static readonly string[] LastNames =
+    [
+        "Santos", "Reyes", "Cruz", "Bautista", "Garcia", "Mendoza", "Torres", "Gonzales", "Fernandez", "Lopez",
+        "Martinez", "Rodriguez", "Hernandez", "Ramos", "Aquino", "Villanueva", "Castro", "Pascual", "Dela Cruz", "Flores",
+        "Rivera", "Morales", "Perez", "Sanchez", "Jimenez", "Romero", "Diaz", "Alvarez", "Vargas", "Castillo",
+        "Gutierrez", "Ortega", "Salazar", "Mercado", "Soriano", "Tan", "Lim", "Chua", "Uy", "Go",
+        "Sy", "Co", "Ang", "Ong", "Yap", "Chan", "Lee", "Wong", "Ng", "Tiu",
+        "Aguilar", "Domingo", "Francisco", "Ignacio", "Laurel", "Magsaysay", "Osmeña", "Quezon", "Roxas", "Bonifacio",
+        "Mabini", "Luna", "Del Pilar", "Jacinto", "Silang", "Tupas", "Legaspi", "Urdaneta", "Salcedo", "Lacson",
+        "Escudero", "Cayetano", "Ejercito", "Marcos", "Arroyo", "Estrada", "Duterte", "Pacquiao", "Sotto", "Villar",
+        "Pangilinan", "Binay", "Poe", "Robredo", "Moreno", "Isko", "Lacson", "Defensor", "Abalos", "Remulla",
+        "Gatchalian", "Tolentino", "Recto", "Angara", "Drilon", "Enrile", "Honasan", "Trillanes", "Hontiveros", "Villanueva"
+    ];
+
+    private static readonly string[] MiddleNames =
+    [
+        "Cruz", "Reyes", "Santos", "Garcia", "Lopez", "Aquino", "Ramos", "Castro", "Martinez", "Gonzales",
+        "Fernandez", "Rodriguez", "Hernandez", "Flores", "Rivera", "Morales", "Perez", "Sanchez", "Jimenez", "Romero"
+    ];
+
+    private static readonly string[] Cities =
+    [
+        "Manila", "Quezon City", "Makati", "Pasig", "Taguig", "Mandaluyong", "San Juan", "Marikina",
+        "Parañaque", "Las Piñas", "Muntinlupa", "Caloocan", "Malabon", "Navotas", "Valenzuela", "Pasay"
+    ];
+
+    private static readonly string[] Barangays =
+    [
+        "Poblacion", "San Antonio", "San Jose", "Santo Niño", "Santa Cruz", "Concepcion", "Bagumbayan", "Kapitolyo",
+        "Ugong", "Pinagkaisahan", "Manggahan", "Rosario", "Rizal", "Malanday", "Parang", "Tumana",
+        "Industrial Valley", "Santa Elena", "Wack-Wack", "Addition Hills", "Hagdang Bato", "Plainview", "Barangka", "Marikina Heights"
+    ];
+
+    private static readonly string[] StreetNames =
+    [
+        "Rizal", "Mabini", "Bonifacio", "Aguinaldo", "Quezon", "Roxas", "Osmena", "Laurel",
+        "Magsaysay", "Garcia", "Macapagal", "Ramos", "Estrada", "Arroyo", "Aquino", "Marcos",
+        "Luna", "Del Pilar", "Jacinto", "Silang", "Katipunan", "EDSA", "Shaw", "Ortigas"
+    ];
+
+    private static readonly string[] StreetTypes = ["St.", "Ave.", "Blvd.", "Road", "Drive", "Lane", "Highway", "Circle"];
+
+    private static readonly string[] EmailDomains = ["email.com", "gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "mail.com"];
 
     /// <summary>
     /// Seeds the database with initial mock data.
@@ -35,37 +106,158 @@ public static class DataSeeder
         var salaryGrades = CreateSalaryGrades();
         await context.SalaryGrades.AddRangeAsync(salaryGrades);
 
-        // Create Items
+        // Create Items - generate enough items for all employments
         var items = CreateItems();
         await context.Items.AddRangeAsync(items);
 
-        // Create Persons with Addresses and Contacts
+        // Create Persons with Addresses and Contacts in batches
         var persons = CreatePersons();
-        await context.Persons.AddRangeAsync(persons);
+        
+        // Add persons in batches to avoid memory issues
+        const int batchSize = 500;
+        for (int i = 0; i < persons.Count; i += batchSize)
+        {
+            var batch = persons.Skip(i).Take(batchSize).ToList();
+            await context.Persons.AddRangeAsync(batch);
+            await context.SaveChangesAsync();
+        }
 
-        // Save to get IDs assigned
-        await context.SaveChangesAsync();
-
-        // Create Employments
+        // Create Employments in batches
         var employments = CreateEmployments(persons, positions, salaryGrades, items);
-        await context.Employments.AddRangeAsync(employments);
+        for (int i = 0; i < employments.Count; i += batchSize)
+        {
+            var batch = employments.Skip(i).Take(batchSize).ToList();
+            await context.Employments.AddRangeAsync(batch);
+            await context.SaveChangesAsync();
+        }
 
-        await context.SaveChangesAsync();
-
-        // Create Employment-School relationships
+        // Create Employment-School relationships in batches
         var employmentSchools = CreateEmploymentSchools(employments, schools);
-        await context.EmploymentSchools.AddRangeAsync(employmentSchools);
+        for (int i = 0; i < employmentSchools.Count; i += batchSize)
+        {
+            var batch = employmentSchools.Skip(i).Take(batchSize).ToList();
+            await context.EmploymentSchools.AddRangeAsync(batch);
+            await context.SaveChangesAsync();
+        }
+    }
 
-        await context.SaveChangesAsync();
+    private static string GetRandomMobileNumber()
+    {
+        var prefixes = new[] { "0917", "0918", "0919", "0920", "0921", "0927", "0928", "0929", "0939", "0949" };
+        return $"{prefixes[Random.Next(prefixes.Length)]}{Random.Next(1000000, 9999999)}";
+    }
+
+    private static string GetRandomLandline()
+    {
+        return $"02{Random.Next(10000000, 99999999)}";
+    }
+
+    private static string GetRandomZipCode()
+    {
+        return Random.Next(1000, 1999).ToString();
+    }
+
+    private static DateOnly GetRandomBirthDate()
+    {
+        // Generate birth dates for people aged 22-65
+        var minYear = DateTime.UtcNow.Year - 65;
+        var maxYear = DateTime.UtcNow.Year - 22;
+        var year = Random.Next(minYear, maxYear + 1);
+        var month = Random.Next(1, 13);
+        var day = Random.Next(1, DateTime.DaysInMonth(year, month) + 1);
+        return new DateOnly(year, month, day);
+    }
+
+    private static DateOnly GetRandomAppointmentDate(DateOnly birthDate)
+    {
+        // Appointment should be at least 22 years after birth (minimum working age)
+        var minYear = birthDate.Year + 22;
+        var maxYear = DateTime.UtcNow.Year;
+        if (minYear > maxYear) minYear = maxYear;
+        var year = Random.Next(minYear, maxYear + 1);
+        var month = Random.Next(1, 13);
+        var day = Random.Next(1, Math.Min(28, DateTime.DaysInMonth(year, month)) + 1);
+        return new DateOnly(year, month, day);
+    }
+
+    private static List<Address> CreateRandomAddresses(int count)
+    {
+        var addresses = new List<Address>();
+        var addressTypes = Enum.GetValues<AddressType>();
+
+        for (int i = 0; i < count; i++)
+        {
+            var city = Cities[Random.Next(Cities.Length)];
+            addresses.Add(new Address
+            {
+                Address1 = $"{Random.Next(1, 9999)} {StreetNames[Random.Next(StreetNames.Length)]} {StreetTypes[Random.Next(StreetTypes.Length)]}",
+                Address2 = Random.Next(100) < 30 ? $"Unit {Random.Next(1, 100)}" : null,
+                Barangay = Barangays[Random.Next(Barangays.Length)],
+                City = city,
+                Province = "Metro Manila",
+                Country = "Philippines",
+                ZipCode = GetRandomZipCode(),
+                AddressType = i == 0 ? AddressType.Home : addressTypes[Random.Next(addressTypes.Length)],
+                IsCurrent = i == 0,
+                IsPermanent = i == 0 || Random.Next(100) < 50,
+                IsActive = true,
+                CreatedBy = SystemUser,
+                CreatedOn = DateTime.UtcNow
+            });
+        }
+
+        return addresses;
+    }
+
+    private static List<Contact> CreateRandomContacts(string firstName, string lastName, int count)
+    {
+        var contacts = new List<Contact>();
+        var contactTypes = Enum.GetValues<ContactType>();
+        var normalizedFirst = firstName.ToLower().Replace(" ", "");
+        var normalizedLast = lastName.ToLower().Replace(" ", "");
+
+        for (int i = 0; i < count; i++)
+        {
+            var contactType = i == 0 ? ContactType.Personal : contactTypes[Random.Next(contactTypes.Length)];
+            var emailVariant = Random.Next(4);
+            var email = emailVariant switch
+            {
+                0 => $"{normalizedFirst}.{normalizedLast}{Random.Next(100)}@{EmailDomains[Random.Next(EmailDomains.Length)]}",
+                1 => $"{normalizedFirst}{normalizedLast[0]}{Random.Next(1000)}@{EmailDomains[Random.Next(EmailDomains.Length)]}",
+                2 => $"{normalizedFirst[0]}{normalizedLast}{Random.Next(100)}@{EmailDomains[Random.Next(EmailDomains.Length)]}",
+                _ => $"{normalizedFirst}_{normalizedLast}@{EmailDomains[Random.Next(EmailDomains.Length)]}"
+            };
+
+            contacts.Add(new Contact
+            {
+                Mobile = GetRandomMobileNumber(),
+                LandLine = Random.Next(100) < 40 ? GetRandomLandline() : null,
+                Email = email,
+                ContactType = contactType,
+                IsActive = true,
+                CreatedBy = SystemUser,
+                CreatedOn = DateTime.UtcNow
+            });
+        }
+
+        return contacts;
     }
 
     private static List<School> CreateSchools()
     {
-        return
-        [
-            new School
+        var schoolTypes = new[] { "Elementary School", "High School", "National High School", "Science High School", "Integrated School", "Central School" };
+        var schools = new List<School>();
+
+        // Create 50 schools to have a good distribution for 5000 employees
+        for (int i = 0; i < 50; i++)
+        {
+            var city = Cities[i % Cities.Length];
+            var schoolType = schoolTypes[Random.Next(schoolTypes.Length)];
+            var schoolName = $"{city} {schoolType} {(i / Cities.Length) + 1}";
+
+            schools.Add(new School
             {
-                SchoolName = "Marikina Elementary School",
+                SchoolName = schoolName,
                 IsActive = true,
                 CreatedBy = SystemUser,
                 CreatedOn = DateTime.UtcNow,
@@ -73,13 +265,13 @@ public static class DataSeeder
                 [
                     new Address
                     {
-                        Address1 = "123 Education Street",
-                        Address2 = "Building A",
-                        Barangay = "Concepcion Uno",
-                        City = "Marikina",
+                        Address1 = $"{Random.Next(1, 999)} {StreetNames[Random.Next(StreetNames.Length)]} {StreetTypes[Random.Next(StreetTypes.Length)]}",
+                        Address2 = Random.Next(100) < 30 ? $"Building {(char)('A' + Random.Next(5))}" : null,
+                        Barangay = Barangays[Random.Next(Barangays.Length)],
+                        City = city,
                         Province = "Metro Manila",
                         Country = "Philippines",
-                        ZipCode = "1800",
+                        ZipCode = GetRandomZipCode(),
                         AddressType = AddressType.Business,
                         IsCurrent = true,
                         IsActive = true,
@@ -91,248 +283,35 @@ public static class DataSeeder
                 [
                     new Contact
                     {
-                        Mobile = "09171234567",
-                        LandLine = "028123456",
-                        Email = "marinakina.es@deped.gov.ph",
+                        Mobile = GetRandomMobileNumber(),
+                        LandLine = GetRandomLandline(),
+                        Email = $"{schoolName.ToLower().Replace(" ", ".").Replace("-", "")}@deped.gov.ph",
                         ContactType = ContactType.Work,
                         IsActive = true,
                         CreatedBy = SystemUser,
                         CreatedOn = DateTime.UtcNow
                     }
                 ]
-            },
-            new School
-            {
-                SchoolName = "Quezon City Science High School",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "456 Science Avenue",
-                        Barangay = "Diliman",
-                        City = "Quezon City",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1100",
-                        AddressType = AddressType.Business,
-                        IsCurrent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09189876543",
-                        Email = "qcshs@deped.gov.ph",
-                        ContactType = ContactType.Work,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            },
-            new School
-            {
-                SchoolName = "Manila National High School",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "789 National Road",
-                        Barangay = "Ermita",
-                        City = "Manila",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1000",
-                        AddressType = AddressType.Business,
-                        IsCurrent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09201112233",
-                        LandLine = "028765432",
-                        Email = "mnhs@deped.gov.ph",
-                        ContactType = ContactType.Work,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            },
-            new School
-            {
-                SchoolName = "Pasig Central Elementary School",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "321 Central Lane",
-                        Barangay = "Kapitolyo",
-                        City = "Pasig",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1600",
-                        AddressType = AddressType.Business,
-                        IsCurrent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09173334455",
-                        Email = "pces@deped.gov.ph",
-                        ContactType = ContactType.Work,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            },
-            new School
-            {
-                SchoolName = "Taguig Integrated School",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "555 BGC Boulevard",
-                        Barangay = "Fort Bonifacio",
-                        City = "Taguig",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1630",
-                        AddressType = AddressType.Business,
-                        IsCurrent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09185556677",
-                        Email = "tis@deped.gov.ph",
-                        ContactType = ContactType.Work,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            }
-        ];
+            });
+        }
+
+        return schools;
     }
 
     private static List<Position> CreatePositions()
     {
         return
         [
-            new Position
-            {
-                TitleName = "Teacher I",
-                Description = "Entry-level teaching position for elementary and secondary schools",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            new Position
-            {
-                TitleName = "Teacher II",
-                Description = "Teaching position with 3+ years of experience",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            new Position
-            {
-                TitleName = "Teacher III",
-                Description = "Senior teaching position with 5+ years of experience",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            new Position
-            {
-                TitleName = "Master Teacher I",
-                Description = "Master teacher position for curriculum development",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            new Position
-            {
-                TitleName = "Master Teacher II",
-                Description = "Senior master teacher position",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            new Position
-            {
-                TitleName = "Head Teacher I",
-                Description = "Department head position",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            new Position
-            {
-                TitleName = "Head Teacher II",
-                Description = "Senior department head position",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            new Position
-            {
-                TitleName = "Principal I",
-                Description = "School principal for small schools",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            new Position
-            {
-                TitleName = "Principal II",
-                Description = "School principal for medium schools",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            new Position
-            {
-                TitleName = "Administrative Officer III",
-                Description = "Administrative support position",
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            }
+            new Position { TitleName = "Teacher I", Description = "Entry-level teaching position for elementary and secondary schools", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
+            new Position { TitleName = "Teacher II", Description = "Teaching position with 3+ years of experience", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
+            new Position { TitleName = "Teacher III", Description = "Senior teaching position with 5+ years of experience", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
+            new Position { TitleName = "Master Teacher I", Description = "Master teacher position for curriculum development", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
+            new Position { TitleName = "Master Teacher II", Description = "Senior master teacher position", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
+            new Position { TitleName = "Head Teacher I", Description = "Department head position", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
+            new Position { TitleName = "Head Teacher II", Description = "Senior department head position", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
+            new Position { TitleName = "Principal I", Description = "School principal for small schools", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
+            new Position { TitleName = "Principal II", Description = "School principal for medium schools", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
+            new Position { TitleName = "Administrative Officer III", Description = "Administrative support position", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow }
         ];
     }
 
@@ -357,449 +336,95 @@ public static class DataSeeder
 
     private static List<Item> CreateItems()
     {
-        return
-        [
-            new Item { ItemName = "OSEC-DECSB-TCH1-1", Description = "Teaching Item 1 - Elementary", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
-            new Item { ItemName = "OSEC-DECSB-TCH1-2", Description = "Teaching Item 2 - Elementary", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
-            new Item { ItemName = "OSEC-DECSB-TCH1-3", Description = "Teaching Item 3 - Elementary", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
-            new Item { ItemName = "OSEC-DECSB-TCH2-1", Description = "Teaching Item 1 - Secondary", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
-            new Item { ItemName = "OSEC-DECSB-TCH2-2", Description = "Teaching Item 2 - Secondary", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
-            new Item { ItemName = "OSEC-DECSB-TCH3-1", Description = "Teaching Item - Senior", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
-            new Item { ItemName = "OSEC-DECSB-MT1-1", Description = "Master Teacher Item 1", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
-            new Item { ItemName = "OSEC-DECSB-MT2-1", Description = "Master Teacher Item 2", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
-            new Item { ItemName = "OSEC-DECSB-HT1-1", Description = "Head Teacher Item 1", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
-            new Item { ItemName = "OSEC-DECSB-HT2-1", Description = "Head Teacher Item 2", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
-            new Item { ItemName = "OSEC-DECSB-PRIN1-1", Description = "Principal Item 1", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
-            new Item { ItemName = "OSEC-DECSB-PRIN2-1", Description = "Principal Item 2", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow },
-            new Item { ItemName = "OSEC-DECSB-AO3-1", Description = "Administrative Officer Item", IsActive = true, CreatedBy = SystemUser, CreatedOn = DateTime.UtcNow }
-        ];
+        var items = new List<Item>();
+        var itemTypes = new[]
+        {
+            ("TCH1", "Teaching Item - Teacher I"),
+            ("TCH2", "Teaching Item - Teacher II"),
+            ("TCH3", "Teaching Item - Teacher III"),
+            ("MT1", "Master Teacher Item I"),
+            ("MT2", "Master Teacher Item II"),
+            ("HT1", "Head Teacher Item I"),
+            ("HT2", "Head Teacher Item II"),
+            ("PRIN1", "Principal Item I"),
+            ("PRIN2", "Principal Item II"),
+            ("AO3", "Administrative Officer Item")
+        };
+
+        // Create enough items for 5000 employees with some buffer
+        int itemNumber = 1;
+        foreach (var (code, description) in itemTypes)
+        {
+            // Distribute items based on typical organizational structure
+            int count = code switch
+            {
+                "TCH1" => 2000, // Most employees are Teacher I
+                "TCH2" => 1200,
+                "TCH3" => 800,
+                "MT1" => 300,
+                "MT2" => 200,
+                "HT1" => 200,
+                "HT2" => 100,
+                "PRIN1" => 80,
+                "PRIN2" => 50,
+                "AO3" => 200,
+                _ => 100
+            };
+
+            for (int i = 1; i <= count; i++)
+            {
+                items.Add(new Item
+                {
+                    ItemName = $"OSEC-DECSB-{code}-{i:D4}",
+                    Description = $"{description} #{i}",
+                    IsActive = true,
+                    CreatedBy = SystemUser,
+                    CreatedOn = DateTime.UtcNow
+                });
+                itemNumber++;
+            }
+        }
+
+        return items;
     }
 
     private static List<Person> CreatePersons()
     {
-        return
-        [
-            new Person
+        var persons = new List<Person>();
+        var genders = Enum.GetValues<Gender>();
+        var civilStatuses = Enum.GetValues<CivilStatus>();
+
+        for (int i = 0; i < PersonCount; i++)
+        {
+            var isMale = Random.Next(100) < 50;
+            var gender = isMale ? Gender.Male : Gender.Female;
+            var firstName = isMale
+                ? MaleFirstNames[Random.Next(MaleFirstNames.Length)]
+                : FemaleFirstNames[Random.Next(FemaleFirstNames.Length)];
+            var lastName = LastNames[Random.Next(LastNames.Length)];
+            var middleName = MiddleNames[Random.Next(MiddleNames.Length)];
+
+            // Random number of addresses (1-4)
+            var addressCount = Random.Next(1, 5);
+            // Random number of contacts (1-4)
+            var contactCount = Random.Next(1, 5);
+
+            persons.Add(new Person
             {
-                FirstName = "Maria",
-                LastName = "Santos",
-                MiddleName = "Cruz",
-                DateOfBirth = new DateOnly(1985, 5, 15),
-                Gender = Gender.Female,
-                CivilStatus = CivilStatus.Married,
+                FirstName = firstName,
+                LastName = lastName,
+                MiddleName = middleName,
+                DateOfBirth = GetRandomBirthDate(),
+                Gender = gender,
+                CivilStatus = civilStatuses[Random.Next(civilStatuses.Length)],
                 CreatedBy = SystemUser,
                 CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "456 Sampaguita St.",
-                        Barangay = "San Antonio",
-                        City = "Makati",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1200",
-                        AddressType = AddressType.Home,
-                        IsCurrent = true,
-                        IsPermanent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09171234568",
-                        Email = "maria.santos@email.com",
-                        ContactType = ContactType.Personal,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    },
-                    new Contact
-                    {
-                        Email = "m.santos@deped.gov.ph",
-                        ContactType = ContactType.Work,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            },
-            new Person
-            {
-                FirstName = "Juan",
-                LastName = "Dela Cruz",
-                MiddleName = "Reyes",
-                DateOfBirth = new DateOnly(1990, 8, 20),
-                Gender = Gender.Male,
-                CivilStatus = CivilStatus.Single,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "789 Mabini Ave.",
-                        Barangay = "Commonwealth",
-                        City = "Quezon City",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1121",
-                        AddressType = AddressType.Home,
-                        IsCurrent = true,
-                        IsPermanent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09189876544",
-                        Email = "juan.delacruz@email.com",
-                        ContactType = ContactType.Personal,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            },
-            new Person
-            {
-                FirstName = "Ana",
-                LastName = "Reyes",
-                MiddleName = "Garcia",
-                DateOfBirth = new DateOnly(1988, 3, 10),
-                Gender = Gender.Female,
-                CivilStatus = CivilStatus.Married,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "123 Rizal Blvd.",
-                        Barangay = "Poblacion",
-                        City = "Pasig",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1600",
-                        AddressType = AddressType.Home,
-                        IsCurrent = true,
-                        IsPermanent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09201234567",
-                        Email = "ana.reyes@email.com",
-                        ContactType = ContactType.Personal,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            },
-            new Person
-            {
-                FirstName = "Pedro",
-                LastName = "Gonzales",
-                MiddleName = "Lopez",
-                DateOfBirth = new DateOnly(1982, 11, 25),
-                Gender = Gender.Male,
-                CivilStatus = CivilStatus.Married,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "567 Bonifacio St.",
-                        Barangay = "Barangka",
-                        City = "Marikina",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1800",
-                        AddressType = AddressType.Home,
-                        IsCurrent = true,
-                        IsPermanent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09173456789",
-                        LandLine = "028654321",
-                        Email = "pedro.gonzales@email.com",
-                        ContactType = ContactType.Personal,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            },
-            new Person
-            {
-                FirstName = "Elena",
-                LastName = "Villanueva",
-                MiddleName = "Martinez",
-                DateOfBirth = new DateOnly(1979, 7, 8),
-                Gender = Gender.Female,
-                CivilStatus = CivilStatus.Widow,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "234 Aguinaldo Highway",
-                        Barangay = "Baclaran",
-                        City = "Parañaque",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1700",
-                        AddressType = AddressType.Home,
-                        IsCurrent = true,
-                        IsPermanent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09185678901",
-                        Email = "elena.villanueva@email.com",
-                        ContactType = ContactType.Personal,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            },
-            new Person
-            {
-                FirstName = "Carlos",
-                LastName = "Mendoza",
-                MiddleName = "Aquino",
-                DateOfBirth = new DateOnly(1992, 1, 30),
-                Gender = Gender.Male,
-                CivilStatus = CivilStatus.Single,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "890 Luna St.",
-                        Barangay = "Tondo",
-                        City = "Manila",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1000",
-                        AddressType = AddressType.Home,
-                        IsCurrent = true,
-                        IsPermanent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09209012345",
-                        Email = "carlos.mendoza@email.com",
-                        ContactType = ContactType.Personal,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            },
-            new Person
-            {
-                FirstName = "Rosa",
-                LastName = "Fernandez",
-                MiddleName = "Castro",
-                DateOfBirth = new DateOnly(1987, 9, 12),
-                Gender = Gender.Female,
-                CivilStatus = CivilStatus.Married,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "432 Katipunan Ave.",
-                        Barangay = "Loyola Heights",
-                        City = "Quezon City",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1108",
-                        AddressType = AddressType.Home,
-                        IsCurrent = true,
-                        IsPermanent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09172345678",
-                        Email = "rosa.fernandez@email.com",
-                        ContactType = ContactType.Personal,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            },
-            new Person
-            {
-                FirstName = "Miguel",
-                LastName = "Torres",
-                MiddleName = "Ramos",
-                DateOfBirth = new DateOnly(1984, 4, 18),
-                Gender = Gender.Male,
-                CivilStatus = CivilStatus.Married,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "765 Shaw Blvd.",
-                        Barangay = "Wack-Wack",
-                        City = "Mandaluyong",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1550",
-                        AddressType = AddressType.Home,
-                        IsCurrent = true,
-                        IsPermanent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09183456789",
-                        Email = "miguel.torres@email.com",
-                        ContactType = ContactType.Personal,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            },
-            new Person
-            {
-                FirstName = "Lucia",
-                LastName = "Bautista",
-                MiddleName = "Santos",
-                DateOfBirth = new DateOnly(1991, 6, 22),
-                Gender = Gender.Female,
-                CivilStatus = CivilStatus.Single,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "321 C5 Road",
-                        Barangay = "Signal Village",
-                        City = "Taguig",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1630",
-                        AddressType = AddressType.Home,
-                        IsCurrent = true,
-                        IsPermanent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09204567890",
-                        Email = "lucia.bautista@email.com",
-                        ContactType = ContactType.Personal,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            },
-            new Person
-            {
-                FirstName = "Roberto",
-                LastName = "Garcia",
-                MiddleName = "Pascual",
-                DateOfBirth = new DateOnly(1980, 12, 5),
-                Gender = Gender.Male,
-                CivilStatus = CivilStatus.Married,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow,
-                Addresses =
-                [
-                    new Address
-                    {
-                        Address1 = "654 EDSA",
-                        Barangay = "Cubao",
-                        City = "Quezon City",
-                        Province = "Metro Manila",
-                        Country = "Philippines",
-                        ZipCode = "1109",
-                        AddressType = AddressType.Home,
-                        IsCurrent = true,
-                        IsPermanent = true,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ],
-                Contacts =
-                [
-                    new Contact
-                    {
-                        Mobile = "09175678901",
-                        LandLine = "027891234",
-                        Email = "roberto.garcia@email.com",
-                        ContactType = ContactType.Personal,
-                        IsActive = true,
-                        CreatedBy = SystemUser,
-                        CreatedOn = DateTime.UtcNow
-                    }
-                ]
-            }
-        ];
+                Addresses = CreateRandomAddresses(addressCount),
+                Contacts = CreateRandomContacts(firstName, lastName, contactCount)
+            });
+        }
+
+        return persons;
     }
 
     private static List<Employment> CreateEmployments(
@@ -808,336 +433,157 @@ public static class DataSeeder
         List<SalaryGrade> salaryGrades,
         List<Item> items)
     {
-        var employments = new List<Employment>
+        var employments = new List<Employment>();
+        var appointmentStatuses = Enum.GetValues<AppointmentStatus>();
+        var employmentStatuses = Enum.GetValues<EmploymentStatus>();
+        var eligibilities = Enum.GetValues<Eligibility>();
+
+        // Position distribution weights (index matches positions list)
+        // Teacher I: 40%, Teacher II: 24%, Teacher III: 16%, MT1: 6%, MT2: 4%, HT1: 4%, HT2: 2%, Prin1: 1.6%, Prin2: 1%, AO3: 1.4%
+        var positionWeights = new[] { 40, 24, 16, 6, 4, 4, 2, 2, 1, 1 };
+        var totalWeight = positionWeights.Sum();
+
+        // Salary grade mapping per position index
+        var positionToSalaryGrade = new Dictionary<int, int[]>
         {
-            // Maria Santos - Master Teacher II
-            new Employment
-            {
-                DepEdId = "DEPED-2010-001234",
-                PSIPOPItemNumber = "PSIPOP-001",
-                TINId = "123-456-789-000",
-                GSISId = "1234567890",
-                PhilHealthId = "12-345678901-2",
-                DateOfOriginalAppointment = new DateOnly(2010, 6, 1),
-                AppointmentStatus = AppointmentStatus.Promotion,
-                EmploymentStatus = EmploymentStatus.Permanent,
-                Eligibility = Eligibility.LET,
-                IsActive = true,
-                PersonId = persons[0].Id,
-                PositionId = positions[4].Id, // Master Teacher II
-                SalaryGradeId = salaryGrades[9].Id, // SG 19
-                ItemId = items[7].Id, // MT2-1
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-
-            // Juan Dela Cruz - Teacher I
-            new Employment
-            {
-                DepEdId = "DEPED-2020-005678",
-                PSIPOPItemNumber = "PSIPOP-002",
-                TINId = "234-567-890-001",
-                GSISId = "2345678901",
-                PhilHealthId = "23-456789012-3",
-                DateOfOriginalAppointment = new DateOnly(2020, 7, 15),
-                AppointmentStatus = AppointmentStatus.Original,
-                EmploymentStatus = EmploymentStatus.Regular,
-                Eligibility = Eligibility.LET,
-                IsActive = true,
-                PersonId = persons[1].Id,
-                PositionId = positions[0].Id, // Teacher I
-                SalaryGradeId = salaryGrades[0].Id, // SG 11 Step 1
-                ItemId = items[0].Id, // TCH1-1
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-
-            // Ana Reyes - Teacher III
-            new Employment
-            {
-                DepEdId = "DEPED-2015-003456",
-                PSIPOPItemNumber = "PSIPOP-003",
-                TINId = "345-678-901-002",
-                GSISId = "3456789012",
-                PhilHealthId = "34-567890123-4",
-                DateOfOriginalAppointment = new DateOnly(2015, 3, 1),
-                AppointmentStatus = AppointmentStatus.Promotion,
-                EmploymentStatus = EmploymentStatus.Permanent,
-                Eligibility = Eligibility.LET,
-                IsActive = true,
-                PersonId = persons[2].Id,
-                PositionId = positions[2].Id, // Teacher III
-                SalaryGradeId = salaryGrades[5].Id, // SG 13
-                ItemId = items[5].Id, // TCH3-1
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-
-            // Pedro Gonzales - Principal II
-            new Employment
-            {
-                DepEdId = "DEPED-2005-001111",
-                PSIPOPItemNumber = "PSIPOP-004",
-                TINId = "456-789-012-003",
-                GSISId = "4567890123",
-                PhilHealthId = "45-678901234-5",
-                DateOfOriginalAppointment = new DateOnly(2005, 8, 1),
-                AppointmentStatus = AppointmentStatus.Promotion,
-                EmploymentStatus = EmploymentStatus.Permanent,
-                Eligibility = Eligibility.CivilServiceProfessional,
-                IsActive = true,
-                PersonId = persons[3].Id,
-                PositionId = positions[8].Id, // Principal II
-                SalaryGradeId = salaryGrades[10].Id, // SG 20
-                ItemId = items[11].Id, // PRIN2-1
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-
-            // Elena Villanueva - Head Teacher II
-            new Employment
-            {
-                DepEdId = "DEPED-2008-002222",
-                PSIPOPItemNumber = "PSIPOP-005",
-                TINId = "567-890-123-004",
-                GSISId = "5678901234",
-                PhilHealthId = "56-789012345-6",
-                DateOfOriginalAppointment = new DateOnly(2008, 1, 15),
-                AppointmentStatus = AppointmentStatus.Promotion,
-                EmploymentStatus = EmploymentStatus.Permanent,
-                Eligibility = Eligibility.LET,
-                IsActive = true,
-                PersonId = persons[4].Id,
-                PositionId = positions[6].Id, // Head Teacher II
-                SalaryGradeId = salaryGrades[7].Id, // SG 15
-                ItemId = items[9].Id, // HT2-1
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-
-            // Carlos Mendoza - Teacher I
-            new Employment
-            {
-                DepEdId = "DEPED-2022-007890",
-                PSIPOPItemNumber = "PSIPOP-006",
-                TINId = "678-901-234-005",
-                GSISId = "6789012345",
-                PhilHealthId = "67-890123456-7",
-                DateOfOriginalAppointment = new DateOnly(2022, 9, 1),
-                AppointmentStatus = AppointmentStatus.Original,
-                EmploymentStatus = EmploymentStatus.Regular,
-                Eligibility = Eligibility.LET,
-                IsActive = true,
-                PersonId = persons[5].Id,
-                PositionId = positions[0].Id, // Teacher I
-                SalaryGradeId = salaryGrades[0].Id, // SG 11 Step 1
-                ItemId = items[1].Id, // TCH1-2
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-
-            // Rosa Fernandez - Teacher II
-            new Employment
-            {
-                DepEdId = "DEPED-2018-004567",
-                PSIPOPItemNumber = "PSIPOP-007",
-                TINId = "789-012-345-006",
-                GSISId = "7890123456",
-                PhilHealthId = "78-901234567-8",
-                DateOfOriginalAppointment = new DateOnly(2018, 6, 15),
-                AppointmentStatus = AppointmentStatus.Promotion,
-                EmploymentStatus = EmploymentStatus.Permanent,
-                Eligibility = Eligibility.LET,
-                IsActive = true,
-                PersonId = persons[6].Id,
-                PositionId = positions[1].Id, // Teacher II
-                SalaryGradeId = salaryGrades[3].Id, // SG 12 Step 1
-                ItemId = items[3].Id, // TCH2-1
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-
-            // Miguel Torres - Master Teacher I
-            new Employment
-            {
-                DepEdId = "DEPED-2012-003333",
-                PSIPOPItemNumber = "PSIPOP-008",
-                TINId = "890-123-456-007",
-                GSISId = "8901234567",
-                PhilHealthId = "89-012345678-9",
-                DateOfOriginalAppointment = new DateOnly(2012, 4, 1),
-                AppointmentStatus = AppointmentStatus.Promotion,
-                EmploymentStatus = EmploymentStatus.Permanent,
-                Eligibility = Eligibility.LET,
-                IsActive = true,
-                PersonId = persons[7].Id,
-                PositionId = positions[3].Id, // Master Teacher I
-                SalaryGradeId = salaryGrades[8].Id, // SG 18
-                ItemId = items[6].Id, // MT1-1
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-
-            // Lucia Bautista - Teacher I
-            new Employment
-            {
-                DepEdId = "DEPED-2021-006789",
-                PSIPOPItemNumber = "PSIPOP-009",
-                TINId = "901-234-567-008",
-                GSISId = "9012345678",
-                PhilHealthId = "90-123456789-0",
-                DateOfOriginalAppointment = new DateOnly(2021, 8, 15),
-                AppointmentStatus = AppointmentStatus.Original,
-                EmploymentStatus = EmploymentStatus.Regular,
-                Eligibility = Eligibility.LET,
-                IsActive = true,
-                PersonId = persons[8].Id,
-                PositionId = positions[0].Id, // Teacher I
-                SalaryGradeId = salaryGrades[1].Id, // SG 11 Step 2
-                ItemId = items[2].Id, // TCH1-3
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-
-            // Roberto Garcia - Administrative Officer III
-            new Employment
-            {
-                DepEdId = "DEPED-2006-001000",
-                PSIPOPItemNumber = "PSIPOP-010",
-                TINId = "012-345-678-009",
-                GSISId = "0123456789",
-                PhilHealthId = "01-234567890-1",
-                DateOfOriginalAppointment = new DateOnly(2006, 2, 1),
-                AppointmentStatus = AppointmentStatus.Original,
-                EmploymentStatus = EmploymentStatus.Permanent,
-                Eligibility = Eligibility.CivilServiceSubProfessional,
-                IsActive = true,
-                PersonId = persons[9].Id,
-                PositionId = positions[9].Id, // Administrative Officer III
-                SalaryGradeId = salaryGrades[11].Id, // SG 9
-                ItemId = items[12].Id, // AO3-1
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            }
+            { 0, new[] { 0, 1, 2 } },      // Teacher I -> SG 11 Step 1-3
+            { 1, new[] { 3, 4 } },          // Teacher II -> SG 12 Step 1-2
+            { 2, new[] { 5 } },             // Teacher III -> SG 13
+            { 3, new[] { 8 } },             // Master Teacher I -> SG 18
+            { 4, new[] { 9 } },             // Master Teacher II -> SG 19
+            { 5, new[] { 6 } },             // Head Teacher I -> SG 14
+            { 6, new[] { 7 } },             // Head Teacher II -> SG 15
+            { 7, new[] { 9 } },             // Principal I -> SG 19
+            { 8, new[] { 10 } },            // Principal II -> SG 20
+            { 9, new[] { 11 } }             // Administrative Officer III -> SG 9
         };
+
+        // Item category mapping based on item code patterns
+        // Items are ordered: TCH1 (0-1999), TCH2 (2000-3199), TCH3 (3200-3999), MT1 (4000-4299), MT2 (4300-4499), 
+        // HT1 (4500-4699), HT2 (4700-4799), PRIN1 (4800-4879), PRIN2 (4880-4929), AO3 (4930-5129)
+        var positionToItemRange = new Dictionary<int, (int start, int count)>
+        {
+            { 0, (0, 2000) },       // Teacher I
+            { 1, (2000, 1200) },    // Teacher II
+            { 2, (3200, 800) },     // Teacher III
+            { 3, (4000, 300) },     // Master Teacher I
+            { 4, (4300, 200) },     // Master Teacher II
+            { 5, (4500, 200) },     // Head Teacher I
+            { 6, (4700, 100) },     // Head Teacher II
+            { 7, (4800, 80) },      // Principal I
+            { 8, (4880, 50) },      // Principal II
+            { 9, (4930, 200) }      // Administrative Officer III
+        };
+
+        var itemUsageCount = new Dictionary<int, int>();
+
+        for (int i = 0; i < persons.Count; i++)
+        {
+            var person = persons[i];
+
+            // Select position based on weighted distribution
+            var randomWeight = Random.Next(totalWeight);
+            var positionIndex = 0;
+            var cumulativeWeight = 0;
+            for (int j = 0; j < positionWeights.Length; j++)
+            {
+                cumulativeWeight += positionWeights[j];
+                if (randomWeight < cumulativeWeight)
+                {
+                    positionIndex = j;
+                    break;
+                }
+            }
+
+            // Get salary grade for this position
+            var salaryGradeOptions = positionToSalaryGrade[positionIndex];
+            var salaryGradeIndex = salaryGradeOptions[Random.Next(salaryGradeOptions.Length)];
+
+            // Get item for this position
+            var (itemStart, itemCount) = positionToItemRange[positionIndex];
+            var itemIndex = itemStart + (i % itemCount);
+            if (itemIndex >= items.Count) itemIndex = items.Count - 1;
+
+            var birthDate = person.DateOfBirth;
+            var appointmentDate = GetRandomAppointmentDate(birthDate);
+
+            // Determine employment status based on years of service
+            var yearsOfService = DateTime.UtcNow.Year - appointmentDate.Year;
+            var employmentStatus = yearsOfService >= 2 ? EmploymentStatus.Permanent : EmploymentStatus.Regular;
+            var appointmentStatus = yearsOfService >= 3 ? AppointmentStatus.Promotion : AppointmentStatus.Original;
+
+            employments.Add(new Employment
+            {
+                DepEdId = $"DEPED-{appointmentDate.Year}-{(i + 1):D6}",
+                PSIPOPItemNumber = $"PSIPOP-{(i + 1):D5}",
+                TINId = $"{Random.Next(100, 999)}-{Random.Next(100, 999)}-{Random.Next(100, 999)}-{Random.Next(0, 999):D3}",
+                GSISId = $"{Random.Next(1000000000, int.MaxValue)}",
+                PhilHealthId = $"{Random.Next(10, 99)}-{Random.Next(100000000, 999999999)}-{Random.Next(0, 9)}",
+                DateOfOriginalAppointment = appointmentDate,
+                AppointmentStatus = appointmentStatus,
+                EmploymentStatus = employmentStatus,
+                Eligibility = eligibilities[Random.Next(eligibilities.Length)],
+                IsActive = true,
+                PersonId = person.Id,
+                PositionId = positions[positionIndex].Id,
+                SalaryGradeId = salaryGrades[salaryGradeIndex].Id,
+                ItemId = items[itemIndex].Id,
+                CreatedBy = SystemUser,
+                CreatedOn = DateTime.UtcNow
+            });
+        }
 
         return employments;
     }
 
     private static List<EmploymentSchool> CreateEmploymentSchools(List<Employment> employments, List<School> schools)
     {
-        return
-        [
-            // Maria Santos at Quezon City Science High School
-            new EmploymentSchool
+        var employmentSchools = new List<EmploymentSchool>();
+
+        foreach (var employment in employments)
+        {
+            // Randomly assign to a school
+            var schoolIndex = Random.Next(schools.Count);
+            var startDate = employment.DateOfOriginalAppointment ?? DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-5));
+
+            // Some employees might have worked at a previous school
+            if (Random.Next(100) < 20) // 20% chance of having previous school
             {
-                EmploymentId = employments[0].Id,
-                SchoolId = schools[1].Id,
-                StartDate = new DateOnly(2018, 6, 1),
-                IsCurrent = true,
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            // Juan Dela Cruz at Marikina Elementary School
-            new EmploymentSchool
-            {
-                EmploymentId = employments[1].Id,
-                SchoolId = schools[0].Id,
-                StartDate = new DateOnly(2020, 7, 15),
-                IsCurrent = true,
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            // Ana Reyes at Manila National High School
-            new EmploymentSchool
-            {
-                EmploymentId = employments[2].Id,
-                SchoolId = schools[2].Id,
-                StartDate = new DateOnly(2019, 6, 1),
-                IsCurrent = true,
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            // Pedro Gonzales at Pasig Central Elementary School (Principal)
-            new EmploymentSchool
-            {
-                EmploymentId = employments[3].Id,
-                SchoolId = schools[3].Id,
-                StartDate = new DateOnly(2015, 1, 1),
-                IsCurrent = true,
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            // Elena Villanueva at Taguig Integrated School
-            new EmploymentSchool
-            {
-                EmploymentId = employments[4].Id,
-                SchoolId = schools[4].Id,
-                StartDate = new DateOnly(2016, 6, 1),
-                IsCurrent = true,
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            // Carlos Mendoza at Marikina Elementary School
-            new EmploymentSchool
-            {
-                EmploymentId = employments[5].Id,
-                SchoolId = schools[0].Id,
-                StartDate = new DateOnly(2022, 9, 1),
-                IsCurrent = true,
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            // Rosa Fernandez at Quezon City Science High School
-            new EmploymentSchool
-            {
-                EmploymentId = employments[6].Id,
-                SchoolId = schools[1].Id,
-                StartDate = new DateOnly(2018, 6, 15),
-                IsCurrent = true,
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            // Miguel Torres at Manila National High School
-            new EmploymentSchool
-            {
-                EmploymentId = employments[7].Id,
-                SchoolId = schools[2].Id,
-                StartDate = new DateOnly(2017, 1, 1),
-                IsCurrent = true,
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            // Lucia Bautista at Taguig Integrated School
-            new EmploymentSchool
-            {
-                EmploymentId = employments[8].Id,
-                SchoolId = schools[4].Id,
-                StartDate = new DateOnly(2021, 8, 15),
-                IsCurrent = true,
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
-            },
-            // Roberto Garcia at Pasig Central Elementary School (Admin)
-            new EmploymentSchool
-            {
-                EmploymentId = employments[9].Id,
-                SchoolId = schools[3].Id,
-                StartDate = new DateOnly(2010, 3, 1),
-                IsCurrent = true,
-                IsActive = true,
-                CreatedBy = SystemUser,
-                CreatedOn = DateTime.UtcNow
+                var previousSchoolIndex = (schoolIndex + 1) % schools.Count;
+                var previousStartDate = startDate;
+                var previousEndDate = startDate.AddYears(Random.Next(1, 4));
+
+                if (previousEndDate < DateOnly.FromDateTime(DateTime.UtcNow))
+                {
+                    employmentSchools.Add(new EmploymentSchool
+                    {
+                        EmploymentId = employment.Id,
+                        SchoolId = schools[previousSchoolIndex].Id,
+                        StartDate = previousStartDate,
+                        EndDate = previousEndDate,
+                        IsCurrent = false,
+                        IsActive = true,
+                        CreatedBy = SystemUser,
+                        CreatedOn = DateTime.UtcNow
+                    });
+
+                    startDate = previousEndDate;
+                }
             }
-        ];
+
+            // Current school assignment
+            employmentSchools.Add(new EmploymentSchool
+            {
+                EmploymentId = employment.Id,
+                SchoolId = schools[schoolIndex].Id,
+                StartDate = startDate,
+                IsCurrent = true,
+                IsActive = true,
+                CreatedBy = SystemUser,
+                CreatedOn = DateTime.UtcNow
+            });
+        }
+
+        return employmentSchools;
     }
 }

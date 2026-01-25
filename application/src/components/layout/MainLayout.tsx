@@ -1,19 +1,35 @@
-import { Box, Flex } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
+const SIDEBAR_WIDTH = '250px';
+const HEADER_HEIGHT = '60px';
+
 const MainLayout = () => {
   return (
-    <Flex minH="100vh">
+    <Box h="100vh" overflow="hidden">
+      {/* Fixed Sidebar */}
       <Sidebar />
-      <Box flex={1} display="flex" flexDirection="column">
+
+      {/* Main content area with fixed header */}
+      <Box ml={SIDEBAR_WIDTH} h="100vh" display="flex" flexDirection="column">
+        {/* Fixed Header */}
         <Header />
-        <Box as="main" flex={1} p={6} bg="bg" overflow="auto">
+
+        {/* Scrollable Main Content */}
+        <Box
+          as="main"
+          flex={1}
+          p={6}
+          bg="bg"
+          overflowY="auto"
+          h={`calc(100vh - ${HEADER_HEIGHT})`}
+        >
           <Outlet />
         </Box>
       </Box>
-    </Flex>
+    </Box>
   );
 };
 

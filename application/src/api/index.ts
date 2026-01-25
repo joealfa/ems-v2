@@ -55,3 +55,7 @@ export const reportsApi = new ReportsApi(
 // Re-export types for convenience
 export * from './generated/models';
 export { API_BASE_URL } from './config';
+export {
+  ApiV1PersonsGetGenderEnum,
+  ApiV1PersonsGetCivilStatusEnum,
+} from './generated/api/persons-api';

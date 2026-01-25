@@ -6,41 +6,16 @@ import {
   Flex,
   Card,
   Text,
-  Badge,
   Input,
   Spinner,
-  Table,
 } from '@chakra-ui/react';
 import { documentsApi, type DocumentListDto, API_BASE_URL } from '../../api';
+import DocumentsTable from './DocumentsTable';
+import { formatFileSize } from './utils';
 
 interface PersonDocumentsProps {
   personDisplayId: number;
 }
-
-const formatFileSize = (bytes: number | undefined): string => {
-  if (!bytes) return '-';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-};
-
-const getDocumentTypeColor = (type: string | undefined): string => {
-  switch (type) {
-    case 'Pdf':
-      return 'red';
-    case 'Word':
-      return 'blue';
-    case 'Excel':
-      return 'green';
-    case 'PowerPoint':
-      return 'orange';
-    case 'ImageJpeg':
-    case 'ImagePng':
-      return 'purple';
-    default:
-      return 'gray';
-  }
-};
 
 const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
   const [documents, setDocuments] = useState<DocumentListDto[]>([]);
@@ -277,83 +252,12 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
           </Box>
         )}
 
-        {documents.length === 0 ? (
-          <Text color="fg.muted" textAlign="center" py={8}>
-            No documents uploaded yet.
-          </Text>
-        ) : (
-          <Table.Root size="sm">
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeader>File Name</Table.ColumnHeader>
-                <Table.ColumnHeader>Type</Table.ColumnHeader>
-                <Table.ColumnHeader>Size</Table.ColumnHeader>
-                <Table.ColumnHeader>Description</Table.ColumnHeader>
-                <Table.ColumnHeader>Uploaded</Table.ColumnHeader>
-                <Table.ColumnHeader textAlign="right">
-                  Actions
-                </Table.ColumnHeader>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {documents.map(doc => (
-                <Table.Row key={doc.displayId}>
-                  <Table.Cell>
-                    <Text fontWeight="medium" fontSize="sm">
-                      {doc.fileName}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Badge
-                      colorPalette={getDocumentTypeColor(doc.documentType)}
-                      size="sm"
-                    >
-                      {doc.documentType}
-                    </Badge>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text fontSize="sm">
-                      {formatFileSize(doc.fileSizeBytes)}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text fontSize="sm" color="fg.muted" maxW="200px" truncate>
-                      {doc.description || '-'}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text fontSize="sm">
-                      {doc.createdOn
-                        ? new Date(doc.createdOn).toLocaleDateString()
-                        : '-'}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell textAlign="right">
-                    <Flex gap={1} justify="flex-end">
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        onClick={() =>
-                          handleDownload(doc.displayId!, doc.fileName)
-                        }
-                      >
-                        Download
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        colorPalette="red"
-                        onClick={() => handleDelete(doc.displayId!)}
-                      >
-                        Delete
-                      </Button>
-                    </Flex>
-                  </Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Root>
-        )}
+        <DocumentsTable
+          documents={documents}
+          onDownload={handleDownload}
+          onDelete={handleDelete}
+          showActions={true}
+        />
       </Card.Body>
     </Card.Root>
   );

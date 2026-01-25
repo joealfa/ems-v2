@@ -79,7 +79,7 @@ public class PersonServiceTests
     public async Task GetPagedAsync_ReturnsPagedResult()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10 };
+        var query = new PersonPaginationQuery { PageNumber = 1, PageSize = 10 };
         var persons = new List<Person>
         {
             CreateTestPerson(100000000001L, "John", "Doe"),
@@ -104,7 +104,7 @@ public class PersonServiceTests
     public async Task GetPagedAsync_WithSearchTerm_FiltersResults()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 1, PageSize = 10, SearchTerm = "John" };
+        var query = new PersonPaginationQuery { PageNumber = 1, PageSize = 10, SearchTerm = "John" };
         var persons = new List<Person>
         {
             CreateTestPerson(100000000001L, "John", "Doe"),
@@ -126,7 +126,7 @@ public class PersonServiceTests
     public async Task GetPagedAsync_WithPagination_ReturnsCorrectPage()
     {
         // Arrange
-        var query = new PaginationQuery { PageNumber = 2, PageSize = 2 };
+        var query = new PersonPaginationQuery { PageNumber = 2, PageSize = 2 };
         var persons = new List<Person>
         {
             CreateTestPerson(100000000001L, "Alice", "Anderson"),

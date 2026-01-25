@@ -36,7 +36,7 @@ public class PersonsController : ApiControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<PersonListDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<PersonListDto>>> GetAll(
-        [FromQuery] PaginationQuery query,
+        [FromQuery] PersonPaginationQuery query,
         CancellationToken cancellationToken)
     {
         var result = await _personService.GetPagedAsync(query, cancellationToken);

@@ -14,8 +14,6 @@ import {
   Checkbox,
   Image,
   Center,
-  Table,
-  Badge,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -33,6 +31,7 @@ import {
   CreateContactDtoContactTypeEnum,
   API_BASE_URL,
 } from '../../api';
+import { DocumentsTable, formatFileSize } from '../../components/documents';
 
 interface AddressFormData {
   address1: string;
@@ -92,29 +91,6 @@ const initialFormData: PersonFormData = {
   dateOfBirth: '',
   gender: 'Male',
   civilStatus: 'Single',
-};
-
-const formatFileSize = (bytes: number | undefined): string => {
-  if (!bytes) return '-';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-};
-
-const getDocumentTypeColor = (type: string | undefined): string => {
-  switch (type) {
-    case 'Pdf':
-      return 'red';
-    case 'Word':
-      return 'blue';
-    case 'Excel':
-      return 'green';
-    case 'ImageJpeg':
-    case 'ImagePng':
-      return 'purple';
-    default:
-      return 'gray';
-  }
 };
 
 const PersonFormPage = () => {
@@ -1081,68 +1057,13 @@ const PersonFormPage = () => {
                     <Flex justify="center" py={4}>
                       <Spinner size="md" />
                     </Flex>
-                  ) : documents.length === 0 ? (
-                    <Text color="fg.muted" fontSize="sm">
-                      No documents uploaded yet.
-                    </Text>
                   ) : (
-                    <Table.Root size="sm">
-                      <Table.Header>
-                        <Table.Row>
-                          <Table.ColumnHeader>File Name</Table.ColumnHeader>
-                          <Table.ColumnHeader>Type</Table.ColumnHeader>
-                          <Table.ColumnHeader>Size</Table.ColumnHeader>
-                          <Table.ColumnHeader>Description</Table.ColumnHeader>
-                          <Table.ColumnHeader>Actions</Table.ColumnHeader>
-                        </Table.Row>
-                      </Table.Header>
-                      <Table.Body>
-                        {documents.map(doc => (
-                          <Table.Row key={doc.displayId}>
-                            <Table.Cell>{doc.fileName}</Table.Cell>
-                            <Table.Cell>
-                              <Badge
-                                colorPalette={getDocumentTypeColor(
-                                  doc.documentType
-                                )}
-                              >
-                                {doc.documentType}
-                              </Badge>
-                            </Table.Cell>
-                            <Table.Cell>
-                              {formatFileSize(doc.fileSizeBytes)}
-                            </Table.Cell>
-                            <Table.Cell>{doc.description || '-'}</Table.Cell>
-                            <Table.Cell>
-                              <Flex gap={2}>
-                                <Button
-                                  size="xs"
-                                  variant="outline"
-                                  onClick={() =>
-                                    handleDocumentDownload(
-                                      doc.displayId!,
-                                      doc.fileName
-                                    )
-                                  }
-                                >
-                                  Download
-                                </Button>
-                                <Button
-                                  size="xs"
-                                  variant="outline"
-                                  colorPalette="red"
-                                  onClick={() =>
-                                    handleDocumentDelete(doc.displayId!)
-                                  }
-                                >
-                                  Delete
-                                </Button>
-                              </Flex>
-                            </Table.Cell>
-                          </Table.Row>
-                        ))}
-                      </Table.Body>
-                    </Table.Root>
+                    <DocumentsTable
+                      documents={documents}
+                      onDownload={handleDocumentDownload}
+                      onDelete={handleDocumentDelete}
+                      showActions={true}
+                    />
                   )}
                 </Stack>
               </Card.Body>

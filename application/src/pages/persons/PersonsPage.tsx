@@ -18,12 +18,138 @@ import {
   type GridReadyEvent,
   type IGetRowsParams,
   type ICellRendererParams,
+  type IFloatingFilterParams,
 } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
-import { personsApi, type PersonListDto, API_BASE_URL } from '../../api';
+import {
+  personsApi,
+  type PersonListDto,
+  API_BASE_URL,
+  ApiV1PersonsGetGenderEnum,
+  ApiV1PersonsGetCivilStatusEnum,
+} from '../../api';
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+// Custom floating filter component for dropdown selection
+interface SelectFloatingFilterProps extends IFloatingFilterParams {
+  values: string[];
+}
+
+const SelectFloatingFilter = (props: SelectFloatingFilterProps) => {
+  const [currentValue, setCurrentValue] = useState<string>('');
+
+  const onSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+    setCurrentValue(value);
+
+    const colId = props.column.getColId();
+
+    if (value === '') {
+      props.api.setColumnFilterModel(colId, null).then(() => {
+        props.api.onFilterChanged();
+      });
+    } else {
+      props.api
+        .setColumnFilterModel(colId, {
+          filterType: 'text',
+          type: 'equals',
+          filter: value,
+        })
+        .then(() => {
+          props.api.onFilterChanged();
+        });
+    }
+  };
+
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+      }}
+    >
+      <select
+        value={currentValue}
+        onChange={onSelectChange}
+        style={{
+          width: '100%',
+          height: '32px',
+          border: '1px solid var(--ag-input-border-color)',
+          borderRadius: 'var(--ag-input-border-radius, 6px)',
+          backgroundColor: 'var(--ag-background-color)',
+          color: 'var(--ag-foreground-color)',
+          fontSize: 'var(--ag-font-size)',
+          outline: 'none',
+          boxSizing: 'border-box',
+        }}
+      >
+        <option value="">All</option>
+        {props.values.map(value => (
+          <option key={value} value={value}>
+            {value}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+// Helper type for AG Grid filter model
+interface FilterModel {
+  [key: string]: {
+    filterType: string;
+    type?: string;
+    filter?: string | number;
+    values?: string[];
+  };
+}
+
+// Helper function to extract filter values from AG Grid filter model
+const extractFilters = (filterModel: FilterModel) => {
+  const filters: {
+    gender?: ApiV1PersonsGetGenderEnum;
+    civilStatus?: ApiV1PersonsGetCivilStatusEnum;
+    displayIdFilter?: string;
+    fullNameFilter?: string;
+  } = {};
+
+  // Extract displayId filter (text filter)
+  if (filterModel.displayId?.filter) {
+    filters.displayIdFilter = String(filterModel.displayId.filter);
+  }
+
+  // Extract fullName filter (text filter)
+  if (filterModel.fullName?.filter) {
+    filters.fullNameFilter = String(filterModel.fullName.filter);
+  }
+
+  // Extract gender filter (set filter or text filter)
+  if (filterModel.gender?.values && filterModel.gender.values.length > 0) {
+    // For set filter, take the first selected value
+    filters.gender = filterModel.gender.values[0] as ApiV1PersonsGetGenderEnum;
+  } else if (filterModel.gender?.filter) {
+    filters.gender = filterModel.gender.filter as ApiV1PersonsGetGenderEnum;
+  }
+
+  // Extract civilStatus filter (set filter or text filter)
+  if (
+    filterModel.civilStatus?.values &&
+    filterModel.civilStatus.values.length > 0
+  ) {
+    // For set filter, take the first selected value
+    filters.civilStatus = filterModel.civilStatus
+      .values[0] as ApiV1PersonsGetCivilStatusEnum;
+  } else if (filterModel.civilStatus?.filter) {
+    filters.civilStatus = filterModel.civilStatus
+      .filter as ApiV1PersonsGetCivilStatusEnum;
+  }
+
+  return filters;
+};
 
 const PersonsPage = () => {
   const navigate = useNavigate();
@@ -45,8 +171,15 @@ const PersonsPage = () => {
           const sortBy = sortModel?.colId;
           const sortDescending = sortModel?.sort === 'desc';
 
+          // Extract filter values from the filter model
+          const filters = extractFilters(rowParams.filterModel as FilterModel);
+
           try {
             const response = await personsApi.apiV1PersonsGet(
+              filters.gender,
+              filters.civilStatus,
+              filters.displayIdFilter,
+              filters.fullNameFilter,
               pageNumber,
               pageSize,
               debouncedSearchTerm || undefined,
@@ -75,6 +208,11 @@ const PersonsPage = () => {
         headerName: 'ID',
         width: 150,
         sortable: true,
+        filter: 'agTextColumnFilter',
+        filterParams: {
+          filterOptions: ['contains'],
+          maxNumConditions: 1,
+        },
       },
       {
         field: 'profileImageUrl',
@@ -139,12 +277,18 @@ const PersonsPage = () => {
         flex: 1,
         minWidth: 200,
         sortable: true,
+        filter: 'agTextColumnFilter',
+        filterParams: {
+          filterOptions: ['contains'],
+          maxNumConditions: 1,
+        },
       },
       {
         field: 'dateOfBirth',
         headerName: 'Date of Birth',
         width: 150,
         sortable: true,
+        filter: false,
         valueFormatter: params => {
           if (!params.value) return '';
           return new Date(params.value).toLocaleDateString();
@@ -155,12 +299,41 @@ const PersonsPage = () => {
         headerName: 'Gender',
         width: 120,
         sortable: true,
+        filter: 'agTextColumnFilter',
+        suppressFloatingFilterButton: true,
+        suppressHeaderFilterButton: true,
+        floatingFilterComponent: SelectFloatingFilter,
+        floatingFilterComponentParams: {
+          values: ['Male', 'Female'],
+        },
+        filterParams: {
+          filterOptions: ['equals'],
+          maxNumConditions: 1,
+        },
       },
       {
         field: 'civilStatus',
         headerName: 'Civil Status',
-        width: 140,
+        width: 160,
         sortable: true,
+        filter: 'agTextColumnFilter',
+        suppressFloatingFilterButton: true,
+        suppressHeaderFilterButton: true,
+        floatingFilterComponent: SelectFloatingFilter,
+        floatingFilterComponentParams: {
+          values: [
+            'Single',
+            'Married',
+            'SoloParent',
+            'Widow',
+            'Separated',
+            'Other',
+          ],
+        },
+        filterParams: {
+          filterOptions: ['equals'],
+          maxNumConditions: 1,
+        },
       },
       {
         headerName: 'Actions',
@@ -198,7 +371,7 @@ const PersonsPage = () => {
   const defaultColDef: ColDef = useMemo(
     () => ({
       filter: false,
-      floatingFilter: false,
+      floatingFilter: true,
       resizable: true,
     }),
     []
@@ -216,8 +389,15 @@ const PersonsPage = () => {
           const sortBy = sortModel?.colId;
           const sortDescending = sortModel?.sort === 'desc';
 
+          // Extract filter values from the filter model
+          const filters = extractFilters(rowParams.filterModel as FilterModel);
+
           try {
             const response = await personsApi.apiV1PersonsGet(
+              filters.gender,
+              filters.civilStatus,
+              filters.displayIdFilter,
+              filters.fullNameFilter,
               pageNumber,
               pageSize,
               debouncedSearchTerm || undefined,

@@ -14,10 +14,14 @@ const Header = () => {
     <Box
       as="header"
       h="60px"
+      minH="60px"
       bg="bg.panel"
       borderBottom="1px solid"
       borderColor="border.muted"
       px={6}
+      position="sticky"
+      top={0}
+      zIndex={10}
     >
       <Flex h="100%" align="center" justify="space-between">
         <Text fontSize="lg" fontWeight="semibold" color="fg">

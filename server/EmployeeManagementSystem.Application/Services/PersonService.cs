@@ -44,17 +44,51 @@ public class PersonService : IPersonService
     }
 
     /// <inheritdoc />
-    public async Task<PagedResult<PersonListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<PersonListDto>> GetPagedAsync(PersonPaginationQuery query, CancellationToken cancellationToken = default)
     {
         var queryable = _personRepository.Query();
 
+        // Apply search term filter (searches across name fields)
+        // Split by spaces to handle multi-word searches like "John Doe"
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            var searchTerm = query.SearchTerm.ToLower();
-            queryable = queryable.Where(p =>
-                p.FirstName.ToLower().Contains(searchTerm) ||
-                p.LastName.ToLower().Contains(searchTerm) ||
-                (p.MiddleName != null && p.MiddleName.ToLower().Contains(searchTerm)));
+            var searchTerms = query.SearchTerm.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var term in searchTerms)
+            {
+                queryable = queryable.Where(p =>
+                    p.FirstName.ToLower().Contains(term) ||
+                    p.LastName.ToLower().Contains(term) ||
+                    (p.MiddleName != null && p.MiddleName.ToLower().Contains(term)));
+            }
+        }
+
+        // Apply column-specific filters
+        if (!string.IsNullOrWhiteSpace(query.DisplayIdFilter))
+        {
+            queryable = queryable.Where(p => p.DisplayId.ToString().Contains(query.DisplayIdFilter));
+        }
+
+        // Split full name filter by spaces to handle multi-word searches
+        if (!string.IsNullOrWhiteSpace(query.FullNameFilter))
+        {
+            var filterTerms = query.FullNameFilter.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var term in filterTerms)
+            {
+                queryable = queryable.Where(p =>
+                    p.FirstName.ToLower().Contains(term) ||
+                    p.LastName.ToLower().Contains(term) ||
+                    (p.MiddleName != null && p.MiddleName.ToLower().Contains(term)));
+            }
+        }
+
+        if (query.Gender.HasValue)
+        {
+            queryable = queryable.Where(p => p.Gender == query.Gender.Value);
+        }
+
+        if (query.CivilStatus.HasValue)
+        {
+            queryable = queryable.Where(p => p.CivilStatus == query.CivilStatus.Value);
         }
 
         var totalCount = await queryable.CountAsync(cancellationToken);
