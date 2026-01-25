@@ -14,6 +14,7 @@ import {
   Checkbox,
   Image,
   Center,
+  Accordion,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -457,6 +458,35 @@ const PersonFormPage = () => {
     return (first + last).toUpperCase() || '?';
   };
 
+  // Generate address summary for accordion header
+  const getAddressSummary = (address: AddressFormData, index: number) => {
+    const parts = [];
+    if (address.address1) parts.push(address.address1);
+    if (address.city) parts.push(address.city);
+    if (address.province) parts.push(address.province);
+
+    const tags = [];
+    if (address.isCurrent) tags.push('Current');
+    if (address.isPermanent) tags.push('Permanent');
+
+    const summary =
+      parts.length > 0 ? parts.join(', ') : `Address ${index + 1}`;
+    const tagText = tags.length > 0 ? ` (${tags.join(', ')})` : '';
+    return `${address.addressType}: ${summary}${tagText}`;
+  };
+
+  // Generate contact summary for accordion header
+  const getContactSummary = (contact: ContactFormData, index: number) => {
+    const parts = [];
+    if (contact.mobile) parts.push(contact.mobile);
+    if (contact.email) parts.push(contact.email);
+    if (contact.landLine) parts.push(contact.landLine);
+
+    const summary =
+      parts.length > 0 ? parts.join(' | ') : `Contact ${index + 1}`;
+    return `${contact.contactType}: ${summary}`;
+  };
+
   if (loading) {
     return (
       <Flex justify="center" align="center" h="100%">
@@ -684,163 +714,224 @@ const PersonFormPage = () => {
                   No addresses added. Click &quot;Add Address&quot; to add one.
                 </Text>
               ) : (
-                <Stack gap={6}>
-                  {addresses.map((address, index) => (
-                    <Box
-                      key={index}
-                      p={4}
-                      borderWidth={1}
-                      borderRadius="md"
-                      position="relative"
-                    >
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        colorPalette="red"
-                        position="absolute"
-                        top={2}
-                        right={2}
-                        onClick={() => removeAddress(index)}
+                <Accordion.Root
+                  multiple
+                  defaultValue={addresses.map((_, i) => `address-${i}`)}
+                >
+                  <Stack gap={3}>
+                    {addresses.map((address, index) => (
+                      <Accordion.Item
+                        key={index}
+                        value={`address-${index}`}
+                        borderWidth="1px"
+                        borderRadius="md"
+                        borderColor="border.muted"
+                        overflow="hidden"
                       >
-                        Remove
-                      </Button>
-
-                      <Stack gap={4}>
-                        <Flex gap={4}>
-                          <Field.Root flex={1}>
-                            <Field.Label>Address Type</Field.Label>
-                            <NativeSelect.Root>
-                              <NativeSelect.Field
-                                value={address.addressType}
-                                onChange={e =>
-                                  updateAddress(
-                                    index,
-                                    'addressType',
-                                    e.target.value
-                                  )
-                                }
+                        <Accordion.ItemTrigger
+                          px={4}
+                          py={3}
+                          cursor="pointer"
+                          _hover={{ bg: 'bg.muted' }}
+                        >
+                          <Text
+                            fontWeight="medium"
+                            fontSize="sm"
+                            flex={1}
+                            textAlign="left"
+                          >
+                            {getAddressSummary(address, index)}
+                          </Text>
+                          <Accordion.ItemIndicator />
+                        </Accordion.ItemTrigger>
+                        <Accordion.ItemContent>
+                          <Box px={4} pb={4} pt={2}>
+                            <Flex justify="flex-end" mb={3}>
+                              <Button
+                                size="xs"
+                                variant="outline"
+                                colorPalette="red"
+                                onClick={() => removeAddress(index)}
                               >
-                                {Object.values(
-                                  CreateAddressDtoAddressTypeEnum
-                                ).map(type => (
-                                  <option key={type} value={type}>
-                                    {type}
-                                  </option>
-                                ))}
-                              </NativeSelect.Field>
-                              <NativeSelect.Indicator />
-                            </NativeSelect.Root>
-                          </Field.Root>
+                                Remove
+                              </Button>
+                            </Flex>
 
-                          <Flex gap={4} align="flex-end">
-                            <Checkbox.Root
-                              checked={address.isCurrent}
-                              onCheckedChange={e =>
-                                updateAddress(index, 'isCurrent', !!e.checked)
-                              }
-                            >
-                              <Checkbox.HiddenInput />
-                              <Checkbox.Control />
-                              <Checkbox.Label>Current</Checkbox.Label>
-                            </Checkbox.Root>
+                            <Stack gap={4}>
+                              <Flex gap={4}>
+                                <Field.Root flex={1}>
+                                  <Field.Label>Address Type</Field.Label>
+                                  <NativeSelect.Root>
+                                    <NativeSelect.Field
+                                      value={address.addressType}
+                                      onChange={e =>
+                                        updateAddress(
+                                          index,
+                                          'addressType',
+                                          e.target.value
+                                        )
+                                      }
+                                    >
+                                      {Object.values(
+                                        CreateAddressDtoAddressTypeEnum
+                                      ).map(type => (
+                                        <option key={type} value={type}>
+                                          {type}
+                                        </option>
+                                      ))}
+                                    </NativeSelect.Field>
+                                    <NativeSelect.Indicator />
+                                  </NativeSelect.Root>
+                                </Field.Root>
 
-                            <Checkbox.Root
-                              checked={address.isPermanent}
-                              onCheckedChange={e =>
-                                updateAddress(index, 'isPermanent', !!e.checked)
-                              }
-                            >
-                              <Checkbox.HiddenInput />
-                              <Checkbox.Control />
-                              <Checkbox.Label>Permanent</Checkbox.Label>
-                            </Checkbox.Root>
-                          </Flex>
-                        </Flex>
+                                <Flex gap={4} align="flex-end">
+                                  <Checkbox.Root
+                                    checked={address.isCurrent}
+                                    onCheckedChange={e =>
+                                      updateAddress(
+                                        index,
+                                        'isCurrent',
+                                        !!e.checked
+                                      )
+                                    }
+                                  >
+                                    <Checkbox.HiddenInput />
+                                    <Checkbox.Control />
+                                    <Checkbox.Label>Current</Checkbox.Label>
+                                  </Checkbox.Root>
 
-                        <Field.Root required>
-                          <Field.Label>Street Address</Field.Label>
-                          <Input
-                            value={address.address1}
-                            onChange={e =>
-                              updateAddress(index, 'address1', e.target.value)
-                            }
-                            placeholder="House/Unit/Building number, Street name"
-                          />
-                        </Field.Root>
+                                  <Checkbox.Root
+                                    checked={address.isPermanent}
+                                    onCheckedChange={e =>
+                                      updateAddress(
+                                        index,
+                                        'isPermanent',
+                                        !!e.checked
+                                      )
+                                    }
+                                  >
+                                    <Checkbox.HiddenInput />
+                                    <Checkbox.Control />
+                                    <Checkbox.Label>Permanent</Checkbox.Label>
+                                  </Checkbox.Root>
+                                </Flex>
+                              </Flex>
 
-                        <Field.Root>
-                          <Field.Label>Address Line 2</Field.Label>
-                          <Input
-                            value={address.address2}
-                            onChange={e =>
-                              updateAddress(index, 'address2', e.target.value)
-                            }
-                            placeholder="Subdivision, Village, etc. (optional)"
-                          />
-                        </Field.Root>
+                              <Field.Root required>
+                                <Field.Label>Street Address</Field.Label>
+                                <Input
+                                  value={address.address1}
+                                  onChange={e =>
+                                    updateAddress(
+                                      index,
+                                      'address1',
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="House/Unit/Building number, Street name"
+                                />
+                              </Field.Root>
 
-                        <Flex gap={4}>
-                          <Field.Root flex={1}>
-                            <Field.Label>Barangay</Field.Label>
-                            <Input
-                              value={address.barangay}
-                              onChange={e =>
-                                updateAddress(index, 'barangay', e.target.value)
-                              }
-                              placeholder="Barangay"
-                            />
-                          </Field.Root>
+                              <Field.Root>
+                                <Field.Label>Address Line 2</Field.Label>
+                                <Input
+                                  value={address.address2}
+                                  onChange={e =>
+                                    updateAddress(
+                                      index,
+                                      'address2',
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="Subdivision, Village, etc. (optional)"
+                                />
+                              </Field.Root>
 
-                          <Field.Root flex={1} required>
-                            <Field.Label>City/Municipality</Field.Label>
-                            <Input
-                              value={address.city}
-                              onChange={e =>
-                                updateAddress(index, 'city', e.target.value)
-                              }
-                              placeholder="City or Municipality"
-                            />
-                          </Field.Root>
-                        </Flex>
+                              <Flex gap={4}>
+                                <Field.Root flex={1}>
+                                  <Field.Label>Barangay</Field.Label>
+                                  <Input
+                                    value={address.barangay}
+                                    onChange={e =>
+                                      updateAddress(
+                                        index,
+                                        'barangay',
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Barangay"
+                                  />
+                                </Field.Root>
 
-                        <Flex gap={4}>
-                          <Field.Root flex={1} required>
-                            <Field.Label>Province</Field.Label>
-                            <Input
-                              value={address.province}
-                              onChange={e =>
-                                updateAddress(index, 'province', e.target.value)
-                              }
-                              placeholder="Province"
-                            />
-                          </Field.Root>
+                                <Field.Root flex={1} required>
+                                  <Field.Label>City/Municipality</Field.Label>
+                                  <Input
+                                    value={address.city}
+                                    onChange={e =>
+                                      updateAddress(
+                                        index,
+                                        'city',
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="City or Municipality"
+                                  />
+                                </Field.Root>
+                              </Flex>
 
-                          <Field.Root flex={1}>
-                            <Field.Label>Zip Code</Field.Label>
-                            <Input
-                              value={address.zipCode}
-                              onChange={e =>
-                                updateAddress(index, 'zipCode', e.target.value)
-                              }
-                              placeholder="Zip Code"
-                            />
-                          </Field.Root>
+                              <Flex gap={4}>
+                                <Field.Root flex={1} required>
+                                  <Field.Label>Province</Field.Label>
+                                  <Input
+                                    value={address.province}
+                                    onChange={e =>
+                                      updateAddress(
+                                        index,
+                                        'province',
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Province"
+                                  />
+                                </Field.Root>
 
-                          <Field.Root flex={1}>
-                            <Field.Label>Country</Field.Label>
-                            <Input
-                              value={address.country}
-                              onChange={e =>
-                                updateAddress(index, 'country', e.target.value)
-                              }
-                              placeholder="Country"
-                            />
-                          </Field.Root>
-                        </Flex>
-                      </Stack>
-                    </Box>
-                  ))}
-                </Stack>
+                                <Field.Root flex={1}>
+                                  <Field.Label>Zip Code</Field.Label>
+                                  <Input
+                                    value={address.zipCode}
+                                    onChange={e =>
+                                      updateAddress(
+                                        index,
+                                        'zipCode',
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Zip Code"
+                                  />
+                                </Field.Root>
+
+                                <Field.Root flex={1}>
+                                  <Field.Label>Country</Field.Label>
+                                  <Input
+                                    value={address.country}
+                                    onChange={e =>
+                                      updateAddress(
+                                        index,
+                                        'country',
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Country"
+                                  />
+                                </Field.Root>
+                              </Flex>
+                            </Stack>
+                          </Box>
+                        </Accordion.ItemContent>
+                      </Accordion.Item>
+                    ))}
+                  </Stack>
+                </Accordion.Root>
               )}
             </Card.Body>
           </Card.Root>
@@ -861,105 +952,146 @@ const PersonFormPage = () => {
                   No contacts added. Click &quot;Add Contact&quot; to add one.
                 </Text>
               ) : (
-                <Stack gap={6}>
-                  {contacts.map((contact, index) => (
-                    <Box
-                      key={index}
-                      p={4}
-                      borderWidth={1}
-                      borderRadius="md"
-                      position="relative"
-                    >
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        colorPalette="red"
-                        position="absolute"
-                        top={2}
-                        right={2}
-                        onClick={() => removeContact(index)}
+                <Accordion.Root
+                  multiple
+                  defaultValue={contacts.map((_, i) => `contact-${i}`)}
+                >
+                  <Stack gap={3}>
+                    {contacts.map((contact, index) => (
+                      <Accordion.Item
+                        key={index}
+                        value={`contact-${index}`}
+                        borderWidth="1px"
+                        borderRadius="md"
+                        borderColor="border.muted"
+                        overflow="hidden"
                       >
-                        Remove
-                      </Button>
+                        <Accordion.ItemTrigger
+                          px={4}
+                          py={3}
+                          cursor="pointer"
+                          _hover={{ bg: 'bg.muted' }}
+                        >
+                          <Text
+                            fontWeight="medium"
+                            fontSize="sm"
+                            flex={1}
+                            textAlign="left"
+                          >
+                            {getContactSummary(contact, index)}
+                          </Text>
+                          <Accordion.ItemIndicator />
+                        </Accordion.ItemTrigger>
+                        <Accordion.ItemContent>
+                          <Box px={4} pb={4} pt={2}>
+                            <Flex justify="flex-end" mb={3}>
+                              <Button
+                                size="xs"
+                                variant="outline"
+                                colorPalette="red"
+                                onClick={() => removeContact(index)}
+                              >
+                                Remove
+                              </Button>
+                            </Flex>
 
-                      <Stack gap={4}>
-                        <Field.Root maxW="200px">
-                          <Field.Label>Contact Type</Field.Label>
-                          <NativeSelect.Root>
-                            <NativeSelect.Field
-                              value={contact.contactType}
-                              onChange={e =>
-                                updateContact(
-                                  index,
-                                  'contactType',
-                                  e.target.value
-                                )
-                              }
-                            >
-                              {Object.values(
-                                CreateContactDtoContactTypeEnum
-                              ).map(type => (
-                                <option key={type} value={type}>
-                                  {type}
-                                </option>
-                              ))}
-                            </NativeSelect.Field>
-                            <NativeSelect.Indicator />
-                          </NativeSelect.Root>
-                        </Field.Root>
+                            <Stack gap={4}>
+                              <Field.Root maxW="200px">
+                                <Field.Label>Contact Type</Field.Label>
+                                <NativeSelect.Root>
+                                  <NativeSelect.Field
+                                    value={contact.contactType}
+                                    onChange={e =>
+                                      updateContact(
+                                        index,
+                                        'contactType',
+                                        e.target.value
+                                      )
+                                    }
+                                  >
+                                    {Object.values(
+                                      CreateContactDtoContactTypeEnum
+                                    ).map(type => (
+                                      <option key={type} value={type}>
+                                        {type}
+                                      </option>
+                                    ))}
+                                  </NativeSelect.Field>
+                                  <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                              </Field.Root>
 
-                        <Flex gap={4}>
-                          <Field.Root flex={1}>
-                            <Field.Label>Mobile</Field.Label>
-                            <Input
-                              value={contact.mobile}
-                              onChange={e =>
-                                updateContact(index, 'mobile', e.target.value)
-                              }
-                              placeholder="e.g., +63 912 345 6789"
-                            />
-                          </Field.Root>
+                              <Flex gap={4}>
+                                <Field.Root flex={1}>
+                                  <Field.Label>Mobile</Field.Label>
+                                  <Input
+                                    value={contact.mobile}
+                                    onChange={e =>
+                                      updateContact(
+                                        index,
+                                        'mobile',
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="e.g., +63 912 345 6789"
+                                  />
+                                </Field.Root>
 
-                          <Field.Root flex={1}>
-                            <Field.Label>Email</Field.Label>
-                            <Input
-                              type="email"
-                              value={contact.email}
-                              onChange={e =>
-                                updateContact(index, 'email', e.target.value)
-                              }
-                              placeholder="e.g., email@example.com"
-                            />
-                          </Field.Root>
-                        </Flex>
+                                <Field.Root flex={1}>
+                                  <Field.Label>Email</Field.Label>
+                                  <Input
+                                    type="email"
+                                    value={contact.email}
+                                    onChange={e =>
+                                      updateContact(
+                                        index,
+                                        'email',
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="e.g., email@example.com"
+                                  />
+                                </Field.Root>
+                              </Flex>
 
-                        <Flex gap={4}>
-                          <Field.Root flex={1}>
-                            <Field.Label>Landline</Field.Label>
-                            <Input
-                              value={contact.landLine}
-                              onChange={e =>
-                                updateContact(index, 'landLine', e.target.value)
-                              }
-                              placeholder="e.g., (02) 1234 5678"
-                            />
-                          </Field.Root>
+                              <Flex gap={4}>
+                                <Field.Root flex={1}>
+                                  <Field.Label>Landline</Field.Label>
+                                  <Input
+                                    value={contact.landLine}
+                                    onChange={e =>
+                                      updateContact(
+                                        index,
+                                        'landLine',
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="e.g., (02) 1234 5678"
+                                  />
+                                </Field.Root>
 
-                          <Field.Root flex={1}>
-                            <Field.Label>Fax</Field.Label>
-                            <Input
-                              value={contact.fax}
-                              onChange={e =>
-                                updateContact(index, 'fax', e.target.value)
-                              }
-                              placeholder="Fax number (optional)"
-                            />
-                          </Field.Root>
-                        </Flex>
-                      </Stack>
-                    </Box>
-                  ))}
-                </Stack>
+                                <Field.Root flex={1}>
+                                  <Field.Label>Fax</Field.Label>
+                                  <Input
+                                    value={contact.fax}
+                                    onChange={e =>
+                                      updateContact(
+                                        index,
+                                        'fax',
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Fax number (optional)"
+                                  />
+                                </Field.Root>
+                              </Flex>
+                            </Stack>
+                          </Box>
+                        </Accordion.ItemContent>
+                      </Accordion.Item>
+                    ))}
+                  </Stack>
+                </Accordion.Root>
               )}
             </Card.Body>
           </Card.Root>

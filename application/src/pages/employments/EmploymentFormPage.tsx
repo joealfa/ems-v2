@@ -16,21 +16,21 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   employmentsApi,
-  personsApi,
   positionsApi,
   salaryGradesApi,
   itemsApi,
   type CreateEmploymentDto,
   type UpdateEmploymentDto,
   type EmploymentResponseDto,
-  type PersonListDto,
   type PositionResponseDto,
   type SalaryGradeResponseDto,
   type ItemResponseDto,
+  type PersonListDto,
   CreateEmploymentDtoAppointmentStatusEnum,
   CreateEmploymentDtoEmploymentStatusEnum,
   CreateEmploymentDtoEligibilityEnum,
 } from '../../api';
+import PersonSearchSelect from '../../components/PersonSearchSelect';
 
 interface EmploymentFormData {
   depEdId: string;
@@ -76,12 +76,14 @@ const EmploymentFormPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [persons, setPersons] = useState<PersonListDto[]>([]);
   const [positions, setPositions] = useState<PositionResponseDto[]>([]);
   const [salaryGrades, setSalaryGrades] = useState<SalaryGradeResponseDto[]>(
     []
   );
   const [items, setItems] = useState<ItemResponseDto[]>([]);
+  const [selectedPerson, setSelectedPerson] = useState<PersonListDto | null>(
+    null
+  );
 
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
@@ -94,21 +96,11 @@ const EmploymentFormPage = () => {
 
   const loadLookupData = async () => {
     try {
-      const [personsRes, positionsRes, salaryGradesRes, itemsRes] =
-        await Promise.all([
-          personsApi.apiV1PersonsGet(
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            1,
-            1000
-          ),
-          positionsApi.apiV1PositionsGet(1, 1000),
-          salaryGradesApi.apiV1SalarygradesGet(1, 1000),
-          itemsApi.apiV1ItemsGet(1, 1000),
-        ]);
-      setPersons(personsRes.data.items || []);
+      const [positionsRes, salaryGradesRes, itemsRes] = await Promise.all([
+        positionsApi.apiV1PositionsGet(1, 1000),
+        salaryGradesApi.apiV1SalarygradesGet(1, 1000),
+        itemsApi.apiV1ItemsGet(1, 1000),
+      ]);
       setPositions(positionsRes.data.items || []);
       setSalaryGrades(salaryGradesRes.data.items || []);
       setItems(itemsRes.data.items || []);
@@ -249,25 +241,67 @@ const EmploymentFormPage = () => {
                 <Heading size="md">Employee Selection</Heading>
               </Card.Header>
               <Card.Body>
-                <Field.Root required>
-                  <Field.Label>Select Person</Field.Label>
-                  <NativeSelect.Root>
-                    <NativeSelect.Field
-                      value={formData.personDisplayId}
-                      onChange={e =>
-                        handleChange('personDisplayId', e.target.value)
-                      }
+                <Flex gap={6}>
+                  <Box flex={1}>
+                    <Field.Root required>
+                      <Field.Label>Select Person</Field.Label>
+                      <PersonSearchSelect
+                        value={formData.personDisplayId}
+                        onChange={(value, person) => {
+                          handleChange('personDisplayId', value);
+                          setSelectedPerson(person);
+                        }}
+                      />
+                    </Field.Root>
+                  </Box>
+                  {selectedPerson && (
+                    <Box
+                      flex={1}
+                      p={4}
+                      borderWidth="1px"
+                      borderRadius="md"
+                      borderColor="border.muted"
+                      bg="bg"
                     >
-                      <option value="">-- Select a Person --</option>
-                      {persons.map(person => (
-                        <option key={person.displayId} value={person.displayId}>
-                          {person.fullName} ({person.displayId})
-                        </option>
-                      ))}
-                    </NativeSelect.Field>
-                    <NativeSelect.Indicator />
-                  </NativeSelect.Root>
-                </Field.Root>
+                      <Stack gap={2}>
+                        <Box>
+                          <Text fontSize="sm" color="fg.muted">
+                            Full Name
+                          </Text>
+                          <Text fontWeight="medium">
+                            {selectedPerson.fullName}
+                          </Text>
+                        </Box>
+                        <Flex gap={6}>
+                          <Box>
+                            <Text fontSize="sm" color="fg.muted">
+                              Date of Birth
+                            </Text>
+                            <Text>
+                              {selectedPerson.dateOfBirth
+                                ? new Date(
+                                    selectedPerson.dateOfBirth
+                                  ).toLocaleDateString()
+                                : 'N/A'}
+                            </Text>
+                          </Box>
+                          <Box>
+                            <Text fontSize="sm" color="fg.muted">
+                              Gender
+                            </Text>
+                            <Text>{selectedPerson.gender || 'N/A'}</Text>
+                          </Box>
+                          <Box>
+                            <Text fontSize="sm" color="fg.muted">
+                              Civil Status
+                            </Text>
+                            <Text>{selectedPerson.civilStatus || 'N/A'}</Text>
+                          </Box>
+                        </Flex>
+                      </Stack>
+                    </Box>
+                  )}
+                </Flex>
               </Card.Body>
             </Card.Root>
           )}
