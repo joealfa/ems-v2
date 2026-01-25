@@ -11,6 +11,7 @@ export const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable sending cookies with requests
 });
 
 // API configuration for generated clients
@@ -19,7 +20,6 @@ export const apiConfiguration = new Configuration({
 });
 
 const ACCESS_TOKEN_KEY = 'accessToken';
-const REFRESH_TOKEN_KEY = 'refreshToken';
 const TOKEN_EXPIRY_KEY = 'tokenExpiry';
 
 let isRefreshing = false;
@@ -88,34 +88,18 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-
-      if (!refreshToken) {
-        isRefreshing = false;
-        clearAuthStorage();
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-
       try {
+        // Refresh token is sent automatically via HttpOnly cookie
         const response = await axios.post(
           `${API_BASE_URL}/api/v1/Auth/refresh`,
-          {
-            refreshToken,
-          }
+          {}, // Empty body - refresh token is in cookie
+          { withCredentials: true } // Ensure cookies are sent
         );
 
-        const {
-          accessToken,
-          refreshToken: newRefreshToken,
-          expiresOn,
-        } = response.data;
+        const { accessToken, expiresOn } = response.data;
 
         if (accessToken) {
           localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-        }
-        if (newRefreshToken) {
-          localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
         }
         if (expiresOn) {
           localStorage.setItem(TOKEN_EXPIRY_KEY, expiresOn);
@@ -140,7 +124,7 @@ axiosInstance.interceptors.response.use(
 
 function clearAuthStorage() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(TOKEN_EXPIRY_KEY);
   localStorage.removeItem('user');
+  // Refresh token is in HttpOnly cookie, managed by the server
 }

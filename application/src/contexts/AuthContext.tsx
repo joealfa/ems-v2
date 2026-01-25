@@ -13,7 +13,6 @@ import { AuthContext, type AuthContextType } from './AuthContextType';
 export { AuthContext, type AuthContextType } from './AuthContextType';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
-const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
 const TOKEN_EXPIRY_KEY = 'tokenExpiry';
 
@@ -29,11 +28,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const clearAuthData = useCallback(() => {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(TOKEN_EXPIRY_KEY);
     setAccessToken(null);
     setUser(null);
+    // Refresh token is in HttpOnly cookie, will be cleared by server on logout
   }, []);
 
   const saveAuthData = useCallback((response: AuthResponseDto) => {
@@ -41,9 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
       setAccessToken(response.accessToken);
     }
-    if (response.refreshToken) {
-      localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
-    }
+    // refreshToken is set as HttpOnly cookie by the server
     if (response.expiresOn) {
       localStorage.setItem(TOKEN_EXPIRY_KEY, response.expiresOn);
     }
@@ -54,16 +51,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const refreshToken = useCallback(async (): Promise<string | null> => {
-    const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-    if (!storedRefreshToken) {
-      clearAuthData();
-      return null;
-    }
-
     try {
-      const response = await authApi.apiV1AuthRefreshPost({
-        refreshToken: storedRefreshToken,
-      });
+      // Refresh token is sent automatically via HttpOnly cookie
+      const response = await authApi.apiV1AuthRefreshPost({});
       saveAuthData(response.data);
       return response.data.accessToken || null;
     } catch {
@@ -88,14 +78,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const logout = useCallback(async () => {
-    const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
     const storedAccessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
 
-    if (storedRefreshToken && storedAccessToken) {
+    if (storedAccessToken) {
       try {
+        // Refresh token is sent automatically via HttpOnly cookie
         await axiosInstance.post(
           '/api/v1/Auth/revoke',
-          { refreshToken: storedRefreshToken },
+          {}, // Empty body - refresh token is in cookie
           {
             headers: {
               Authorization: `Bearer ${storedAccessToken}`,
