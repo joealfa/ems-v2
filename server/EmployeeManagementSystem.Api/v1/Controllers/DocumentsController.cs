@@ -12,7 +12,7 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 /// API controller for managing person documents.
 /// </summary>
 [Authorize]
-[Route("api/v1/persons/{personDisplayId:long}/documents")]
+[Route("api/v1/Persons/{displayId:long}/documents")]
 public class DocumentsController : ApiControllerBase
 {
     private readonly IDocumentService _documentService;
@@ -50,25 +50,25 @@ public class DocumentsController : ApiControllerBase
     /// <summary>
     /// Gets a paginated list of documents for a person.
     /// </summary>
-    /// <param name="personDisplayId">The person's display ID.</param>
+    /// <param name="displayId">The person's display ID.</param>
     /// <param name="query">Pagination and filtering parameters.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A paginated list of documents.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<DocumentListDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<DocumentListDto>>> GetAll(
-        long personDisplayId,
+        long displayId,
         [FromQuery] PaginationQuery query,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.GetPagedAsync(personDisplayId, query, cancellationToken);
+        var result = await _documentService.GetPagedAsync(displayId, query, cancellationToken);
         return Ok(result);
     }
 
     /// <summary>
     /// Gets a document by display ID.
     /// </summary>
-    /// <param name="personDisplayId">The person's display ID.</param>
+    /// <param name="displayId">The person's display ID.</param>
     /// <param name="documentDisplayId">The document's display ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The document details.</returns>
@@ -76,18 +76,18 @@ public class DocumentsController : ApiControllerBase
     [ProducesResponseType(typeof(DocumentResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<DocumentResponseDto>> GetByDisplayId(
-        long personDisplayId,
+        long displayId,
         long documentDisplayId,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.GetByDisplayIdAsync(personDisplayId, documentDisplayId, cancellationToken);
+        var result = await _documentService.GetByDisplayIdAsync(displayId, documentDisplayId, cancellationToken);
         return ToActionResult(result);
     }
 
     /// <summary>
     /// Uploads a document for a person.
     /// </summary>
-    /// <param name="personDisplayId">The person's display ID.</param>
+    /// <param name="displayId">The person's display ID.</param>
     /// <param name="file">The file to upload.</param>
     /// <param name="description">Optional description for the document.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -99,7 +99,7 @@ public class DocumentsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [RequestSizeLimit(MaxFileSizeBytes)]
     public async Task<ActionResult<DocumentResponseDto>> Upload(
-        long personDisplayId,
+        long displayId,
         IFormFile file,
         [FromForm] string? description,
         CancellationToken cancellationToken)
@@ -122,14 +122,14 @@ public class DocumentsController : ApiControllerBase
             Description = description
         };
 
-        var result = await _documentService.UploadAsync(personDisplayId, dto, CurrentUserEmail, cancellationToken);
-        return ToCreatedResult(result, nameof(GetByDisplayId), new { personDisplayId, documentDisplayId = result.Value?.DisplayId ?? 0 });
+        var result = await _documentService.UploadAsync(displayId, dto, CurrentUserEmail, cancellationToken);
+        return ToCreatedResult(result, nameof(GetByDisplayId), new { displayId, documentDisplayId = result.Value?.DisplayId ?? 0 });
     }
 
     /// <summary>
     /// Updates document metadata.
     /// </summary>
-    /// <param name="personDisplayId">The person's display ID.</param>
+    /// <param name="displayId">The person's display ID.</param>
     /// <param name="documentDisplayId">The document's display ID.</param>
     /// <param name="dto">The update data.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -138,19 +138,19 @@ public class DocumentsController : ApiControllerBase
     [ProducesResponseType(typeof(DocumentResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<DocumentResponseDto>> Update(
-        long personDisplayId,
+        long displayId,
         long documentDisplayId,
         [FromBody] UpdateDocumentDto dto,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.UpdateAsync(personDisplayId, documentDisplayId, dto, CurrentUserEmail, cancellationToken);
+        var result = await _documentService.UpdateAsync(displayId, documentDisplayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }
 
     /// <summary>
     /// Downloads a document.
     /// </summary>
-    /// <param name="personDisplayId">The person's display ID.</param>
+    /// <param name="displayId">The person's display ID.</param>
     /// <param name="documentDisplayId">The document's display ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The document file.</returns>
@@ -158,18 +158,18 @@ public class DocumentsController : ApiControllerBase
     [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Download(
-        long personDisplayId,
+        long displayId,
         long documentDisplayId,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.DownloadAsync(personDisplayId, documentDisplayId, cancellationToken);
+        var result = await _documentService.DownloadAsync(displayId, documentDisplayId, cancellationToken);
         return ToFileResult(result);
     }
 
     /// <summary>
     /// Deletes a document.
     /// </summary>
-    /// <param name="personDisplayId">The person's display ID.</param>
+    /// <param name="displayId">The person's display ID.</param>
     /// <param name="documentDisplayId">The document's display ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>No content if successful.</returns>
@@ -177,18 +177,18 @@ public class DocumentsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(
-        long personDisplayId,
+        long displayId,
         long documentDisplayId,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.DeleteAsync(personDisplayId, documentDisplayId, CurrentUserEmail, cancellationToken);
+        var result = await _documentService.DeleteAsync(displayId, documentDisplayId, CurrentUserEmail, cancellationToken);
         return ToNoContentResult(result);
     }
 
     /// <summary>
     /// Uploads a profile image for a person.
     /// </summary>
-    /// <param name="personDisplayId">The person's display ID.</param>
+    /// <param name="displayId">The person's display ID.</param>
     /// <param name="file">The image file to upload.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The URL of the uploaded profile image.</returns>
@@ -199,7 +199,7 @@ public class DocumentsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [RequestSizeLimit(MaxImageSizeBytes)]
     public async Task<ActionResult<string>> UploadProfileImage(
-        long personDisplayId,
+        long displayId,
         IFormFile file,
         CancellationToken cancellationToken)
     {
@@ -220,14 +220,14 @@ public class DocumentsController : ApiControllerBase
             FileSizeBytes = file.Length
         };
 
-        var result = await _documentService.UploadProfileImageAsync(personDisplayId, dto, CurrentUserEmail, cancellationToken);
+        var result = await _documentService.UploadProfileImageAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }
 
     /// <summary>
     /// Gets a person's profile image.
     /// </summary>
-    /// <param name="personDisplayId">The person's display ID.</param>
+    /// <param name="displayId">The person's display ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The profile image file.</returns>
     [AllowAnonymous]
@@ -235,27 +235,27 @@ public class DocumentsController : ApiControllerBase
     [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProfileImage(
-        long personDisplayId,
+        long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.GetProfileImageAsync(personDisplayId, cancellationToken);
+        var result = await _documentService.GetProfileImageAsync(displayId, cancellationToken);
         return ToFileResult(result);
     }
 
     /// <summary>
     /// Deletes a person's profile image.
     /// </summary>
-    /// <param name="personDisplayId">The person's display ID.</param>
+    /// <param name="displayId">The person's display ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>No content if successful.</returns>
     [HttpDelete("profile-image")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteProfileImage(
-        long personDisplayId,
+        long displayId,
         CancellationToken cancellationToken)
     {
-        var result = await _documentService.DeleteProfileImageAsync(personDisplayId, CurrentUserEmail, cancellationToken);
+        var result = await _documentService.DeleteProfileImageAsync(displayId, CurrentUserEmail, cancellationToken);
         return ToNoContentResult(result);
     }
 }
