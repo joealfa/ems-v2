@@ -8,6 +8,9 @@ import {
   Badge,
   Spinner,
   Center,
+  IconButton,
+  Tooltip,
+  Portal,
 } from '@chakra-ui/react';
 import { AgGridReact } from 'ag-grid-react';
 import { useDebounce } from '../../hooks';
@@ -29,6 +32,39 @@ import {
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+// Icon components for action buttons
+const EyeIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const EditIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </svg>
+);
 
 // Custom floating filter component for dropdown selection
 interface SelectFloatingFilterProps extends IFloatingFilterParams {
@@ -215,6 +251,79 @@ const EmploymentsPage = () => {
   const columnDefs: ColDef<EmploymentListDto>[] = useMemo(
     () => [
       {
+        headerName: 'Actions',
+        width: 100,
+        sortable: false,
+        filter: false,
+        cellRenderer: (params: ICellRendererParams<EmploymentListDto>) => {
+          return (
+            <Flex
+              gap={1}
+              align="center"
+              h="100%"
+              css={{
+                '& button': {
+                  padding: '5px !important',
+                  minWidth: 'auto !important',
+                  minHeight: 'auto !important',
+                },
+              }}
+            >
+              <Tooltip.Root
+                positioning={{ placement: 'top' }}
+                openDelay={300}
+                closeDelay={0}
+              >
+                <Tooltip.Trigger asChild>
+                  <IconButton
+                    aria-label="View details"
+                    size="xs"
+                    variant="ghost"
+                    onClick={() =>
+                      navigate(`/employments/${params.data?.displayId}`)
+                    }
+                  >
+                    <EyeIcon />
+                  </IconButton>
+                </Tooltip.Trigger>
+                <Portal>
+                  <Tooltip.Positioner>
+                    <Tooltip.Content px={1} py={1}>
+                      View details
+                    </Tooltip.Content>
+                  </Tooltip.Positioner>
+                </Portal>
+              </Tooltip.Root>
+              <Tooltip.Root
+                positioning={{ placement: 'top' }}
+                openDelay={300}
+                closeDelay={0}
+              >
+                <Tooltip.Trigger asChild>
+                  <IconButton
+                    aria-label="Edit employment"
+                    size="xs"
+                    variant="ghost"
+                    onClick={() =>
+                      navigate(`/employments/${params.data?.displayId}/edit`)
+                    }
+                  >
+                    <EditIcon />
+                  </IconButton>
+                </Tooltip.Trigger>
+                <Portal>
+                  <Tooltip.Positioner>
+                    <Tooltip.Content px={1} py={1}>
+                      Edit employment
+                    </Tooltip.Content>
+                  </Tooltip.Positioner>
+                </Portal>
+              </Tooltip.Root>
+            </Flex>
+          );
+        },
+      },
+      {
         field: 'displayId',
         headerName: 'ID',
         width: 150,
@@ -306,37 +415,6 @@ const EmploymentsPage = () => {
             <Badge colorPalette={params.value ? 'green' : 'red'}>
               {params.value ? 'Yes' : 'No'}
             </Badge>
-          );
-        },
-      },
-      {
-        headerName: 'Actions',
-        width: 160,
-        sortable: false,
-        filter: false,
-        cellRenderer: (params: ICellRendererParams<EmploymentListDto>) => {
-          return (
-            <Flex gap={2} align="center" h="100%">
-              <Button
-                size="xs"
-                variant="outline"
-                onClick={() =>
-                  navigate(`/employments/${params.data?.displayId}`)
-                }
-              >
-                View
-              </Button>
-              <Button
-                size="xs"
-                variant="outline"
-                colorPalette="blue"
-                onClick={() =>
-                  navigate(`/employments/${params.data?.displayId}/edit`)
-                }
-              >
-                Edit
-              </Button>
-            </Flex>
           );
         },
       },
