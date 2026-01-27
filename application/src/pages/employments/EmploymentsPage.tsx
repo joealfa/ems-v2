@@ -18,12 +18,147 @@ import {
   type GridReadyEvent,
   type IGetRowsParams,
   type ICellRendererParams,
+  type IFloatingFilterParams,
 } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
-import { employmentsApi, type EmploymentListDto } from '../../api';
+import {
+  employmentsApi,
+  type EmploymentListDto,
+  ApiV1EmploymentsGetEmploymentStatusEnum,
+} from '../../api';
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+// Custom floating filter component for dropdown selection
+interface SelectFloatingFilterProps extends IFloatingFilterParams {
+  values: string[];
+}
+
+const SelectFloatingFilter = (props: SelectFloatingFilterProps) => {
+  const [currentValue, setCurrentValue] = useState<string>('');
+
+  const onSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+    setCurrentValue(value);
+
+    const colId = props.column.getColId();
+
+    if (value === '') {
+      props.api.setColumnFilterModel(colId, null).then(() => {
+        props.api.onFilterChanged();
+      });
+    } else {
+      props.api
+        .setColumnFilterModel(colId, {
+          filterType: 'text',
+          type: 'equals',
+          filter: value,
+        })
+        .then(() => {
+          props.api.onFilterChanged();
+        });
+    }
+  };
+
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+      }}
+    >
+      <select
+        value={currentValue}
+        onChange={onSelectChange}
+        style={{
+          width: '100%',
+          height: '32px',
+          border: '1px solid var(--ag-input-border-color)',
+          borderRadius: 'var(--ag-input-border-radius, 6px)',
+          backgroundColor: 'var(--ag-background-color)',
+          color: 'var(--ag-foreground-color)',
+          fontSize: 'var(--ag-font-size)',
+          outline: 'none',
+          boxSizing: 'border-box',
+        }}
+      >
+        <option value="">All</option>
+        {props.values.map(value => (
+          <option key={value} value={value}>
+            {value}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+// Helper type for AG Grid filter model
+interface FilterModel {
+  [key: string]: {
+    filterType: string;
+    type?: string;
+    filter?: string | number;
+    values?: string[];
+  };
+}
+
+// Helper function to extract filter values from AG Grid filter model
+const extractFilters = (filterModel: FilterModel) => {
+  const filters: {
+    employmentStatus?: ApiV1EmploymentsGetEmploymentStatusEnum;
+    isActive?: boolean;
+    displayIdFilter?: string;
+    employeeNameFilter?: string;
+    depEdIdFilter?: string;
+    positionFilter?: string;
+  } = {};
+
+  // Extract displayId filter (text filter)
+  if (filterModel.displayId?.filter) {
+    filters.displayIdFilter = String(filterModel.displayId.filter);
+  }
+
+  // Extract employeeFullName filter (text filter)
+  if (filterModel.employeeFullName?.filter) {
+    filters.employeeNameFilter = String(filterModel.employeeFullName.filter);
+  }
+
+  // Extract depEdId filter (text filter)
+  if (filterModel.depEdId?.filter) {
+    filters.depEdIdFilter = String(filterModel.depEdId.filter);
+  }
+
+  // Extract positionTitle filter (text filter)
+  if (filterModel.positionTitle?.filter) {
+    filters.positionFilter = String(filterModel.positionTitle.filter);
+  }
+
+  // Extract employmentStatus filter (set filter or text filter)
+  if (
+    filterModel.employmentStatus?.values &&
+    filterModel.employmentStatus.values.length > 0
+  ) {
+    filters.employmentStatus = filterModel.employmentStatus
+      .values[0] as ApiV1EmploymentsGetEmploymentStatusEnum;
+  } else if (filterModel.employmentStatus?.filter) {
+    filters.employmentStatus = String(
+      filterModel.employmentStatus.filter
+    ) as ApiV1EmploymentsGetEmploymentStatusEnum;
+  }
+
+  // Extract isActive filter (set filter or text filter)
+  if (filterModel.isActive?.values && filterModel.isActive.values.length > 0) {
+    filters.isActive = filterModel.isActive.values[0] === 'Yes';
+  } else if (filterModel.isActive?.filter) {
+    filters.isActive = filterModel.isActive.filter === 'Yes';
+  }
+
+  return filters;
+};
 
 const EmploymentsPage = () => {
   const navigate = useNavigate();
@@ -45,8 +180,17 @@ const EmploymentsPage = () => {
           const sortBy = sortModel?.colId;
           const sortDescending = sortModel?.sort === 'desc';
 
+          // Extract filter values from the filter model
+          const filters = extractFilters(rowParams.filterModel as FilterModel);
+
           try {
             const response = await employmentsApi.apiV1EmploymentsGet(
+              filters.employmentStatus,
+              filters.isActive,
+              filters.displayIdFilter,
+              filters.employeeNameFilter,
+              filters.depEdIdFilter,
+              filters.positionFilter,
               pageNumber,
               pageSize,
               debouncedSearchTerm || undefined,
@@ -75,6 +219,11 @@ const EmploymentsPage = () => {
         headerName: 'ID',
         width: 150,
         sortable: true,
+        filter: 'agTextColumnFilter',
+        filterParams: {
+          filterOptions: ['contains'],
+          maxNumConditions: 1,
+        },
       },
       {
         field: 'employeeFullName',
@@ -82,12 +231,22 @@ const EmploymentsPage = () => {
         flex: 1,
         minWidth: 200,
         sortable: true,
+        filter: 'agTextColumnFilter',
+        filterParams: {
+          filterOptions: ['contains'],
+          maxNumConditions: 1,
+        },
       },
       {
         field: 'depEdId',
         headerName: 'DepEd ID',
         width: 180,
         sortable: true,
+        filter: 'agTextColumnFilter',
+        filterParams: {
+          filterOptions: ['contains'],
+          maxNumConditions: 1,
+        },
       },
       {
         field: 'positionTitle',
@@ -95,12 +254,28 @@ const EmploymentsPage = () => {
         flex: 1,
         minWidth: 150,
         sortable: true,
+        filter: 'agTextColumnFilter',
+        filterParams: {
+          filterOptions: ['contains'],
+          maxNumConditions: 1,
+        },
       },
       {
         field: 'employmentStatus',
         headerName: 'Status',
         width: 130,
         sortable: true,
+        filter: 'agTextColumnFilter',
+        suppressFloatingFilterButton: true,
+        suppressHeaderFilterButton: true,
+        floatingFilterComponent: SelectFloatingFilter,
+        floatingFilterComponentParams: {
+          values: ['Regular', 'Permanent'],
+        },
+        filterParams: {
+          filterOptions: ['equals'],
+          maxNumConditions: 1,
+        },
         cellRenderer: (params: ICellRendererParams<EmploymentListDto>) => {
           const value = params.value;
           return (
@@ -115,6 +290,17 @@ const EmploymentsPage = () => {
         headerName: 'Active',
         width: 100,
         sortable: true,
+        filter: 'agTextColumnFilter',
+        suppressFloatingFilterButton: true,
+        suppressHeaderFilterButton: true,
+        floatingFilterComponent: SelectFloatingFilter,
+        floatingFilterComponentParams: {
+          values: ['Yes', 'No'],
+        },
+        filterParams: {
+          filterOptions: ['equals'],
+          maxNumConditions: 1,
+        },
         cellRenderer: (params: ICellRendererParams<EmploymentListDto>) => {
           return (
             <Badge colorPalette={params.value ? 'green' : 'red'}>
@@ -161,7 +347,7 @@ const EmploymentsPage = () => {
   const defaultColDef: ColDef = useMemo(
     () => ({
       filter: false,
-      floatingFilter: false,
+      floatingFilter: true,
       resizable: true,
     }),
     []
@@ -179,8 +365,17 @@ const EmploymentsPage = () => {
           const sortBy = sortModel?.colId;
           const sortDescending = sortModel?.sort === 'desc';
 
+          // Extract filter values from the filter model
+          const filters = extractFilters(rowParams.filterModel as FilterModel);
+
           try {
             const response = await employmentsApi.apiV1EmploymentsGet(
+              filters.employmentStatus,
+              filters.isActive,
+              filters.displayIdFilter,
+              filters.employeeNameFilter,
+              filters.depEdIdFilter,
+              filters.positionFilter,
               pageNumber,
               pageSize,
               debouncedSearchTerm || undefined,

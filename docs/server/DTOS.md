@@ -226,6 +226,47 @@ public class PersonListDto
 
 ## Employment DTOs
 
+### EmploymentPaginationQuery
+
+Query parameters for employment list with column filtering support.
+
+```csharp
+public class EmploymentPaginationQuery : PaginationQuery
+{
+    /// <summary>
+    /// Filter by employment status (Regular, Permanent).
+    /// </summary>
+    public EmploymentStatus? EmploymentStatus { get; set; }
+
+    /// <summary>
+    /// Filter by active status.
+    /// </summary>
+    public bool? IsActive { get; set; }
+
+    /// <summary>
+    /// Filter by display ID (contains search).
+    /// </summary>
+    public string? DisplayIdFilter { get; set; }
+
+    /// <summary>
+    /// Filter by employee name (contains search, supports multi-word).
+    /// </summary>
+    public string? EmployeeNameFilter { get; set; }
+
+    /// <summary>
+    /// Filter by DepEd ID (contains search).
+    /// </summary>
+    public string? DepEdIdFilter { get; set; }
+
+    /// <summary>
+    /// Filter by position title (contains search).
+    /// </summary>
+    public string? PositionFilter { get; set; }
+}
+```
+
+**Note:** Multi-word filters (e.g., "John Doe") are split by spaces, and ALL terms must match. This allows filtering by full name even when names are stored separately.
+
 ### CreateEmploymentDto
 
 ```csharp

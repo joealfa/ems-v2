@@ -87,7 +87,7 @@ public class EmploymentServiceTests
     public async Task GetPagedAsync_ReturnsPagedResult()
     {
         // Arrange
-        PaginationQuery query = new() { PageNumber = 1, PageSize = 10 };
+        EmploymentPaginationQuery query = new() { PageNumber = 1, PageSize = 10 };
         IQueryable<Employment> employments = new List<Employment>
         {
             CreateTestEmployment(100000000001L),
@@ -110,7 +110,7 @@ public class EmploymentServiceTests
     public async Task GetPagedAsync_WithSearchTerm_FiltersResults()
     {
         // Arrange
-        PaginationQuery query = new() { PageNumber = 1, PageSize = 10, SearchTerm = "John" };
+        EmploymentPaginationQuery query = new() { PageNumber = 1, PageSize = 10, SearchTerm = "John" };
         IQueryable<Employment> employments = new List<Employment>
         {
             CreateTestEmployment(100000000001L, personFirstName: "John", personLastName: "Doe"),
@@ -132,7 +132,7 @@ public class EmploymentServiceTests
     public async Task GetPagedAsync_WithPagination_ReturnsCorrectPage()
     {
         // Arrange
-        PaginationQuery query = new() { PageNumber = 2, PageSize = 2 };
+        EmploymentPaginationQuery query = new() { PageNumber = 2, PageSize = 2 };
         IQueryable<Employment> employments = new List<Employment>
         {
             CreateTestEmployment(100000000001L, personFirstName: "Alice", personLastName: "Anderson"),

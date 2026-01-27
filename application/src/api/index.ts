@@ -59,3 +59,4 @@ export {
   ApiV1PersonsGetGenderEnum,
   ApiV1PersonsGetCivilStatusEnum,
 } from './generated/api/persons-api';
+export { ApiV1EmploymentsGetEmploymentStatusEnum } from './generated/api/employments-api';

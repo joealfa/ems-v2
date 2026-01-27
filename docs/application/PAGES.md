@@ -121,44 +121,45 @@ const handleGoogleSuccess = async (response: CredentialResponse) => {
 
 **Route:** `/persons`
 
-Displays all persons with AG Grid infinite scrolling.
+Displays all persons with AG Grid infinite scrolling and advanced filtering.
 
 **Features:**
 - Server-side pagination with infinite scroll
-- Debounced search (300ms)
+- Debounced global search (300ms) - supports multi-word searches (e.g., "John Doe")
+- Column-level filtering with floating filters
 - Sortable columns
 - Profile image thumbnail
-- Click row to view details
+- Custom dropdown filters for Gender and Civil Status columns
 - "Add New Person" button
 
 **Grid Columns:**
 
-| Column        | Field             | Features             |
-|---------------|-------------------|----------------------|
-| Profile       | `profileImageUrl` | Image thumbnail      |
-| Name          | `fullName`        | Sortable, searchable |
-| Date of Birth | `dateOfBirth`     | Date formatted       |
-| Gender        | `gender`          | Badge display        |
-| Civil Status  | `civilStatus`     | Badge display        |
+| Column        | Field             | Filter Type        | Features                    |
+|---------------|-------------------|--------------------|-----------------------------|
+| ID            | `displayId`       | Text (contains)    | Sortable, filterable        |
+| Profile       | `profileImageUrl` | None               | Image thumbnail             |
+| Full Name     | `fullName`        | Text (contains)    | Sortable, filterable        |
+| Date of Birth | `dateOfBirth`     | None               | Date formatted              |
+| Gender        | `gender`          | Dropdown (equals)  | Male/Female                 |
+| Civil Status  | `civilStatus`     | Dropdown (equals)  | Single/Married/etc.         |
+| Actions       | -                 | None               | View/Edit buttons           |
 
-**Data Source Pattern:**
+**Custom Floating Filters:**
+
+The Gender and Civil Status columns use a custom `SelectFloatingFilter` component:
 
 ```tsx
-const dataSource: IDatasource = {
-  getRows: async (params) => {
-    const page = Math.floor(params.startRow / pageSize) + 1;
-    const response = await personsApi.apiV1PersonsGet(
-      page, 
-      pageSize, 
-      debouncedSearch
-    );
-    params.successCallback(
-      response.data.items, 
-      response.data.totalCount
-    );
-  }
-};
+floatingFilterComponent: SelectFloatingFilter,
+floatingFilterComponentParams: {
+  values: ['Male', 'Female'],  // For Gender
+  // or
+  values: ['Single', 'Married', 'SoloParent', 'Widow', 'Separated', 'Other'],  // For Civil Status
+}
 ```
+
+**Search Behavior:**
+- Global search splits by spaces for multi-word searches
+- Searching "John Doe" matches records containing both "John" AND "Doe" in name fields
 
 ---
 
@@ -391,16 +392,44 @@ Displays school information with related addresses and contacts.
 
 **Route:** `/employments`
 
+Displays all employments with AG Grid infinite scrolling and advanced filtering.
+
+**Features:**
+- Server-side pagination with infinite scroll
+- Debounced global search (300ms) - supports multi-word searches (e.g., "John Doe")
+- Column-level filtering with floating filters
+- Sortable columns
+- Custom dropdown filters for Status and Active columns
+
 **Grid Columns:**
 
-| Column       | Field              |
-|--------------|--------------------|
-| Person       | `personFullName`   |
-| Position     | `positionTitle`    |
-| Salary Grade | `salaryGradeName`  |
-| Item         | `itemName`         |
-| Status       | `employmentStatus` |
-| Active       | `isActive`         |
+| Column        | Field              | Filter Type        | Features                    |
+|---------------|--------------------|--------------------|------------------------------|
+| ID            | `displayId`        | Text (contains)    | Sortable, filterable         |
+| Employee Name | `employeeFullName` | Text (contains)    | Sortable, filterable         |
+| DepEd ID      | `depEdId`          | Text (contains)    | Sortable, filterable         |
+| Position      | `positionTitle`    | Text (contains)    | Sortable, filterable         |
+| Status        | `employmentStatus` | Dropdown (equals)  | Regular/Permanent, Badge     |
+| Active        | `isActive`         | Dropdown (equals)  | Yes/No, Badge                |
+| Actions       | -                  | None               | View/Edit buttons            |
+
+**Custom Floating Filters:**
+
+The Status and Active columns use a custom `SelectFloatingFilter` component for dropdown-based filtering:
+
+```tsx
+floatingFilterComponent: SelectFloatingFilter,
+floatingFilterComponentParams: {
+  values: ['Regular', 'Permanent'],  // For Status
+  // or
+  values: ['Yes', 'No'],  // For Active
+}
+```
+
+**Search Behavior:**
+- Global search splits by spaces for multi-word searches
+- Searching "John Doe" matches records containing both "John" AND "Doe" in name fields
+- Searches across: Employee Name, DepEd ID, Position Title
 
 ---
 

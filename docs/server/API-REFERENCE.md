@@ -266,6 +266,27 @@ DELETE /api/v1/persons/{displayId}
 GET /api/v1/employments
 ```
 
+**Query Parameters:**
+
+| Parameter          | Type    | Default | Description                                      |
+|--------------------|---------|---------|--------------------------------------------------|
+| `employmentStatus` | enum    | null    | Filter by employment status (Regular, Permanent) |
+| `isActive`         | bool    | null    | Filter by active status                          |
+| `displayIdFilter`  | string  | null    | Filter by display ID (contains)                  |
+| `employeeNameFilter` | string | null   | Filter by employee name (contains, multi-word)   |
+| `depEdIdFilter`    | string  | null    | Filter by DepEd ID (contains)                    |
+| `positionFilter`   | string  | null    | Filter by position title (contains)              |
+| `pageNumber`       | int     | 1       | Page number (1-based)                            |
+| `pageSize`         | int     | 10      | Items per page (max 100)                         |
+| `searchTerm`       | string  | null    | Global search across all searchable fields       |
+| `sortBy`           | string  | null    | Sort field                                       |
+| `sortDescending`   | bool    | false   | Sort direction                                   |
+
+**Search Behavior:**
+- The `searchTerm` parameter searches across employee name, DepEd ID, and position title
+- Multi-word searches (e.g., "John Doe") are split by spaces and ALL terms must match
+- This allows searching by full name even when names are stored separately (FirstName, LastName)
+
 **Response**: `PagedResult<EmploymentListDto>`
 
 ### Get Employment by DisplayId

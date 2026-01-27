@@ -421,3 +421,39 @@ public class EmploymentSchoolResponseDto : BaseResponseDto
     /// </summary>
     public bool IsActive { get; init; }
 }
+
+/// <summary>
+/// Query parameters for employment pagination with column filtering support.
+/// </summary>
+public class EmploymentPaginationQuery : PaginationQuery
+{
+    /// <summary>
+    /// Gets or sets the employment status filter.
+    /// </summary>
+    public EmploymentStatus? EmploymentStatus { get; set; }
+
+    /// <summary>
+    /// Gets or sets the is active filter.
+    /// </summary>
+    public bool? IsActive { get; set; }
+
+    /// <summary>
+    /// Gets or sets the display ID filter (contains search).
+    /// </summary>
+    public string? DisplayIdFilter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the employee name filter (contains search).
+    /// </summary>
+    public string? EmployeeNameFilter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DepEd ID filter (contains search).
+    /// </summary>
+    public string? DepEdIdFilter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the position filter (contains search).
+    /// </summary>
+    public string? PositionFilter { get; set; }
+}

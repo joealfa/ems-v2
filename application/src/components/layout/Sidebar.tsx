@@ -1,18 +1,53 @@
-import { Box, VStack, Text } from '@chakra-ui/react';
+import { Box, VStack, Text, IconButton } from '@chakra-ui/react';
 import { NavLink } from 'react-router-dom';
 
 interface NavItemProps {
   to: string;
   label: string;
   icon: string;
+  collapsed?: boolean;
 }
 
-const NavItem = ({ to, label, icon }: NavItemProps) => {
+const ChevronLeftIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+
+const ChevronRightIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
+
+const NavItem = ({ to, label, icon, collapsed }: NavItemProps) => {
   return (
-    <NavLink to={to} style={{ width: '100%' }}>
+    <NavLink
+      to={to}
+      style={{ width: '100%' }}
+      title={collapsed ? label : undefined}
+    >
       {({ isActive }) => (
         <Box
-          px={4}
+          px={collapsed ? 0 : 4}
           py={3}
           borderRadius="md"
           bg={isActive ? 'colorPalette.subtle' : 'transparent'}
@@ -21,19 +56,25 @@ const NavItem = ({ to, label, icon }: NavItemProps) => {
           cursor="pointer"
           display="flex"
           alignItems="center"
+          justifyContent={collapsed ? 'center' : 'flex-start'}
           gap={3}
           fontWeight={isActive ? 'semibold' : 'normal'}
         >
           <Text fontSize="lg">{icon}</Text>
-          <Text>{label}</Text>
+          {!collapsed && <Text>{label}</Text>}
         </Box>
       )}
     </NavLink>
   );
 };
 
-const Sidebar = () => {
-  const navItems: NavItemProps[] = [
+interface SidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
+  const navItems: Omit<NavItemProps, 'collapsed'>[] = [
     { to: '/', label: 'Dashboard', icon: '📊' },
     { to: '/employments', label: 'Employments', icon: '💼' },
     { to: '/schools', label: 'Schools', icon: '🏫' },
@@ -46,7 +87,7 @@ const Sidebar = () => {
   return (
     <Box
       as="nav"
-      w="250px"
+      w={collapsed ? '60px' : '250px'}
       h="100vh"
       position="fixed"
       top={0}
@@ -54,20 +95,41 @@ const Sidebar = () => {
       bg="bg.panel"
       borderRight="1px solid"
       borderColor="border.muted"
-      p={4}
+      p={collapsed ? 2 : 4}
       overflowY="auto"
+      overflowX="hidden"
+      transition="width 0.3s ease, padding 0.3s ease"
     >
-      <Box mb={8}>
-        <Text fontSize="xl" fontWeight="bold" color="fg">
-          EMS
-        </Text>
-        <Text fontSize="sm" color="fg.muted">
-          Employee Management
-        </Text>
+      <Box
+        mb={8}
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+      >
+        {!collapsed && (
+          <Box>
+            <Text fontSize="xl" fontWeight="bold" color="fg">
+              EMS
+            </Text>
+            <Text fontSize="sm" color="fg.muted">
+              Employee Management
+            </Text>
+          </Box>
+        )}
+        <IconButton
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          onClick={onToggle}
+          variant="ghost"
+          size="sm"
+          color="fg.muted"
+          _hover={{ bg: 'bg.muted', color: 'fg' }}
+        >
+          {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+        </IconButton>
       </Box>
       <VStack gap={1} align="stretch" colorPalette="blue">
         {navItems.map(item => (
-          <NavItem key={item.to} {...item} />
+          <NavItem key={item.to} {...item} collapsed={collapsed} />
         ))}
       </VStack>
     </Box>

@@ -17,7 +17,7 @@ public interface IEmploymentService
     /// <summary>
     /// Gets a paginated list of employment records.
     /// </summary>
-    Task<PagedResult<EmploymentListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default);
+    Task<PagedResult<EmploymentListDto>> GetPagedAsync(EmploymentPaginationQuery query, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a new employment record.

@@ -31,7 +31,7 @@ public class EmploymentsController(IEmploymentService employmentService) : ApiCo
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<EmploymentListDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<EmploymentListDto>>> GetAll(
-        [FromQuery] PaginationQuery query,
+        [FromQuery] EmploymentPaginationQuery query,
         CancellationToken cancellationToken)
     {
         PagedResult<EmploymentListDto> result = await _employmentService.GetPagedAsync(query, cancellationToken);

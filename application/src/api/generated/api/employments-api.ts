@@ -240,6 +240,12 @@ export const EmploymentsApiAxiosParamCreator = function (configuration?: Configu
         },
         /**
          * 
+         * @param {ApiV1EmploymentsGetEmploymentStatusEnum} [employmentStatus] 
+         * @param {boolean} [isActive] 
+         * @param {string} [displayIdFilter] 
+         * @param {string} [employeeNameFilter] 
+         * @param {string} [depEdIdFilter] 
+         * @param {string} [positionFilter] 
          * @param {number} [pageNumber] 
          * @param {number} [pageSize] 
          * @param {string} [searchTerm] 
@@ -248,7 +254,7 @@ export const EmploymentsApiAxiosParamCreator = function (configuration?: Configu
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1EmploymentsGet: async (pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiV1EmploymentsGet: async (employmentStatus?: ApiV1EmploymentsGetEmploymentStatusEnum, isActive?: boolean, displayIdFilter?: string, employeeNameFilter?: string, depEdIdFilter?: string, positionFilter?: string, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/v1/employments`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -264,6 +270,30 @@ export const EmploymentsApiAxiosParamCreator = function (configuration?: Configu
             // authentication Bearer required
             // http bearer authentication required
             await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (employmentStatus !== undefined) {
+                localVarQueryParameter['EmploymentStatus'] = employmentStatus;
+            }
+
+            if (isActive !== undefined) {
+                localVarQueryParameter['IsActive'] = isActive;
+            }
+
+            if (displayIdFilter !== undefined) {
+                localVarQueryParameter['DisplayIdFilter'] = displayIdFilter;
+            }
+
+            if (employeeNameFilter !== undefined) {
+                localVarQueryParameter['EmployeeNameFilter'] = employeeNameFilter;
+            }
+
+            if (depEdIdFilter !== undefined) {
+                localVarQueryParameter['DepEdIdFilter'] = depEdIdFilter;
+            }
+
+            if (positionFilter !== undefined) {
+                localVarQueryParameter['PositionFilter'] = positionFilter;
+            }
 
             if (pageNumber !== undefined) {
                 localVarQueryParameter['PageNumber'] = pageNumber;
@@ -408,6 +438,12 @@ export const EmploymentsApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {ApiV1EmploymentsGetEmploymentStatusEnum} [employmentStatus] 
+         * @param {boolean} [isActive] 
+         * @param {string} [displayIdFilter] 
+         * @param {string} [employeeNameFilter] 
+         * @param {string} [depEdIdFilter] 
+         * @param {string} [positionFilter] 
          * @param {number} [pageNumber] 
          * @param {number} [pageSize] 
          * @param {string} [searchTerm] 
@@ -416,8 +452,8 @@ export const EmploymentsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1EmploymentsGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmploymentListDtoPagedResult>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1EmploymentsGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options);
+        async apiV1EmploymentsGet(employmentStatus?: ApiV1EmploymentsGetEmploymentStatusEnum, isActive?: boolean, displayIdFilter?: string, employeeNameFilter?: string, depEdIdFilter?: string, positionFilter?: string, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EmploymentListDtoPagedResult>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1EmploymentsGet(employmentStatus, isActive, displayIdFilter, employeeNameFilter, depEdIdFilter, positionFilter, pageNumber, pageSize, searchTerm, sortBy, sortDescending, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EmploymentsApi.apiV1EmploymentsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -494,6 +530,12 @@ export const EmploymentsApiFactory = function (configuration?: Configuration, ba
         },
         /**
          * 
+         * @param {ApiV1EmploymentsGetEmploymentStatusEnum} [employmentStatus] 
+         * @param {boolean} [isActive] 
+         * @param {string} [displayIdFilter] 
+         * @param {string} [employeeNameFilter] 
+         * @param {string} [depEdIdFilter] 
+         * @param {string} [positionFilter] 
          * @param {number} [pageNumber] 
          * @param {number} [pageSize] 
          * @param {string} [searchTerm] 
@@ -502,8 +544,8 @@ export const EmploymentsApiFactory = function (configuration?: Configuration, ba
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1EmploymentsGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<EmploymentListDtoPagedResult> {
-            return localVarFp.apiV1EmploymentsGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(axios, basePath));
+        apiV1EmploymentsGet(employmentStatus?: ApiV1EmploymentsGetEmploymentStatusEnum, isActive?: boolean, displayIdFilter?: string, employeeNameFilter?: string, depEdIdFilter?: string, positionFilter?: string, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<EmploymentListDtoPagedResult> {
+            return localVarFp.apiV1EmploymentsGet(employmentStatus, isActive, displayIdFilter, employeeNameFilter, depEdIdFilter, positionFilter, pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -584,6 +626,12 @@ export class EmploymentsApi extends BaseAPI {
 
     /**
      * 
+     * @param {ApiV1EmploymentsGetEmploymentStatusEnum} [employmentStatus] 
+     * @param {boolean} [isActive] 
+     * @param {string} [displayIdFilter] 
+     * @param {string} [employeeNameFilter] 
+     * @param {string} [depEdIdFilter] 
+     * @param {string} [positionFilter] 
      * @param {number} [pageNumber] 
      * @param {number} [pageSize] 
      * @param {string} [searchTerm] 
@@ -593,8 +641,8 @@ export class EmploymentsApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof EmploymentsApi
      */
-    public apiV1EmploymentsGet(pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig) {
-        return EmploymentsApiFp(this.configuration).apiV1EmploymentsGet(pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(this.axios, this.basePath));
+    public apiV1EmploymentsGet(employmentStatus?: ApiV1EmploymentsGetEmploymentStatusEnum, isActive?: boolean, displayIdFilter?: string, employeeNameFilter?: string, depEdIdFilter?: string, positionFilter?: string, pageNumber?: number, pageSize?: number, searchTerm?: string, sortBy?: string, sortDescending?: boolean, options?: RawAxiosRequestConfig) {
+        return EmploymentsApiFp(this.configuration).apiV1EmploymentsGet(employmentStatus, isActive, displayIdFilter, employeeNameFilter, depEdIdFilter, positionFilter, pageNumber, pageSize, searchTerm, sortBy, sortDescending, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -609,3 +657,11 @@ export class EmploymentsApi extends BaseAPI {
     }
 }
 
+/**
+ * @export
+ */
+export const ApiV1EmploymentsGetEmploymentStatusEnum = {
+    Regular: 'Regular',
+    Permanent: 'Permanent'
+} as const;
+export type ApiV1EmploymentsGetEmploymentStatusEnum = typeof ApiV1EmploymentsGetEmploymentStatusEnum[keyof typeof ApiV1EmploymentsGetEmploymentStatusEnum];

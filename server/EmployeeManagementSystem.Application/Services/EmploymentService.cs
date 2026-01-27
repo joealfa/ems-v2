@@ -48,21 +48,68 @@ public class EmploymentService(
     }
 
     /// <inheritdoc />
-    public async Task<PagedResult<EmploymentListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<EmploymentListDto>> GetPagedAsync(EmploymentPaginationQuery query, CancellationToken cancellationToken = default)
     {
         IQueryable<Employment> baseQuery = _employmentRepository.Query()
             .Include(e => e.Person)
             .Include(e => e.Position)
             .AsQueryable();
 
+        // Apply search term filter (searches across name fields and DepEd ID)
+        // Split by spaces to handle multi-word searches like "John Doe"
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            string searchTerm = query.SearchTerm.ToLower();
-            baseQuery = baseQuery.Where(e =>
-                (e.DepEdId != null && e.DepEdId.ToLower().Contains(searchTerm)) ||
-                e.Person.FirstName.ToLower().Contains(searchTerm) ||
-                e.Person.LastName.ToLower().Contains(searchTerm) ||
-                e.Position.TitleName.ToLower().Contains(searchTerm));
+            string[] searchTerms = query.SearchTerm.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (string term in searchTerms)
+            {
+                baseQuery = baseQuery.Where(e =>
+                    (e.DepEdId != null && e.DepEdId.ToLower().Contains(term)) ||
+                    e.Person.FirstName.ToLower().Contains(term) ||
+                    e.Person.LastName.ToLower().Contains(term) ||
+                    (e.Person.MiddleName != null && e.Person.MiddleName.ToLower().Contains(term)) ||
+                    e.Position.TitleName.ToLower().Contains(term));
+            }
+        }
+
+        // Apply column-specific filters
+        if (!string.IsNullOrWhiteSpace(query.DisplayIdFilter))
+        {
+            baseQuery = baseQuery.Where(e => e.DisplayId.ToString().Contains(query.DisplayIdFilter));
+        }
+
+        // Split employee name filter by spaces to handle multi-word searches
+        if (!string.IsNullOrWhiteSpace(query.EmployeeNameFilter))
+        {
+            string[] filterTerms = query.EmployeeNameFilter.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (string term in filterTerms)
+            {
+                baseQuery = baseQuery.Where(e =>
+                    e.Person.FirstName.ToLower().Contains(term) ||
+                    e.Person.LastName.ToLower().Contains(term) ||
+                    (e.Person.MiddleName != null && e.Person.MiddleName.ToLower().Contains(term)));
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.DepEdIdFilter))
+        {
+            string depEdIdFilter = query.DepEdIdFilter.ToLower();
+            baseQuery = baseQuery.Where(e => e.DepEdId != null && e.DepEdId.ToLower().Contains(depEdIdFilter));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.PositionFilter))
+        {
+            string positionFilter = query.PositionFilter.ToLower();
+            baseQuery = baseQuery.Where(e => e.Position.TitleName.ToLower().Contains(positionFilter));
+        }
+
+        if (query.EmploymentStatus.HasValue)
+        {
+            baseQuery = baseQuery.Where(e => e.EmploymentStatus == query.EmploymentStatus.Value);
+        }
+
+        if (query.IsActive.HasValue)
+        {
+            baseQuery = baseQuery.Where(e => e.IsActive == query.IsActive.Value);
         }
 
         int totalCount = await baseQuery.CountAsync(cancellationToken);

@@ -21,7 +21,7 @@ The root layout component that provides the application shell.
 ├─────────────┬──────────────────────────────────┤
 │             │                                  │
 │   Sidebar   │          Content Area            │
-│             │         (Outlet)                 │
+│   (toggle)  │         (Outlet)                 │
 │             │                                  │
 └─────────────┴──────────────────────────────────┘
 ```
@@ -36,8 +36,11 @@ The root layout component that provides the application shell.
 ```
 
 **Features:**
-- Fixed sidebar (250px width)
-- Flexible content area
+- Collapsible sidebar with toggle button
+- Sidebar width: 250px expanded, 60px collapsed
+- Smooth CSS transitions (0.3s) for collapse/expand
+- State managed via React useState
+- Flexible content area adjusts margin on sidebar toggle
 - Responsive header
 - Uses Chakra UI Flex layout
 
@@ -45,11 +48,18 @@ The root layout component that provides the application shell.
 
 ### Sidebar
 
-Navigation menu with links to all major sections.
+Collapsible navigation menu with links to all major sections.
 
 **File:** `Sidebar.tsx`
 
-**Props:** None (standalone component)
+**Props:**
+
+```typescript
+interface SidebarProps {
+  collapsed: boolean;    // Whether the sidebar is collapsed
+  onToggle: () => void;  // Callback to toggle collapsed state
+}
+```
 
 **Navigation Items:**
 
@@ -64,16 +74,29 @@ Navigation menu with links to all major sections.
 | Persons       | `/persons`       | 👤   |
 
 **Features:**
-- Active link highlighting using `useLocation()`
+- **Collapsible**: Toggle between expanded (250px) and collapsed (60px) states
+- **Toggle Button**: Chevron icon button (left/right) to collapse/expand
+- Active link highlighting using `NavLink` from react-router-dom
 - Hover effects
 - Dark/light mode compatible
+- Smooth CSS transitions for width and padding
+- Collapsed state shows only icons with tooltips
 
-**Styling:**
+**Toggle Button:**
 ```tsx
-// Active item styling
-bg={isActive ? 'blue.500' : 'transparent'}
-color={isActive ? 'white' : 'inherit'}
+<IconButton
+  aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+  onClick={onToggle}
+>
+  {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+</IconButton>
 ```
+
+**Collapsed Behavior:**
+- Navigation items show only icons (labels hidden)
+- Title/branding text hidden
+- Icons centered in the collapsed width
+- Tooltips show full label on hover
 
 ---
 
