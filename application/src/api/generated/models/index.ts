@@ -46,4 +46,6 @@ export * from './update-person-dto';
 export * from './update-position-dto';
 export * from './update-salary-grade-dto';
 export * from './update-school-dto';
+export * from './upsert-address-dto';
+export * from './upsert-contact-dto';
 export * from './user-dto';

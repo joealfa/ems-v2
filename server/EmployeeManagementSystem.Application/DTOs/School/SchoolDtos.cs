@@ -41,6 +41,16 @@ public class UpdateSchoolDto
     /// Gets or sets a value indicating whether this school is active.
     /// </summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the addresses to upsert. Existing addresses not in this list will be soft-deleted.
+    /// </summary>
+    public List<UpsertAddressDto>? Addresses { get; set; }
+
+    /// <summary>
+    /// Gets or sets the contacts to upsert. Existing contacts not in this list will be soft-deleted.
+    /// </summary>
+    public List<UpsertContactDto>? Contacts { get; set; }
 }
 
 /// <summary>

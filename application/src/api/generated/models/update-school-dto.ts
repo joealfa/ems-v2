@@ -13,6 +13,12 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { UpsertAddressDto } from './upsert-address-dto';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { UpsertContactDto } from './upsert-contact-dto';
 
 /**
  * 
@@ -32,5 +38,17 @@ export interface UpdateSchoolDto {
      * @memberof UpdateSchoolDto
      */
     'isActive'?: boolean;
+    /**
+     * 
+     * @type {Array<UpsertAddressDto>}
+     * @memberof UpdateSchoolDto
+     */
+    'addresses'?: Array<UpsertAddressDto> | null;
+    /**
+     * 
+     * @type {Array<UpsertContactDto>}
+     * @memberof UpdateSchoolDto
+     */
+    'contacts'?: Array<UpsertContactDto> | null;
 }
 

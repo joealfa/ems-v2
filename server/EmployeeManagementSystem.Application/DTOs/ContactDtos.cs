@@ -58,6 +58,49 @@ public class UpdateContactDto : CreateContactDto
 }
 
 /// <summary>
+/// DTO for upserting a contact (create new or update existing).
+/// When DisplayId is null, a new contact is created. When DisplayId has a value, the existing contact is updated.
+/// </summary>
+public class UpsertContactDto
+{
+    /// <summary>
+    /// Gets or sets the display ID of the contact. Null for new contacts.
+    /// </summary>
+    public long? DisplayId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the mobile phone number.
+    /// </summary>
+    [MaxLength(20)]
+    public string? Mobile { get; set; }
+
+    /// <summary>
+    /// Gets or sets the landline phone number.
+    /// </summary>
+    [MaxLength(20)]
+    public string? LandLine { get; set; }
+
+    /// <summary>
+    /// Gets or sets the fax number.
+    /// </summary>
+    [MaxLength(20)]
+    public string? Fax { get; set; }
+
+    /// <summary>
+    /// Gets or sets the email address.
+    /// </summary>
+    [MaxLength(256)]
+    [EmailAddress]
+    public string? Email { get; set; }
+
+    /// <summary>
+    /// Gets or sets the type of contact.
+    /// </summary>
+    [Required]
+    public ContactType ContactType { get; set; }
+}
+
+/// <summary>
 /// DTO for contact response.
 /// </summary>
 public class ContactResponseDto : BaseResponseDto

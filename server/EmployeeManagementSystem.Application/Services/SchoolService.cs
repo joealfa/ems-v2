@@ -152,6 +152,122 @@ public class SchoolService(
         school.IsActive = dto.IsActive;
         school.ModifiedBy = modifiedBy;
 
+        // Sync addresses if provided
+        if (dto.Addresses != null)
+        {
+            HashSet<long> addressDisplayIds = dto.Addresses
+                .Where(a => a.DisplayId.HasValue)
+                .Select(a => a.DisplayId!.Value)
+                .ToHashSet();
+
+            // Soft-delete addresses not in the list
+            foreach (Address existing in school.Addresses.Where(a => !addressDisplayIds.Contains(a.DisplayId)).ToList())
+            {
+                existing.ModifiedBy = modifiedBy;
+                await _addressRepository.DeleteAsync(existing, cancellationToken);
+                school.Addresses.Remove(existing);
+            }
+
+            // Update existing / create new
+            foreach (UpsertAddressDto addrDto in dto.Addresses)
+            {
+                if (addrDto.DisplayId.HasValue)
+                {
+                    // Update existing
+                    Address? existing = school.Addresses.FirstOrDefault(a => a.DisplayId == addrDto.DisplayId);
+                    if (existing != null)
+                    {
+                        existing.Address1 = addrDto.Address1;
+                        existing.Address2 = addrDto.Address2;
+                        existing.Barangay = addrDto.Barangay;
+                        existing.City = addrDto.City;
+                        existing.Province = addrDto.Province;
+                        existing.Country = addrDto.Country;
+                        existing.ZipCode = addrDto.ZipCode;
+                        existing.IsCurrent = addrDto.IsCurrent;
+                        existing.IsPermanent = addrDto.IsPermanent;
+                        existing.AddressType = addrDto.AddressType;
+                        existing.ModifiedBy = modifiedBy;
+                        await _addressRepository.UpdateAsync(existing, cancellationToken);
+                    }
+                }
+                else
+                {
+                    // Create new
+                    Address newAddress = new()
+                    {
+                        Address1 = addrDto.Address1,
+                        Address2 = addrDto.Address2,
+                        Barangay = addrDto.Barangay,
+                        City = addrDto.City,
+                        Province = addrDto.Province,
+                        Country = addrDto.Country,
+                        ZipCode = addrDto.ZipCode,
+                        IsCurrent = addrDto.IsCurrent,
+                        IsPermanent = addrDto.IsPermanent,
+                        AddressType = addrDto.AddressType,
+                        SchoolId = school.Id,
+                        CreatedBy = modifiedBy
+                    };
+                    await _addressRepository.AddAsync(newAddress, cancellationToken);
+                    school.Addresses.Add(newAddress);
+                }
+            }
+        }
+
+        // Sync contacts if provided
+        if (dto.Contacts != null)
+        {
+            HashSet<long> contactDisplayIds = dto.Contacts
+                .Where(c => c.DisplayId.HasValue)
+                .Select(c => c.DisplayId!.Value)
+                .ToHashSet();
+
+            // Soft-delete contacts not in the list
+            foreach (Contact existing in school.Contacts.Where(c => !contactDisplayIds.Contains(c.DisplayId)).ToList())
+            {
+                existing.ModifiedBy = modifiedBy;
+                await _contactRepository.DeleteAsync(existing, cancellationToken);
+                school.Contacts.Remove(existing);
+            }
+
+            // Update existing / create new
+            foreach (UpsertContactDto contactDto in dto.Contacts)
+            {
+                if (contactDto.DisplayId.HasValue)
+                {
+                    // Update existing
+                    Contact? existing = school.Contacts.FirstOrDefault(c => c.DisplayId == contactDto.DisplayId);
+                    if (existing != null)
+                    {
+                        existing.Mobile = contactDto.Mobile;
+                        existing.LandLine = contactDto.LandLine;
+                        existing.Fax = contactDto.Fax;
+                        existing.Email = contactDto.Email;
+                        existing.ContactType = contactDto.ContactType;
+                        existing.ModifiedBy = modifiedBy;
+                        await _contactRepository.UpdateAsync(existing, cancellationToken);
+                    }
+                }
+                else
+                {
+                    // Create new
+                    Contact newContact = new()
+                    {
+                        Mobile = contactDto.Mobile,
+                        LandLine = contactDto.LandLine,
+                        Fax = contactDto.Fax,
+                        Email = contactDto.Email,
+                        ContactType = contactDto.ContactType,
+                        SchoolId = school.Id,
+                        CreatedBy = modifiedBy
+                    };
+                    await _contactRepository.AddAsync(newContact, cancellationToken);
+                    school.Contacts.Add(newContact);
+                }
+            }
+        }
+
         await _schoolRepository.UpdateAsync(school, cancellationToken);
 
         return Result<SchoolResponseDto>.Success(MapToResponseDto(school));

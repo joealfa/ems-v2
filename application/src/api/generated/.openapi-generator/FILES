@@ -1,5 +1,6 @@
 .gitignore
 .npmignore
+.openapi-generator-ignore
 api.ts
 api/auth-api.ts
 api/documents-api.ts
@@ -64,4 +65,6 @@ models/update-person-dto.ts
 models/update-position-dto.ts
 models/update-salary-grade-dto.ts
 models/update-school-dto.ts
+models/upsert-address-dto.ts
+models/upsert-contact-dto.ts
 models/user-dto.ts

@@ -88,6 +88,79 @@ public class UpdateAddressDto : CreateAddressDto
 }
 
 /// <summary>
+/// DTO for upserting an address (create new or update existing).
+/// When DisplayId is null, a new address is created. When DisplayId has a value, the existing address is updated.
+/// </summary>
+public class UpsertAddressDto
+{
+    /// <summary>
+    /// Gets or sets the display ID of the address. Null for new addresses.
+    /// </summary>
+    public long? DisplayId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the primary address line.
+    /// </summary>
+    [Required]
+    [MaxLength(200)]
+    public string Address1 { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the secondary address line.
+    /// </summary>
+    [MaxLength(200)]
+    public string? Address2 { get; set; }
+
+    /// <summary>
+    /// Gets or sets the barangay.
+    /// </summary>
+    [MaxLength(100)]
+    public string? Barangay { get; set; }
+
+    /// <summary>
+    /// Gets or sets the city or municipality.
+    /// </summary>
+    [Required]
+    [MaxLength(100)]
+    public string City { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the province or state.
+    /// </summary>
+    [Required]
+    [MaxLength(100)]
+    public string Province { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the country.
+    /// </summary>
+    [MaxLength(100)]
+    public string Country { get; set; } = "Philippines";
+
+    /// <summary>
+    /// Gets or sets the zip or postal code.
+    /// </summary>
+    [MaxLength(20)]
+    public string? ZipCode { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this is the current address.
+    /// </summary>
+    public bool IsCurrent { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this is the permanent address.
+    /// </summary>
+    public bool IsPermanent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the type of address.
+    /// </summary>
+    [Required]
+    public AddressType AddressType { get; set; }
+}
+
+/// <summary>
 /// DTO for address response.
 /// </summary>
 public class AddressResponseDto : BaseResponseDto
