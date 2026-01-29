@@ -2,6 +2,7 @@ using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.School;
 using EmployeeManagementSystem.Application.Interfaces;
+using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,7 +33,9 @@ public class SchoolService(
             .Include(s => s.Contacts.Where(c => !c.IsDeleted))
             .FirstOrDefaultAsync(s => s.DisplayId == displayId, cancellationToken);
 
-        return school == null ? Result<SchoolResponseDto>.NotFound("School not found.") : Result<SchoolResponseDto>.Success(MapToResponseDto(school));
+        return school == null
+            ? Result<SchoolResponseDto>.NotFound("School not found.")
+            : Result<SchoolResponseDto>.Success(school.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -132,7 +135,7 @@ public class SchoolService(
             }
         }
 
-        return Result<SchoolResponseDto>.Success(MapToResponseDto(school));
+        return Result<SchoolResponseDto>.Success(school.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -165,7 +168,7 @@ public class SchoolService(
             {
                 existing.ModifiedBy = modifiedBy;
                 await _addressRepository.DeleteAsync(existing, cancellationToken);
-                school.Addresses.Remove(existing);
+                _ = school.Addresses.Remove(existing);
             }
 
             // Update existing / create new
@@ -209,7 +212,7 @@ public class SchoolService(
                         SchoolId = school.Id,
                         CreatedBy = modifiedBy
                     };
-                    await _addressRepository.AddAsync(newAddress, cancellationToken);
+                    _ = await _addressRepository.AddAsync(newAddress, cancellationToken);
                     school.Addresses.Add(newAddress);
                 }
             }
@@ -228,7 +231,7 @@ public class SchoolService(
             {
                 existing.ModifiedBy = modifiedBy;
                 await _contactRepository.DeleteAsync(existing, cancellationToken);
-                school.Contacts.Remove(existing);
+                _ = school.Contacts.Remove(existing);
             }
 
             // Update existing / create new
@@ -262,7 +265,7 @@ public class SchoolService(
                         SchoolId = school.Id,
                         CreatedBy = modifiedBy
                     };
-                    await _contactRepository.AddAsync(newContact, cancellationToken);
+                    _ = await _contactRepository.AddAsync(newContact, cancellationToken);
                     school.Contacts.Add(newContact);
                 }
             }
@@ -270,7 +273,7 @@ public class SchoolService(
 
         await _schoolRepository.UpdateAsync(school, cancellationToken);
 
-        return Result<SchoolResponseDto>.Success(MapToResponseDto(school));
+        return Result<SchoolResponseDto>.Success(school.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -312,53 +315,5 @@ public class SchoolService(
         school.ModifiedBy = deletedBy;
         await _schoolRepository.DeleteAsync(school, cancellationToken);
         return Result.Success();
-    }
-
-    private static SchoolResponseDto MapToResponseDto(School school)
-    {
-        return new SchoolResponseDto
-        {
-            DisplayId = school.DisplayId,
-            SchoolName = school.SchoolName,
-            IsActive = school.IsActive,
-            CreatedOn = school.CreatedOn,
-            CreatedBy = school.CreatedBy,
-            ModifiedOn = school.ModifiedOn,
-            ModifiedBy = school.ModifiedBy,
-            Addresses = school.Addresses.Select(a => new AddressResponseDto
-            {
-                DisplayId = a.DisplayId,
-                Address1 = a.Address1,
-                Address2 = a.Address2,
-                Barangay = a.Barangay,
-                City = a.City,
-                Province = a.Province,
-                Country = a.Country,
-                ZipCode = a.ZipCode,
-                IsCurrent = a.IsCurrent,
-                IsPermanent = a.IsPermanent,
-                IsActive = a.IsActive,
-                AddressType = a.AddressType,
-                FullAddress = a.FullAddress,
-                CreatedOn = a.CreatedOn,
-                CreatedBy = a.CreatedBy,
-                ModifiedOn = a.ModifiedOn,
-                ModifiedBy = a.ModifiedBy
-            }).ToList(),
-            Contacts = school.Contacts.Select(c => new ContactResponseDto
-            {
-                DisplayId = c.DisplayId,
-                Mobile = c.Mobile,
-                LandLine = c.LandLine,
-                Fax = c.Fax,
-                Email = c.Email,
-                IsActive = c.IsActive,
-                ContactType = c.ContactType,
-                CreatedOn = c.CreatedOn,
-                CreatedBy = c.CreatedBy,
-                ModifiedOn = c.ModifiedOn,
-                ModifiedBy = c.ModifiedBy
-            }).ToList()
-        };
     }
 }

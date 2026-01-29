@@ -1,0 +1,63 @@
+# SalaryGrade Fragments
+fragment SalaryGradeFields on SalaryGradeResponseDto {
+  displayId
+  salaryGradeName
+  description
+  step
+  monthlySalary
+  isActive
+  createdBy
+  createdOn
+  modifiedBy
+  modifiedOn
+}
+
+# SalaryGrade Queries
+query GetSalaryGrades(
+  $pageNumber: Int
+  $pageSize: Int
+  $searchTerm: String
+  $sortBy: String
+  $sortDescending: Boolean
+) {
+  salaryGrades(
+    pageNumber: $pageNumber
+    pageSize: $pageSize
+    searchTerm: $searchTerm
+    sortBy: $sortBy
+    sortDescending: $sortDescending
+  ) {
+    items {
+      ...SalaryGradeFields
+    }
+    totalCount
+    pageNumber
+    pageSize
+    totalPages
+    hasPreviousPage
+    hasNextPage
+  }
+}
+
+query GetSalaryGrade($displayId: Long!) {
+  salaryGrade(displayId: $displayId) {
+    ...SalaryGradeFields
+  }
+}
+
+# SalaryGrade Mutations
+mutation CreateSalaryGrade($input: CreateSalaryGradeInput!) {
+  createSalaryGrade(input: $input) {
+    ...SalaryGradeFields
+  }
+}
+
+mutation UpdateSalaryGrade($displayId: Long!, $input: UpdateSalaryGradeInput!) {
+  updateSalaryGrade(displayId: $displayId, input: $input) {
+    ...SalaryGradeFields
+  }
+}
+
+mutation DeleteSalaryGrade($displayId: Long!) {
+  deleteSalaryGrade(displayId: $displayId)
+}

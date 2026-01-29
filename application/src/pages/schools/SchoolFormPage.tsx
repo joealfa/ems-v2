@@ -16,13 +16,36 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  schoolsApi,
-  type CreateSchoolDto,
-  type UpdateSchoolDto,
-  type SchoolResponseDto,
-  CreateAddressDtoAddressTypeEnum,
-  CreateContactDtoContactTypeEnum,
-} from '../../api';
+  useSchool,
+  useCreateSchool,
+  useUpdateSchool,
+} from '../../hooks/useSchools';
+import type {
+  CreateSchoolInput,
+  UpdateSchoolInput,
+  CreateAddressInput,
+  CreateContactInput,
+  UpsertAddressInput,
+  UpsertContactInput,
+} from '../../graphql/generated/graphql';
+
+// Enum definitions matching backend values
+const AddressTypeEnum = {
+  Home: 0,
+  Business: 1,
+  Other: 2,
+} as const;
+
+const AddressTypeOptions = ['Home', 'Business', 'Other'];
+
+const ContactTypeEnum = {
+  Personal: 0,
+  Work: 1,
+  Emergency: 2,
+  Other: 3,
+} as const;
+
+const ContactTypeOptions = ['Personal', 'Work', 'Emergency', 'Other'];
 
 interface AddressFormData {
   displayId?: number;
@@ -83,29 +106,37 @@ const SchoolFormPage = () => {
   const { displayId } = useParams<{ displayId: string }>();
   const isEditMode = displayId && displayId !== 'new';
 
+  // GraphQL hooks
+  const { school, loading: loadingSchool } = useSchool(
+    isEditMode ? Number(displayId) : 0
+  );
+  const { createSchool, loading: creating } = useCreateSchool();
+  const { updateSchool, loading: updating } = useUpdateSchool();
+
   const [formData, setFormData] = useState<SchoolFormData>(initialFormData);
   const [addresses, setAddresses] = useState<AddressFormData[]>([]);
   const [contacts, setContacts] = useState<ContactFormData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    if (isEditMode) {
-      loadSchool();
-    }
-  }, [displayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
+  const loading = loadingSchool;
+  const saving = creating || updating;
 
-  const loadSchool = async () => {
-    if (!displayId) return;
-    setLoading(true);
-    try {
-      const response = await schoolsApi.apiV1SchoolsDisplayIdGet(
-        Number(displayId)
-      );
-      const school: SchoolResponseDto = response.data;
+  useEffect(() => {
+    if (isEditMode && school) {
+      // Map GraphQL uppercase enum strings to form display values
+      const addressTypeMap: Record<string, string> = {
+        HOME: 'Home',
+        BUSINESS: 'Business',
+        OTHER: 'Other',
+      };
+      const contactTypeMap: Record<string, string> = {
+        PERSONAL: 'Personal',
+        WORK: 'Work',
+        EMERGENCY: 'Emergency',
+        OTHER: 'Other',
+      };
+
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Populating form with loaded data is a valid pattern
       setFormData({
         schoolName: school.schoolName || '',
         isActive: school.isActive ?? true,
@@ -114,42 +145,41 @@ const SchoolFormPage = () => {
       // Load existing addresses
       if (school.addresses && school.addresses.length > 0) {
         setAddresses(
-          school.addresses.map(addr => ({
-            displayId: addr.displayId,
-            address1: addr.address1 || '',
-            address2: addr.address2 || '',
-            barangay: addr.barangay || '',
-            city: addr.city || '',
-            province: addr.province || '',
-            country: addr.country || 'Philippines',
-            zipCode: addr.zipCode || '',
-            isCurrent: addr.isCurrent || false,
-            isPermanent: addr.isPermanent || false,
-            addressType: addr.addressType || 'Business',
-          }))
+          school.addresses
+            .filter(addr => addr !== null)
+            .map(addr => ({
+              displayId: addr.displayId as number,
+              address1: addr.address1 || '',
+              address2: addr.address2 || '',
+              barangay: addr.barangay || '',
+              city: addr.city || '',
+              province: addr.province || '',
+              country: addr.country || 'Philippines',
+              zipCode: addr.zipCode || '',
+              isCurrent: addr.isCurrent || false,
+              isPermanent: addr.isPermanent || false,
+              addressType: addressTypeMap[addr.addressType] || 'Business',
+            }))
         );
       }
 
       // Load existing contacts
       if (school.contacts && school.contacts.length > 0) {
         setContacts(
-          school.contacts.map(contact => ({
-            displayId: contact.displayId,
-            mobile: contact.mobile || '',
-            landLine: contact.landLine || '',
-            fax: contact.fax || '',
-            email: contact.email || '',
-            contactType: contact.contactType || 'Work',
-          }))
+          school.contacts
+            .filter(contact => contact !== null)
+            .map(contact => ({
+              displayId: contact.displayId as number,
+              mobile: contact.mobile || '',
+              landLine: contact.landLine || '',
+              fax: contact.fax || '',
+              email: contact.email || '',
+              contactType: contactTypeMap[contact.contactType] || 'Work',
+            }))
         );
       }
-    } catch (err) {
-      console.error('Error loading school:', err);
-      setError('Failed to load school data');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [isEditMode, school]);
 
   const handleChange = (
     field: keyof SchoolFormData,
@@ -229,59 +259,93 @@ const SchoolFormPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError(null);
 
     try {
-      const addressDtos = addresses
-        .filter(addr => addr.address1 && addr.city && addr.province)
-        .map(addr => ({
-          displayId: addr.displayId || null,
-          address1: addr.address1,
-          address2: addr.address2 || null,
-          barangay: addr.barangay || null,
-          city: addr.city,
-          province: addr.province,
-          country: addr.country || null,
-          zipCode: addr.zipCode || null,
-          isCurrent: addr.isCurrent,
-          isPermanent: addr.isPermanent,
-          addressType: addr.addressType as CreateAddressDtoAddressTypeEnum,
-        }));
-
-      const contactDtos = contacts
-        .filter(contact => contact.mobile || contact.email || contact.landLine)
-        .map(contact => ({
-          displayId: contact.displayId || null,
-          mobile: contact.mobile || null,
-          landLine: contact.landLine || null,
-          fax: contact.fax || null,
-          email: contact.email || null,
-          contactType: contact.contactType as CreateContactDtoContactTypeEnum,
-        }));
-
       if (isEditMode) {
-        const updateDto: UpdateSchoolDto = {
+        const addressDtos: UpsertAddressInput[] = addresses
+          .filter(addr => addr.address1 && addr.city && addr.province)
+          .map(addr => ({
+            displayId: addr.displayId || null,
+            address1: addr.address1,
+            address2: addr.address2 || null,
+            barangay: addr.barangay || null,
+            city: addr.city,
+            province: addr.province,
+            country: addr.country || null,
+            zipCode: addr.zipCode || null,
+            isCurrent: addr.isCurrent,
+            isPermanent: addr.isPermanent,
+            addressType:
+              AddressTypeEnum[addr.addressType as keyof typeof AddressTypeEnum],
+          }));
+
+        const contactDtos: UpsertContactInput[] = contacts
+          .filter(
+            contact => contact.mobile || contact.email || contact.landLine
+          )
+          .map(contact => ({
+            displayId: contact.displayId || null,
+            mobile: contact.mobile || null,
+            landLine: contact.landLine || null,
+            fax: contact.fax || null,
+            email: contact.email || null,
+            contactType:
+              ContactTypeEnum[
+                contact.contactType as keyof typeof ContactTypeEnum
+              ],
+          }));
+
+        const updateDto: UpdateSchoolInput = {
           schoolName: formData.schoolName,
           isActive: formData.isActive,
           addresses: addressDtos.length > 0 ? addressDtos : [],
           contacts: contactDtos.length > 0 ? contactDtos : [],
         };
-        await schoolsApi.apiV1SchoolsDisplayIdPut(Number(displayId), updateDto);
+        await updateSchool(Number(displayId), updateDto);
       } else {
-        const createDto: CreateSchoolDto = {
+        const addressDtos: CreateAddressInput[] = addresses
+          .filter(addr => addr.address1 && addr.city && addr.province)
+          .map(addr => ({
+            address1: addr.address1,
+            address2: addr.address2 || null,
+            barangay: addr.barangay || null,
+            city: addr.city,
+            province: addr.province,
+            country: addr.country || null,
+            zipCode: addr.zipCode || null,
+            isCurrent: addr.isCurrent,
+            isPermanent: addr.isPermanent,
+            addressType:
+              AddressTypeEnum[addr.addressType as keyof typeof AddressTypeEnum],
+          }));
+
+        const contactDtos: CreateContactInput[] = contacts
+          .filter(
+            contact => contact.mobile || contact.email || contact.landLine
+          )
+          .map(contact => ({
+            mobile: contact.mobile || null,
+            landLine: contact.landLine || null,
+            fax: contact.fax || null,
+            email: contact.email || null,
+            contactType:
+              ContactTypeEnum[
+                contact.contactType as keyof typeof ContactTypeEnum
+              ],
+          }));
+
+        const createDto: CreateSchoolInput = {
           schoolName: formData.schoolName,
           addresses: addressDtos.length > 0 ? addressDtos : null,
           contacts: contactDtos.length > 0 ? contactDtos : null,
         };
-        await schoolsApi.apiV1SchoolsPost(createDto);
+        await createSchool(createDto);
       }
       navigate('/schools');
     } catch (err) {
       console.error('Error saving school:', err);
       setError('Failed to save school');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -416,10 +480,8 @@ const SchoolFormPage = () => {
                                         )
                                       }
                                     >
-                                      {Object.values(
-                                        CreateAddressDtoAddressTypeEnum
-                                      ).map(type => (
-                                        <option key={type} value={type}>
+                                      {AddressTypeOptions.map((type, idx) => (
+                                        <option key={idx} value={type}>
                                           {type}
                                         </option>
                                       ))}
@@ -653,9 +715,7 @@ const SchoolFormPage = () => {
                                       )
                                     }
                                   >
-                                    {Object.values(
-                                      CreateContactDtoContactTypeEnum
-                                    ).map(type => (
+                                    {ContactTypeOptions.map(type => (
                                       <option key={type} value={type}>
                                         {type}
                                       </option>

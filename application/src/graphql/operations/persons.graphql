@@ -1,0 +1,108 @@
+# Person Fragments
+fragment PersonListFields on PersonListDto {
+  displayId
+  fullName
+  gender
+  civilStatus
+  dateOfBirth
+  profileImageUrl
+  createdBy
+  createdOn
+  modifiedBy
+  modifiedOn
+}
+
+fragment PersonDetailFields on PersonResponseDto {
+  displayId
+  firstName
+  middleName
+  lastName
+  fullName
+  gender
+  civilStatus
+  dateOfBirth
+  profileImageUrl
+  createdBy
+  createdOn
+  modifiedBy
+  modifiedOn
+  addresses {
+    displayId
+    address1
+    address2
+    barangay
+    city
+    province
+    country
+    zipCode
+    addressType
+    isCurrent
+    isPermanent
+  }
+  contacts {
+    displayId
+    contactType
+    email
+    mobile
+    landLine
+    fax
+  }
+}
+
+# Person Queries
+query GetPersons(
+  $pageNumber: Int
+  $pageSize: Int
+  $searchTerm: String
+  $fullNameFilter: String
+  $displayIdFilter: String
+  $gender: Int
+  $civilStatus: Int
+  $sortBy: String
+  $sortDescending: Boolean
+) {
+  persons(
+    pageNumber: $pageNumber
+    pageSize: $pageSize
+    searchTerm: $searchTerm
+    fullNameFilter: $fullNameFilter
+    displayIdFilter: $displayIdFilter
+    gender: $gender
+    civilStatus: $civilStatus
+    sortBy: $sortBy
+    sortDescending: $sortDescending
+  ) {
+    items {
+      ...PersonListFields
+    }
+    totalCount
+    pageNumber
+    pageSize
+    totalPages
+    hasPreviousPage
+    hasNextPage
+  }
+}
+
+query GetPerson($displayId: Long!) {
+  person(displayId: $displayId) {
+    ...PersonDetailFields
+  }
+}
+
+# Person Mutations
+mutation CreatePerson($input: CreatePersonInput!) {
+  createPerson(input: $input) {
+    ...PersonDetailFields
+  }
+}
+
+mutation UpdatePerson($displayId: Long!, $input: UpdatePersonInput!) {
+  updatePerson(displayId: $displayId, input: $input) {
+    ...PersonDetailFields
+  }
+}
+
+mutation DeletePerson($displayId: Long!) {
+  deletePerson(displayId: $displayId)
+}

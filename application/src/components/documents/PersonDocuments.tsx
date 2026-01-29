@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useContext } from 'react';
 import {
   Box,
   Heading,
@@ -9,46 +9,30 @@ import {
   Input,
   Spinner,
 } from '@chakra-ui/react';
-import { documentsApi, type DocumentListDto, API_BASE_URL } from '../../api';
 import DocumentsTable from './DocumentsTable';
 import { formatFileSize } from './utils';
+import { AuthContext } from '../../contexts/AuthContext';
+import {
+  usePersonDocuments,
+  uploadDocument,
+  getDocumentDownloadUrl,
+  deleteDocumentRest,
+} from '../../hooks/useDocuments';
 
 interface PersonDocumentsProps {
   personDisplayId: number;
 }
 
 const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
-  const [documents, setDocuments] = useState<DocumentListDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const authContext = useContext(AuthContext);
+  const accessToken = authContext?.accessToken ?? null;
+  const { documents, loading, refetch } = usePersonDocuments(personDisplayId);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [description, setDescription] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    loadDocuments();
-  }, [personDisplayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
-
-  const loadDocuments = async () => {
-    setLoading(true);
-    try {
-      const response = await documentsApi.apiV1PersonsDisplayIdDocumentsGet(
-        personDisplayId,
-        1,
-        100
-      );
-      setDocuments(response.data.items || []);
-    } catch (err) {
-      console.error('Error loading documents:', err);
-      setError('Failed to load documents');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -58,7 +42,7 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
   };
 
   const handleUpload = async () => {
-    if (selectedFiles.length === 0) return;
+    if (selectedFiles.length === 0 || !accessToken) return;
 
     setUploading(true);
     setError(null);
@@ -68,11 +52,16 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
 
     for (const file of selectedFiles) {
       try {
-        await documentsApi.apiV1PersonsDisplayIdDocumentsPost(
+        const response = await uploadDocument(
           personDisplayId,
           file,
-          description || undefined
+          description || undefined,
+          accessToken
         );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         successCount++;
       } catch (err: unknown) {
         console.error('Error uploading document:', err);
@@ -94,7 +83,7 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-      await loadDocuments();
+      await refetch();
     }
 
     if (errors.length === 0) {
@@ -104,34 +93,74 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
     setUploading(false);
   };
 
-  const handleDownload = (
+  const handleDownload = async (
     documentDisplayId: number,
     fileName: string | null | undefined
   ) => {
-    const url = `${API_BASE_URL}/api/v1/persons/${personDisplayId}/documents/${documentDisplayId}/download`;
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName || 'document';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (!accessToken) return;
+
+    try {
+      const url = getDocumentDownloadUrl(personDisplayId, documentDisplayId);
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName || 'document';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Error downloading document:', err);
+      setError('Failed to download document');
+    }
   };
 
   const handleDelete = async (documentDisplayId: number) => {
     if (!window.confirm('Are you sure you want to delete this document?'))
       return;
+    if (!accessToken) return;
 
     try {
-      await documentsApi.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete(
+      const response = await deleteDocumentRest(
         personDisplayId,
-        documentDisplayId
+        documentDisplayId,
+        accessToken
       );
-      await loadDocuments();
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      await refetch();
     } catch (err) {
       console.error('Error deleting document:', err);
       setError('Failed to delete document');
     }
   };
+
+  // Transform GraphQL documents to the format expected by DocumentsTable
+  const transformedDocuments = documents
+    .filter((doc): doc is NonNullable<typeof doc> => doc !== null)
+    .map(doc => ({
+      displayId: doc.displayId,
+      fileName: doc.fileName,
+      fileSize: doc.fileSizeBytes,
+      mimeType: doc.contentType,
+      description: doc.description,
+      uploadedAt: doc.createdOn,
+      uploadedBy: doc.createdBy,
+    }));
 
   if (loading) {
     return (
@@ -252,7 +281,7 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
         )}
 
         <DocumentsTable
-          documents={documents}
+          documents={transformedDocuments}
           onDownload={handleDownload}
           onDelete={handleDelete}
           showActions={true}

@@ -1,0 +1,31 @@
+{
+  "runtime": "Net100",
+  "defaultVariables": null,
+  "documentGenerator": {
+    "fromDocument": {
+      "url": "https://localhost:7166/openapi/v1.json",
+      "output": null
+    }
+  },
+  "codeGenerators": {
+    "openApiToCSharpClient": {
+      "className": "EmsApiClient",
+      "namespace": "EmployeeManagementSystem.ApiClient.Generated",
+      "generateClientInterfaces": true,
+      "generateDtoTypes": true,
+      "parameterType": "System.IO.Stream",
+      "generateFileParameters": true,
+      "output": "Generated/EmsApiClient.cs",
+      "injectHttpClient": true,
+      "useBaseUrl": true,
+      "arrayType": "System.Collections.Generic.List",
+      "arrayInstanceType": "System.Collections.Generic.List",
+      "dateTimeType": "System.DateTime",
+      "jsonSerializerSettingsTransformationMethod": null,
+      "generateUpdateJsonSerializerSettingsMethod": true,
+      "serializeTypeInformation": false,
+      "enumNameGeneratorType": null,
+      "generateEnumMappingDescription": false
+    }
+  }
+}

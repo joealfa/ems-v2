@@ -1,6 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useContext, useEffect } from 'react';
 import { Box, Button, Flex, Text, Image, Spinner } from '@chakra-ui/react';
-import { documentsApi, API_BASE_URL } from '../../api';
+import { AuthContext } from '../../contexts/AuthContext';
+import {
+  getProfileImageUrl,
+  uploadProfileImage,
+  deleteProfileImageRest,
+} from '../../hooks/useDocuments';
 
 interface ProfileImageUploadProps {
   personDisplayId: number;
@@ -13,15 +18,62 @@ const ProfileImageUpload = ({
   currentImageUrl,
   onImageUpdated,
 }: ProfileImageUploadProps) => {
+  const authContext = useContext(AuthContext);
+  const accessToken = authContext?.accessToken ?? null;
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageVersion, setImageVersion] = useState(0);
+  const [imageBlobUrl, setImageBlobUrl] = useState<string | null>(null);
+  const [loadingImage, setLoadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch profile image with authentication through Gateway
+  useEffect(() => {
+    const fetchImage = async () => {
+      if (!currentImageUrl || !accessToken) {
+        setImageBlobUrl(null);
+        return;
+      }
+
+      setLoadingImage(true);
+      try {
+        const url = getProfileImageUrl(personDisplayId, imageVersion);
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        setImageBlobUrl(blobUrl);
+      } catch (err) {
+        console.error('Error loading profile image:', err);
+        setImageBlobUrl(null);
+      } finally {
+        setLoadingImage(false);
+      }
+    };
+
+    fetchImage();
+
+    // Cleanup blob URL on unmount or when dependencies change
+    return () => {
+      if (imageBlobUrl) {
+        URL.revokeObjectURL(imageBlobUrl);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [personDisplayId, currentImageUrl, accessToken, imageVersion]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !accessToken) return;
 
     // Validate file type
     if (!['image/jpeg', 'image/png'].includes(file.type)) {
@@ -39,10 +91,16 @@ const ProfileImageUpload = ({
     setError(null);
 
     try {
-      await documentsApi.apiV1PersonsDisplayIdDocumentsProfileImagePost(
+      const response = await uploadProfileImage(
         personDisplayId,
-        file
+        file,
+        accessToken
       );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       setImageVersion(v => v + 1);
       onImageUpdated();
     } catch (err) {
@@ -59,14 +117,22 @@ const ProfileImageUpload = ({
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete the profile image?'))
       return;
+    if (!accessToken) return;
 
     setDeleting(true);
     setError(null);
 
     try {
-      await documentsApi.apiV1PersonsDisplayIdDocumentsProfileImageDelete(
-        personDisplayId
+      const response = await deleteProfileImageRest(
+        personDisplayId,
+        accessToken
       );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      setImageBlobUrl(null);
       onImageUpdated();
     } catch (err) {
       console.error('Error deleting profile image:', err);
@@ -91,11 +157,11 @@ const ProfileImageUpload = ({
           borderWidth={2}
           borderColor="border.muted"
         >
-          {uploading ? (
+          {uploading || loadingImage ? (
             <Spinner size="lg" />
-          ) : currentImageUrl ? (
+          ) : imageBlobUrl ? (
             <Image
-              src={`${API_BASE_URL}/api/v1/persons/${personDisplayId}/documents/profile-image?v=${imageVersion}`}
+              src={imageBlobUrl}
               alt="Profile"
               w="100%"
               h="100%"

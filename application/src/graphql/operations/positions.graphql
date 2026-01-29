@@ -1,0 +1,61 @@
+# Position Fragments
+fragment PositionFields on PositionResponseDto {
+  displayId
+  titleName
+  description
+  isActive
+  createdBy
+  createdOn
+  modifiedBy
+  modifiedOn
+}
+
+# Position Queries
+query GetPositions(
+  $pageNumber: Int
+  $pageSize: Int
+  $searchTerm: String
+  $sortBy: String
+  $sortDescending: Boolean
+) {
+  positions(
+    pageNumber: $pageNumber
+    pageSize: $pageSize
+    searchTerm: $searchTerm
+    sortBy: $sortBy
+    sortDescending: $sortDescending
+  ) {
+    items {
+      ...PositionFields
+    }
+    totalCount
+    pageNumber
+    pageSize
+    totalPages
+    hasPreviousPage
+    hasNextPage
+  }
+}
+
+query GetPosition($displayId: Long!) {
+  position(displayId: $displayId) {
+    ...PositionFields
+  }
+}
+
+# Position Mutations
+mutation CreatePosition($input: CreatePositionInput!) {
+  createPosition(input: $input) {
+    ...PositionFields
+  }
+}
+
+mutation UpdatePosition($displayId: Long!, $input: UpdatePositionInput!) {
+  updatePosition(displayId: $displayId, input: $input) {
+    ...PositionFields
+  }
+}
+
+mutation DeletePosition($displayId: Long!) {
+  deletePosition(displayId: $displayId)
+}

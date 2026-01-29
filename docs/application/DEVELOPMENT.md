@@ -117,7 +117,7 @@ npm run format:check
 | `npm run lint`         | Run ESLint                 |
 | `npm run format`       | Format code with Prettier  |
 | `npm run format:check` | Check code formatting      |
-| `npm run generate-api` | Regenerate API client      |
+| `npm run codegen`      | Regenerate GraphQL types   |
 
 ---
 
@@ -288,31 +288,59 @@ import './PersonCard.css';
 
 ---
 
-## Working with API
+## Working with GraphQL
 
-### After Backend Changes
+### After Schema Changes
 
-When the backend API changes:
+When the GraphQL Gateway schema changes:
 
-1. **Ensure backend is running**
-2. **Regenerate client:**
+1. **Ensure Gateway is running** on `https://localhost:5003`
+2. **Regenerate types:**
    ```bash
-   npm run generate-api
+   npm run codegen
    ```
 3. **Check for TypeScript errors**
-4. **Update components using changed endpoints**
+4. **Update components using changed queries/mutations**
 
-### Adding New API Call
+### Adding New GraphQL Operations
 
-```typescript
-// In a component or service
-import { myApi, type MyDto } from '../api';
+1. **Create `.graphql` file** in `src/graphql/operations/`:
+   ```graphql
+   # src/graphql/operations/new-entity.graphql
+   query GetNewEntities($pageNumber: Int, $pageSize: Int) {
+     newEntities(pageNumber: $pageNumber, pageSize: $pageSize) {
+       items {
+         displayId
+         name
+       }
+       totalCount
+     }
+   }
+   ```
 
-const fetchData = async (): Promise<MyDto[]> => {
-  const response = await myApi.apiV1MyEndpointGet();
-  return response.data;
-};
-```
+2. **Run codegen:**
+   ```bash
+   npm run codegen
+   ```
+
+3. **Create custom hook** in `src/hooks/`:
+   ```typescript
+   import { useQuery } from '@apollo/client';
+   import { GetNewEntitiesDocument } from '../graphql/generated/graphql';
+
+   export const useNewEntities = (variables?: { pageNumber?: number; pageSize?: number }) => {
+     const { data, loading, error, refetch } = useQuery(GetNewEntitiesDocument, { variables });
+     return {
+       newEntities: data?.newEntities?.items ?? [],
+       totalCount: data?.newEntities?.totalCount ?? 0,
+       loading,
+       error,
+       refetch,
+     };
+   };
+   ```
+
+4. **Export from barrel file** `src/hooks/index.ts`
 
 ---
 

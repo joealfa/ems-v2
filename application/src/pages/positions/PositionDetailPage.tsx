@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Box,
   Heading,
@@ -11,38 +10,14 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { positionsApi, type PositionResponseDto } from '../../api';
+import { usePosition, useDeletePosition } from '../../hooks/usePositions';
 
 const PositionDetailPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
 
-  const [position, setPosition] = useState<PositionResponseDto | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    loadPosition();
-  }, [displayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
-
-  const loadPosition = async () => {
-    if (!displayId) return;
-    setLoading(true);
-    try {
-      const response = await positionsApi.apiV1PositionsDisplayIdGet(
-        Number(displayId)
-      );
-      setPosition(response.data);
-    } catch (err) {
-      console.error('Error loading position:', err);
-      setError('Failed to load position data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { position, loading, error } = usePosition(Number(displayId));
+  const { deletePosition, loading: deleting } = useDeletePosition();
 
   const handleDelete = async () => {
     if (
@@ -50,15 +25,12 @@ const PositionDetailPage = () => {
       !window.confirm('Are you sure you want to delete this position?')
     )
       return;
-    setDeleting(true);
+
     try {
-      await positionsApi.apiV1PositionsDisplayIdDelete(Number(displayId));
+      await deletePosition(Number(displayId));
       navigate('/positions');
     } catch (err) {
       console.error('Error deleting position:', err);
-      setError('Failed to delete position');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -73,7 +45,7 @@ const PositionDetailPage = () => {
   if (error || !position) {
     return (
       <Box>
-        <Text color="red.500">{error || 'Position not found'}</Text>
+        <Text color="red.500">{error?.message || 'Position not found'}</Text>
         <Button mt={4} onClick={() => navigate('/positions')}>
           Back to Positions
         </Button>
@@ -122,7 +94,9 @@ const PositionDetailPage = () => {
                   <Text color="fg.muted" fontSize="sm">
                     Display ID
                   </Text>
-                  <Text fontWeight="medium">{position.displayId}</Text>
+                  <Text fontWeight="medium">
+                    {position.displayId as unknown as number}
+                  </Text>
                 </Box>
                 <Box flex={1}>
                   <Text color="fg.muted" fontSize="sm">

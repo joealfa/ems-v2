@@ -24,11 +24,20 @@ import {
   type IFloatingFilterParams,
 } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
-import {
-  employmentsApi,
-  type EmploymentListDto,
-  ApiV1EmploymentsGetEmploymentStatusEnum,
-} from '../../api';
+import { useEmploymentsLazy } from '../../hooks/useEmployments';
+import type { EmploymentListDto } from '../../graphql/generated/graphql';
+
+// Employment status enum values matching backend
+const EmploymentStatusEnum = {
+  Regular: 0,
+  Permanent: 1,
+} as const;
+
+// Reverse mapping for display
+const EmploymentStatusDisplay: Record<number, string> = {
+  0: 'Regular',
+  1: 'Permanent',
+};
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -145,7 +154,7 @@ interface FilterModel {
 // Helper function to extract filter values from AG Grid filter model
 const extractFilters = (filterModel: FilterModel) => {
   const filters: {
-    employmentStatus?: ApiV1EmploymentsGetEmploymentStatusEnum;
+    employmentStatus?: number;
     isActive?: boolean;
     displayIdFilter?: string;
     employeeNameFilter?: string;
@@ -178,12 +187,14 @@ const extractFilters = (filterModel: FilterModel) => {
     filterModel.employmentStatus?.values &&
     filterModel.employmentStatus.values.length > 0
   ) {
-    filters.employmentStatus = filterModel.employmentStatus
-      .values[0] as ApiV1EmploymentsGetEmploymentStatusEnum;
+    const statusValue = filterModel.employmentStatus
+      .values[0] as keyof typeof EmploymentStatusEnum;
+    filters.employmentStatus = EmploymentStatusEnum[statusValue];
   } else if (filterModel.employmentStatus?.filter) {
-    filters.employmentStatus = String(
+    const statusValue = String(
       filterModel.employmentStatus.filter
-    ) as ApiV1EmploymentsGetEmploymentStatusEnum;
+    ) as keyof typeof EmploymentStatusEnum;
+    filters.employmentStatus = EmploymentStatusEnum[statusValue];
   }
 
   // Extract isActive filter (set filter or text filter)
@@ -203,6 +214,7 @@ const EmploymentsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const theme = useAgGridTheme();
+  const { fetchEmployments } = useEmploymentsLazy();
 
   useEffect(() => {
     if (gridRef.current?.api) {
@@ -220,23 +232,25 @@ const EmploymentsPage = () => {
           const filters = extractFilters(rowParams.filterModel as FilterModel);
 
           try {
-            const response = await employmentsApi.apiV1EmploymentsGet(
-              filters.employmentStatus,
-              filters.isActive,
-              filters.displayIdFilter,
-              filters.employeeNameFilter,
-              filters.depEdIdFilter,
-              filters.positionFilter,
-              pageNumber,
-              pageSize,
-              debouncedSearchTerm || undefined,
-              sortBy,
-              sortDescending
-            );
+            const result = await fetchEmployments({
+              variables: {
+                employmentStatus: filters.employmentStatus,
+                isActive: filters.isActive,
+                displayIdFilter: filters.displayIdFilter,
+                employeeNameFilter: filters.employeeNameFilter,
+                depEdIdFilter: filters.depEdIdFilter,
+                positionFilter: filters.positionFilter,
+                pageNumber,
+                pageSize,
+                searchTerm: debouncedSearchTerm || undefined,
+                sortBy,
+                sortDescending,
+              },
+            });
 
-            const data = response.data;
-            const rowsThisPage = data.items || [];
-            const lastRow = data.totalCount ?? -1;
+            const data = result.data?.employments;
+            const rowsThisPage = data?.items || [];
+            const lastRow = data?.totalCount ?? -1;
 
             rowParams.successCallback(rowsThisPage, lastRow);
           } catch (error) {
@@ -246,7 +260,7 @@ const EmploymentsPage = () => {
         },
       });
     }
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, fetchEmployments]);
 
   const columnDefs: ColDef<EmploymentListDto>[] = useMemo(
     () => [
@@ -386,10 +400,11 @@ const EmploymentsPage = () => {
           maxNumConditions: 1,
         },
         cellRenderer: (params: ICellRendererParams<EmploymentListDto>) => {
-          const value = params.value;
+          const value = params.value as number;
+          const displayValue = EmploymentStatusDisplay[value] || 'Unknown';
           return (
-            <Badge colorPalette={value === 'Permanent' ? 'green' : 'blue'}>
-              {value}
+            <Badge colorPalette={value === 1 ? 'green' : 'blue'}>
+              {displayValue}
             </Badge>
           );
         },
@@ -447,23 +462,25 @@ const EmploymentsPage = () => {
           const filters = extractFilters(rowParams.filterModel as FilterModel);
 
           try {
-            const response = await employmentsApi.apiV1EmploymentsGet(
-              filters.employmentStatus,
-              filters.isActive,
-              filters.displayIdFilter,
-              filters.employeeNameFilter,
-              filters.depEdIdFilter,
-              filters.positionFilter,
-              pageNumber,
-              pageSize,
-              debouncedSearchTerm || undefined,
-              sortBy,
-              sortDescending
-            );
+            const result = await fetchEmployments({
+              variables: {
+                employmentStatus: filters.employmentStatus,
+                isActive: filters.isActive,
+                displayIdFilter: filters.displayIdFilter,
+                employeeNameFilter: filters.employeeNameFilter,
+                depEdIdFilter: filters.depEdIdFilter,
+                positionFilter: filters.positionFilter,
+                pageNumber,
+                pageSize,
+                searchTerm: debouncedSearchTerm || undefined,
+                sortBy,
+                sortDescending,
+              },
+            });
 
-            const data = response.data;
-            const rowsThisPage = data.items || [];
-            const lastRow = data.totalCount ?? -1;
+            const data = result.data?.employments;
+            const rowsThisPage = data?.items || [];
+            const lastRow = data?.totalCount ?? -1;
 
             rowParams.successCallback(rowsThisPage, lastRow);
             setIsLoading(false);
@@ -477,7 +494,7 @@ const EmploymentsPage = () => {
 
       params.api.setGridOption('datasource', dataSource);
     },
-    [debouncedSearchTerm]
+    [debouncedSearchTerm, fetchEmployments]
   );
 
   return (

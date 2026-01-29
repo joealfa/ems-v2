@@ -3,8 +3,6 @@
  * These functions are only available when running in development mode.
  */
 
-import axios from 'axios';
-
 interface DevTokenRequest {
   userId?: string;
   email?: string;
@@ -39,17 +37,26 @@ export const getDevToken = async (
   const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7001';
 
   try {
-    const response = await axios.post<DevTokenResponse>(
-      `${apiUrl}/api/v1/dev/devauth/token`,
-      request || {}
-    );
+    const response = await fetch(`${apiUrl}/api/v1/dev/devauth/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request || {}),
+    });
 
-    return response.data.token;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        `Failed to generate dev token: ${error.response?.data?.message || error.message}`
+        `Failed to generate dev token: ${errorData.message || response.statusText}`
       );
+    }
+
+    const data: DevTokenResponse = await response.json();
+    return data.token;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to generate dev token: ${error.message}`);
     }
     throw error;
   }
@@ -74,37 +81,47 @@ export const generateAndStoreDevToken = async (
   const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7001';
 
   try {
-    const response = await axios.post<DevTokenResponse>(
-      `${apiUrl}/api/v1/dev/devauth/token`,
-      request || {}
-    );
+    const response = await fetch(`${apiUrl}/api/v1/dev/devauth/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request || {}),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `Failed to generate dev token: ${errorData.message || response.statusText}`
+      );
+    }
+
+    const data: DevTokenResponse = await response.json();
 
     // Store the token in localStorage (same keys as used by your auth system)
-    localStorage.setItem('accessToken', response.data.token);
+    localStorage.setItem('accessToken', data.token);
 
     // Create a mock user object
     const mockUser = {
-      id: response.data.userId,
-      email: response.data.email,
-      displayName: response.data.name,
+      id: data.userId,
+      email: data.email,
+      displayName: data.name,
       pictureUrl: null,
     };
     localStorage.setItem('user', JSON.stringify(mockUser));
 
     // Set expiry
-    localStorage.setItem('tokenExpiry', response.data.expiresAt);
+    localStorage.setItem('tokenExpiry', data.expiresAt);
 
     console.log('Development token generated and stored:', {
-      email: response.data.email,
-      expiresAt: response.data.expiresAt,
+      email: data.email,
+      expiresAt: data.expiresAt,
     });
 
-    return response.data;
+    return data;
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(
-        `Failed to generate dev token: ${error.response?.data?.message || error.message}`
-      );
+    if (error instanceof Error) {
+      throw new Error(`Failed to generate dev token: ${error.message}`);
     }
     throw error;
   }

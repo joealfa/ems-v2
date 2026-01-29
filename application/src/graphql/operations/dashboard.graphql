@@ -1,0 +1,11 @@
+# Dashboard Queries
+query GetDashboardStats {
+  dashboardStats {
+    totalPersons
+    totalSchools
+    totalPositions
+    totalSalaryGrades
+    totalItems
+    activeEmployments
+  }
+}

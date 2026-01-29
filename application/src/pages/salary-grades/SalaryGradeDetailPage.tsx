@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Box,
   Heading,
@@ -11,18 +10,17 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { salaryGradesApi, type SalaryGradeResponseDto } from '../../api';
+import {
+  useSalaryGrade,
+  useDeleteSalaryGrade,
+} from '../../hooks/useSalaryGrades';
 
 const SalaryGradeDetailPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
 
-  const [salaryGrade, setSalaryGrade] = useState<SalaryGradeResponseDto | null>(
-    null
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const { salaryGrade, loading, error } = useSalaryGrade(Number(displayId));
+  const { deleteSalaryGrade, loading: deleting } = useDeleteSalaryGrade();
 
   const formatCurrency = (value: number | undefined): string => {
     if (value === undefined || value === null) return '-';
@@ -32,43 +30,18 @@ const SalaryGradeDetailPage = () => {
     }).format(value);
   };
 
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    loadSalaryGrade();
-  }, [displayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
-
-  const loadSalaryGrade = async () => {
-    if (!displayId) return;
-    setLoading(true);
-    try {
-      const response = await salaryGradesApi.apiV1SalarygradesDisplayIdGet(
-        Number(displayId)
-      );
-      setSalaryGrade(response.data);
-    } catch (err) {
-      console.error('Error loading salary grade:', err);
-      setError('Failed to load salary grade data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDelete = async () => {
     if (
       !displayId ||
       !window.confirm('Are you sure you want to delete this salary grade?')
     )
       return;
-    setDeleting(true);
+
     try {
-      await salaryGradesApi.apiV1SalarygradesDisplayIdDelete(Number(displayId));
+      await deleteSalaryGrade(Number(displayId));
       navigate('/salary-grades');
     } catch (err) {
       console.error('Error deleting salary grade:', err);
-      setError('Failed to delete salary grade');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -83,7 +56,9 @@ const SalaryGradeDetailPage = () => {
   if (error || !salaryGrade) {
     return (
       <Box>
-        <Text color="red.500">{error || 'Salary grade not found'}</Text>
+        <Text color="red.500">
+          {error?.message || 'Salary grade not found'}
+        </Text>
         <Button mt={4} onClick={() => navigate('/salary-grades')}>
           Back to Salary Grades
         </Button>
@@ -132,7 +107,9 @@ const SalaryGradeDetailPage = () => {
                   <Text color="fg.muted" fontSize="sm">
                     Display ID
                   </Text>
-                  <Text fontWeight="medium">{salaryGrade.displayId}</Text>
+                  <Text fontWeight="medium">
+                    {salaryGrade.displayId as unknown as number}
+                  </Text>
                 </Box>
                 <Box flex={1}>
                   <Text color="fg.muted" fontSize="sm">
@@ -155,14 +132,18 @@ const SalaryGradeDetailPage = () => {
                   <Text color="fg.muted" fontSize="sm">
                     Step
                   </Text>
-                  <Text fontWeight="medium">{salaryGrade.step || '-'}</Text>
+                  <Text fontWeight="medium">
+                    {(salaryGrade.step as unknown as number) || '-'}
+                  </Text>
                 </Box>
                 <Box flex={1}>
                   <Text color="fg.muted" fontSize="sm">
                     Monthly Salary
                   </Text>
                   <Text fontWeight="medium" fontSize="lg" color="green.600">
-                    {formatCurrency(salaryGrade.monthlySalary)}
+                    {formatCurrency(
+                      salaryGrade.monthlySalary as unknown as number
+                    )}
                   </Text>
                 </Box>
                 <Box flex={1}></Box>

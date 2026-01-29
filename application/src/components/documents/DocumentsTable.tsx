@@ -1,9 +1,20 @@
 import { Box, Button, Flex, Text, Badge, Table } from '@chakra-ui/react';
-import type { DocumentListDto } from '../../api';
 import { formatFileSize, getDocumentTypeColor } from './utils';
 
+interface DocumentListItem {
+  displayId?: number;
+  fileName?: string | null;
+  fileSize?: number | null;
+  fileSizeBytes?: number | null;
+  mimeType?: string | null;
+  documentType?: string | null;
+  description?: string | null;
+  uploadedAt?: string | null;
+  uploadedBy?: string | null;
+}
+
 interface DocumentsTableProps {
-  documents: DocumentListDto[];
+  documents: DocumentListItem[];
   onDownload: (
     documentDisplayId: number,
     fileName: string | null | undefined
@@ -52,7 +63,7 @@ const DocumentsTable = ({
         </Table.Header>
         <Table.Body>
           {documents.map(doc => (
-            <Table.Row key={doc.displayId}>
+            <Table.Row key={doc.displayId as unknown as React.Key}>
               <Table.Cell px={4} py={2}>
                 <Text fontWeight="medium" fontSize="sm">
                   {doc.fileName}
@@ -60,14 +71,18 @@ const DocumentsTable = ({
               </Table.Cell>
               <Table.Cell px={4} py={2} textAlign="center">
                 <Badge
-                  colorPalette={getDocumentTypeColor(doc.documentType)}
+                  colorPalette={getDocumentTypeColor(
+                    doc.documentType as unknown as string
+                  )}
                   size="sm"
                 >
                   {doc.documentType}
                 </Badge>
               </Table.Cell>
               <Table.Cell px={4} py={2} textAlign="center">
-                <Text fontSize="sm">{formatFileSize(doc.fileSizeBytes)}</Text>
+                <Text fontSize="sm">
+                  {formatFileSize(doc.fileSizeBytes as unknown as number)}
+                </Text>
               </Table.Cell>
               <Table.Cell px={4} py={2}>
                 <Text fontSize="sm" color="fg.muted" maxW="200px" truncate>
@@ -80,7 +95,12 @@ const DocumentsTable = ({
                     <Button
                       size="xs"
                       variant="ghost"
-                      onClick={() => onDownload(doc.displayId!, doc.fileName)}
+                      onClick={() =>
+                        onDownload(
+                          doc.displayId as unknown as number,
+                          doc.fileName
+                        )
+                      }
                     >
                       Download
                     </Button>
@@ -89,7 +109,9 @@ const DocumentsTable = ({
                         size="xs"
                         variant="outline"
                         colorPalette="red"
-                        onClick={() => onDelete(doc.displayId!)}
+                        onClick={() =>
+                          onDelete(doc.displayId as unknown as number)
+                        }
                       >
                         Delete
                       </Button>

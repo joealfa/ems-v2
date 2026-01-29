@@ -54,43 +54,43 @@ public class UpdateSchoolDto
 }
 
 /// <summary>
-/// DTO for school response.
+/// Record for school response data. Immutable by design.
 /// </summary>
-public class SchoolResponseDto : BaseResponseDto
+public record SchoolResponseDto : BaseResponseDto
 {
     /// <summary>
-    /// Gets or sets the name of the school.
+    /// Gets the name of the school.
     /// </summary>
     public string SchoolName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value indicating whether this school is active.
+    /// Gets a value indicating whether this school is active.
     /// </summary>
     public bool IsActive { get; init; }
 
     /// <summary>
-    /// Gets or sets the addresses associated with the school.
+    /// Gets the addresses associated with the school.
     /// </summary>
-    public List<AddressResponseDto> Addresses { get; init; } = [];
+    public IReadOnlyList<AddressResponseDto> Addresses { get; init; } = [];
 
     /// <summary>
-    /// Gets or sets the contacts associated with the school.
+    /// Gets the contacts associated with the school.
     /// </summary>
-    public List<ContactResponseDto> Contacts { get; init; } = [];
+    public IReadOnlyList<ContactResponseDto> Contacts { get; init; } = [];
 }
 
 /// <summary>
-/// DTO for school list response (simplified).
+/// Record for school list response (simplified). Immutable by design.
 /// </summary>
-public class SchoolListDto : BaseResponseDto
+public record SchoolListDto : BaseResponseDto
 {
     /// <summary>
-    /// Gets or sets the name of the school.
+    /// Gets the name of the school.
     /// </summary>
     public string SchoolName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value indicating whether this school is active.
+    /// Gets a value indicating whether this school is active.
     /// </summary>
     public bool IsActive { get; init; }
 }

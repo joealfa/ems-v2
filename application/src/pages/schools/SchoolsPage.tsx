@@ -23,7 +23,8 @@ import {
   type ICellRendererParams,
 } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
-import { schoolsApi, type SchoolListDto } from '../../api';
+import { useSchoolsLazy } from '../../hooks/useSchools';
+import type { SchoolListDto } from '../../graphql/generated/graphql';
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -68,6 +69,7 @@ const SchoolsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const theme = useAgGridTheme();
+  const { fetchSchools } = useSchoolsLazy();
 
   useEffect(() => {
     if (gridRef.current?.api) {
@@ -82,17 +84,19 @@ const SchoolsPage = () => {
           const sortDescending = sortModel?.sort === 'desc';
 
           try {
-            const response = await schoolsApi.apiV1SchoolsGet(
-              pageNumber,
-              pageSize,
-              debouncedSearchTerm || undefined,
-              sortBy,
-              sortDescending
-            );
+            const result = await fetchSchools({
+              variables: {
+                pageNumber,
+                pageSize,
+                searchTerm: debouncedSearchTerm || undefined,
+                sortBy,
+                sortDescending,
+              },
+            });
 
-            const data = response.data;
-            const rowsThisPage = data.items || [];
-            const lastRow = data.totalCount ?? -1;
+            const data = result.data?.schools;
+            const rowsThisPage = data?.items || [];
+            const lastRow = data?.totalCount ?? -1;
 
             rowParams.successCallback(rowsThisPage, lastRow);
           } catch (error) {
@@ -102,7 +106,7 @@ const SchoolsPage = () => {
         },
       });
     }
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, fetchSchools]);
 
   const columnDefs: ColDef<SchoolListDto>[] = useMemo(
     () => [
@@ -241,17 +245,19 @@ const SchoolsPage = () => {
           const sortDescending = sortModel?.sort === 'desc';
 
           try {
-            const response = await schoolsApi.apiV1SchoolsGet(
-              pageNumber,
-              pageSize,
-              debouncedSearchTerm || undefined,
-              sortBy,
-              sortDescending
-            );
+            const result = await fetchSchools({
+              variables: {
+                pageNumber,
+                pageSize,
+                searchTerm: debouncedSearchTerm || undefined,
+                sortBy,
+                sortDescending,
+              },
+            });
 
-            const data = response.data;
-            const rowsThisPage = data.items || [];
-            const lastRow = data.totalCount ?? -1;
+            const data = result.data?.schools;
+            const rowsThisPage = data?.items || [];
+            const lastRow = data?.totalCount ?? -1;
 
             rowParams.successCallback(rowsThisPage, lastRow);
             setIsLoading(false);
@@ -265,7 +271,7 @@ const SchoolsPage = () => {
 
       params.api.setGridOption('datasource', dataSource);
     },
-    [debouncedSearchTerm]
+    [debouncedSearchTerm, fetchSchools]
   );
 
   return (

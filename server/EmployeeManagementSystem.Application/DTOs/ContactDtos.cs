@@ -101,37 +101,37 @@ public class UpsertContactDto
 }
 
 /// <summary>
-/// DTO for contact response.
+/// Record for contact response data. Immutable by design.
 /// </summary>
-public class ContactResponseDto : BaseResponseDto
+public record ContactResponseDto : BaseResponseDto
 {
     /// <summary>
-    /// Gets or sets the mobile phone number.
+    /// Gets the mobile phone number.
     /// </summary>
     public string? Mobile { get; init; }
 
     /// <summary>
-    /// Gets or sets the landline phone number.
+    /// Gets the landline phone number.
     /// </summary>
     public string? LandLine { get; init; }
 
     /// <summary>
-    /// Gets or sets the fax number.
+    /// Gets the fax number.
     /// </summary>
     public string? Fax { get; init; }
 
     /// <summary>
-    /// Gets or sets the email address.
+    /// Gets the email address.
     /// </summary>
     public string? Email { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether this contact is active.
+    /// Gets a value indicating whether this contact is active.
     /// </summary>
     public bool IsActive { get; init; }
 
     /// <summary>
-    /// Gets or sets the type of contact.
+    /// Gets the type of contact.
     /// </summary>
     public ContactType ContactType { get; init; }
 }

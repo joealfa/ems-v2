@@ -34,65 +34,65 @@ public class RefreshTokenRequestDto
 }
 
 /// <summary>
-/// Response DTO containing authentication tokens and user information.
+/// Response record containing authentication tokens and user information. Immutable by design.
 /// </summary>
-public class AuthResponseDto
+public record AuthResponseDto
 {
     /// <summary>
     /// The JWT access token for API authentication.
     /// </summary>
-    public string AccessToken { get; set; } = string.Empty;
+    public string AccessToken { get; init; } = string.Empty;
 
     /// <summary>
     /// The refresh token for obtaining new access tokens.
     /// </summary>
-    public string RefreshToken { get; set; } = string.Empty;
+    public string RefreshToken { get; init; } = string.Empty;
 
     /// <summary>
     /// The date and time when the access token expires.
     /// </summary>
-    public DateTime ExpiresOn { get; set; }
+    public DateTime ExpiresOn { get; init; }
 
     /// <summary>
     /// The authenticated user's information.
     /// </summary>
-    public UserDto User { get; set; } = null!;
+    public UserDto User { get; init; } = null!;
 }
 
 /// <summary>
-/// DTO representing user information.
+/// Record representing user information. Immutable by design.
 /// </summary>
-public class UserDto
+public record UserDto
 {
     /// <summary>
     /// The user's unique identifier.
     /// </summary>
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
 
     /// <summary>
     /// The user's email address.
     /// </summary>
-    public string Email { get; set; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
 
     /// <summary>
     /// The user's first name.
     /// </summary>
-    public string FirstName { get; set; } = string.Empty;
+    public string FirstName { get; init; } = string.Empty;
 
     /// <summary>
     /// The user's last name.
     /// </summary>
-    public string LastName { get; set; } = string.Empty;
+    public string LastName { get; init; } = string.Empty;
 
     /// <summary>
     /// The user's profile picture URL.
     /// </summary>
-    public string? ProfilePictureUrl { get; set; }
+    public string? ProfilePictureUrl { get; init; }
 
     /// <summary>
     /// The user's role in the system.
     /// </summary>
-    public string Role { get; set; } = string.Empty;
+    public string Role { get; init; } = string.Empty;
 }
 
 /// <summary>

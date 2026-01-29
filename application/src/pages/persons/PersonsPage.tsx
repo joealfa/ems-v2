@@ -1,4 +1,11 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+  useContext,
+} from 'react';
 import {
   Box,
   Heading,
@@ -24,13 +31,30 @@ import {
   type IFloatingFilterParams,
 } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
-import {
-  personsApi,
-  type PersonListDto,
-  API_BASE_URL,
-  ApiV1PersonsGetGenderEnum,
-  ApiV1PersonsGetCivilStatusEnum,
-} from '../../api';
+import { usePersonsLazy } from '../../hooks/usePersons';
+import { AuthContext } from '../../contexts/AuthContext';
+import type { PersonListDto } from '../../graphql/generated/graphql';
+
+// Gateway base URL for proxied API requests
+const GATEWAY_BASE_URL =
+  import.meta.env.VITE_GRAPHQL_URL?.replace('/graphql', '') ||
+  'http://localhost:5100';
+
+// Gender enum values matching backend
+const GenderEnum = {
+  Male: 0,
+  Female: 1,
+} as const;
+
+// Civil status enum values matching backend
+const CivilStatusEnum = {
+  Single: 0,
+  Married: 1,
+  SoloParent: 2,
+  Widow: 3,
+  Separated: 4,
+  Other: 5,
+} as const;
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -67,6 +91,123 @@ const EditIcon = () => (
     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
   </svg>
 );
+
+// Profile image cell renderer with authenticated image fetching
+interface ProfileImageCellProps {
+  displayId: number;
+  fullName: string;
+  hasImage: boolean;
+  accessToken: string | null;
+}
+
+const ProfileImageCell = ({
+  displayId,
+  fullName,
+  hasImage,
+  accessToken,
+}: ProfileImageCellProps) => {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const nameParts = fullName.split(' ');
+  const initials =
+    nameParts.length >= 2
+      ? `${nameParts[0]?.[0] || ''}${nameParts[nameParts.length - 1]?.[0] || ''}`.toUpperCase()
+      : (fullName[0] || '?').toUpperCase();
+
+  useEffect(() => {
+    if (!hasImage || !accessToken || !displayId) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchImage = async () => {
+      try {
+        const url = `${GATEWAY_BASE_URL}/api/persons/${displayId}/documents/profile-image`;
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        setBlobUrl(objectUrl);
+      } catch (err) {
+        console.error('Error loading profile image:', err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchImage();
+
+    return () => {
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayId, hasImage, accessToken]);
+
+  if (loading) {
+    return (
+      <Flex align="center" justify="center" h="100%">
+        <Center
+          w="32px"
+          h="32px"
+          minW="32px"
+          minH="32px"
+          borderRadius="50%"
+          bg="bg.muted"
+        >
+          <Spinner size="xs" />
+        </Center>
+      </Flex>
+    );
+  }
+
+  if (blobUrl && !error) {
+    return (
+      <Flex align="center" justify="center" h="100%">
+        <Image
+          src={blobUrl}
+          alt="Profile"
+          w="32px"
+          h="32px"
+          minW="32px"
+          minH="32px"
+          borderRadius="50%"
+          objectFit="cover"
+        />
+      </Flex>
+    );
+  }
+
+  return (
+    <Flex align="center" justify="center" h="100%">
+      <Center
+        w="32px"
+        h="32px"
+        minW="32px"
+        minH="32px"
+        borderRadius="50%"
+        bg="bg.muted"
+        color="fg.muted"
+        fontSize="xs"
+        fontWeight="bold"
+      >
+        {initials}
+      </Center>
+    </Flex>
+  );
+};
 
 // Custom floating filter component for dropdown selection
 interface SelectFloatingFilterProps extends IFloatingFilterParams {
@@ -147,8 +288,8 @@ interface FilterModel {
 // Helper function to extract filter values from AG Grid filter model
 const extractFilters = (filterModel: FilterModel) => {
   const filters: {
-    gender?: ApiV1PersonsGetGenderEnum;
-    civilStatus?: ApiV1PersonsGetCivilStatusEnum;
+    gender?: number;
+    civilStatus?: number;
     displayIdFilter?: string;
     fullNameFilter?: string;
   } = {};
@@ -165,10 +306,11 @@ const extractFilters = (filterModel: FilterModel) => {
 
   // Extract gender filter (set filter or text filter)
   if (filterModel.gender?.values && filterModel.gender.values.length > 0) {
-    // For set filter, take the first selected value
-    filters.gender = filterModel.gender.values[0] as ApiV1PersonsGetGenderEnum;
+    const genderValue = filterModel.gender.values[0] as keyof typeof GenderEnum;
+    filters.gender = GenderEnum[genderValue];
   } else if (filterModel.gender?.filter) {
-    filters.gender = filterModel.gender.filter as ApiV1PersonsGetGenderEnum;
+    const genderValue = filterModel.gender.filter as keyof typeof GenderEnum;
+    filters.gender = GenderEnum[genderValue];
   }
 
   // Extract civilStatus filter (set filter or text filter)
@@ -176,12 +318,13 @@ const extractFilters = (filterModel: FilterModel) => {
     filterModel.civilStatus?.values &&
     filterModel.civilStatus.values.length > 0
   ) {
-    // For set filter, take the first selected value
-    filters.civilStatus = filterModel.civilStatus
-      .values[0] as ApiV1PersonsGetCivilStatusEnum;
+    const civilStatusValue = filterModel.civilStatus
+      .values[0] as keyof typeof CivilStatusEnum;
+    filters.civilStatus = CivilStatusEnum[civilStatusValue];
   } else if (filterModel.civilStatus?.filter) {
-    filters.civilStatus = filterModel.civilStatus
-      .filter as ApiV1PersonsGetCivilStatusEnum;
+    const civilStatusValue = filterModel.civilStatus
+      .filter as keyof typeof CivilStatusEnum;
+    filters.civilStatus = CivilStatusEnum[civilStatusValue];
   }
 
   return filters;
@@ -189,11 +332,14 @@ const extractFilters = (filterModel: FilterModel) => {
 
 const PersonsPage = () => {
   const navigate = useNavigate();
+  const authContext = useContext(AuthContext);
+  const accessToken = authContext?.accessToken ?? null;
   const gridRef = useRef<AgGridReact<PersonListDto>>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const theme = useAgGridTheme();
+  const { fetchPersons } = usePersonsLazy();
 
   useEffect(() => {
     if (gridRef.current?.api) {
@@ -211,21 +357,23 @@ const PersonsPage = () => {
           const filters = extractFilters(rowParams.filterModel as FilterModel);
 
           try {
-            const response = await personsApi.apiV1PersonsGet(
-              filters.gender,
-              filters.civilStatus,
-              filters.displayIdFilter,
-              filters.fullNameFilter,
-              pageNumber,
-              pageSize,
-              debouncedSearchTerm || undefined,
-              sortBy,
-              sortDescending
-            );
+            const result = await fetchPersons({
+              variables: {
+                gender: filters.gender,
+                civilStatus: filters.civilStatus,
+                displayIdFilter: filters.displayIdFilter,
+                fullNameFilter: filters.fullNameFilter,
+                pageNumber,
+                pageSize,
+                searchTerm: debouncedSearchTerm || undefined,
+                sortBy,
+                sortDescending,
+              },
+            });
 
-            const data = response.data;
-            const rowsThisPage = data.items || [];
-            const lastRow = data.totalCount ?? -1;
+            const data = result.data?.persons;
+            const rowsThisPage = data?.items || [];
+            const lastRow = data?.totalCount ?? -1;
 
             rowParams.successCallback(rowsThisPage, lastRow);
           } catch (error) {
@@ -235,7 +383,7 @@ const PersonsPage = () => {
         },
       });
     }
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, fetchPersons]);
 
   const columnDefs: ColDef<PersonListDto>[] = useMemo(
     () => [
@@ -332,51 +480,16 @@ const PersonsPage = () => {
         cellRenderer: (params: ICellRendererParams<PersonListDto>) => {
           const fullName = params.data?.fullName || '';
           const displayId = params.data?.displayId;
-          const nameParts = fullName.split(' ');
-          const initials =
-            nameParts.length >= 2
-              ? `${nameParts[0]?.[0] || ''}${nameParts[nameParts.length - 1]?.[0] || ''}`.toUpperCase()
-              : (fullName[0] || '?').toUpperCase();
 
-          if (params.value && displayId) {
-            // Use the streaming endpoint instead of the blob URL
-            const imageUrl = `${API_BASE_URL}/api/v1/persons/${displayId}/documents/profile-image`;
-            return (
-              <Flex align="center" justify="center" h="100%">
-                <Image
-                  src={imageUrl}
-                  alt="Profile"
-                  w="32px"
-                  h="32px"
-                  minW="32px"
-                  minH="32px"
-                  borderRadius="50%"
-                  objectFit="cover"
-                  onError={e => {
-                    // Hide the image on error, showing fallback initials
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              </Flex>
-            );
-          }
+          if (!displayId) return null;
 
           return (
-            <Flex align="center" justify="center" h="100%">
-              <Center
-                w="32px"
-                h="32px"
-                minW="32px"
-                minH="32px"
-                borderRadius="50%"
-                bg="bg.muted"
-                color="fg.muted"
-                fontSize="xs"
-                fontWeight="bold"
-              >
-                {initials}
-              </Center>
-            </Flex>
+            <ProfileImageCell
+              displayId={displayId}
+              fullName={fullName}
+              hasImage={!!params.value}
+              accessToken={accessToken}
+            />
           );
         },
       },
@@ -445,7 +558,7 @@ const PersonsPage = () => {
         },
       },
     ],
-    [navigate]
+    [navigate, accessToken]
   );
 
   const defaultColDef: ColDef = useMemo(
@@ -473,21 +586,23 @@ const PersonsPage = () => {
           const filters = extractFilters(rowParams.filterModel as FilterModel);
 
           try {
-            const response = await personsApi.apiV1PersonsGet(
-              filters.gender,
-              filters.civilStatus,
-              filters.displayIdFilter,
-              filters.fullNameFilter,
-              pageNumber,
-              pageSize,
-              debouncedSearchTerm || undefined,
-              sortBy,
-              sortDescending
-            );
+            const result = await fetchPersons({
+              variables: {
+                gender: filters.gender,
+                civilStatus: filters.civilStatus,
+                displayIdFilter: filters.displayIdFilter,
+                fullNameFilter: filters.fullNameFilter,
+                pageNumber,
+                pageSize,
+                searchTerm: debouncedSearchTerm || undefined,
+                sortBy,
+                sortDescending,
+              },
+            });
 
-            const data = response.data;
-            const rowsThisPage = data.items || [];
-            const lastRow = data.totalCount ?? -1;
+            const data = result.data?.persons;
+            const rowsThisPage = data?.items || [];
+            const lastRow = data?.totalCount ?? -1;
 
             rowParams.successCallback(rowsThisPage, lastRow);
             setIsLoading(false);
@@ -501,7 +616,7 @@ const PersonsPage = () => {
 
       params.api.setGridOption('datasource', dataSource);
     },
-    [debouncedSearchTerm]
+    [debouncedSearchTerm, fetchPersons]
   );
 
   return (

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import {
   Box,
   Heading,
@@ -18,20 +18,69 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  personsApi,
-  documentsApi,
-  type CreatePersonDto,
-  type UpdatePersonDto,
-  type PersonResponseDto,
-  type CreateAddressDto,
-  type CreateContactDto,
-  type DocumentListDto,
-  CreatePersonDtoGenderEnum,
-  CreatePersonDtoCivilStatusEnum,
-  CreateAddressDtoAddressTypeEnum,
-  CreateContactDtoContactTypeEnum,
-  API_BASE_URL,
-} from '../../api';
+  usePerson,
+  useCreatePerson,
+  useUpdatePerson,
+} from '../../hooks/usePersons';
+import {
+  usePersonDocuments,
+  uploadDocument,
+  uploadProfileImage,
+  deleteProfileImageRest,
+  getDocumentDownloadUrl,
+  getProfileImageUrl,
+  deleteDocumentRest,
+} from '../../hooks/useDocuments';
+import { AuthContext } from '../../contexts/AuthContext';
+import type {
+  CreatePersonInput,
+  UpdatePersonInput,
+  CreateAddressInput,
+  CreateContactInput,
+} from '../../graphql/generated/graphql';
+
+// Enum definitions matching backend values
+const GenderEnum = {
+  Male: 0,
+  Female: 1,
+} as const;
+
+const GenderOptions = ['Male', 'Female'];
+
+const CivilStatusEnum = {
+  Single: 0,
+  Married: 1,
+  SoloParent: 2,
+  Widow: 3,
+  Separated: 4,
+  Other: 5,
+} as const;
+
+const CivilStatusOptions = [
+  'Single',
+  'Married',
+  'SoloParent',
+  'Widow',
+  'Separated',
+  'Other',
+];
+
+const AddressTypeEnum = {
+  Home: 0,
+  Business: 1,
+  Other: 2,
+} as const;
+
+const AddressTypeOptions = ['Home', 'Business', 'Other'];
+
+const ContactTypeEnum = {
+  Personal: 0,
+  Work: 1,
+  Emergency: 2,
+  Other: 3,
+} as const;
+
+const ContactTypeOptions = ['Personal', 'Work', 'Emergency', 'Other'];
 import { DocumentsTable, formatFileSize } from '../../components/documents';
 
 interface AddressFormData {
@@ -62,6 +111,16 @@ interface PersonFormData {
   dateOfBirth: string;
   gender: string;
   civilStatus: string;
+}
+
+interface DocumentListItem {
+  displayId?: number;
+  fileName?: string | null;
+  fileSize?: number | null;
+  mimeType?: string | null;
+  description?: string | null;
+  uploadedAt?: string | null;
+  uploadedBy?: string | null;
 }
 
 const initialAddressData: AddressFormData = {
@@ -97,24 +156,53 @@ const initialFormData: PersonFormData = {
 const PersonFormPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
+  const authContext = useContext(AuthContext);
+  const accessToken = authContext?.accessToken ?? null;
   const isEditMode = displayId && displayId !== 'new';
+
+  const {
+    person,
+    loading: loadingPerson,
+    refetch: refetchPerson,
+  } = usePerson(isEditMode ? Number(displayId) : 0);
+  const { createPerson, loading: creating } = useCreatePerson();
+  const { updatePerson, loading: updating } = useUpdatePerson();
+
+  // Use GraphQL hook for documents
+  const {
+    documents: graphqlDocuments,
+    loading: loadingDocuments,
+    refetch: refetchDocuments,
+  } = usePersonDocuments(isEditMode ? Number(displayId) : 0);
 
   const [formData, setFormData] = useState<PersonFormData>(initialFormData);
   const [addresses, setAddresses] = useState<AddressFormData[]>([]);
   const [contacts, setContacts] = useState<ContactFormData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const loading = loadingPerson;
+  const saving = creating || updating;
 
   // Profile image state
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [profileImageVersion, setProfileImageVersion] = useState(0);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [profileBlobUrl, setProfileBlobUrl] = useState<string | null>(null);
+  const [loadingProfileImage, setLoadingProfileImage] = useState(false);
   const profileInputRef = useRef<HTMLInputElement>(null);
 
-  // Documents state
-  const [documents, setDocuments] = useState<DocumentListDto[]>([]);
-  const [loadingDocuments, setLoadingDocuments] = useState(false);
+  // Documents state - transform GraphQL documents for DocumentsTable
+  const documents: DocumentListItem[] = graphqlDocuments
+    .filter((doc): doc is NonNullable<typeof doc> => doc !== null)
+    .map(doc => ({
+      displayId: doc.displayId,
+      fileName: doc.fileName,
+      fileSize: doc.fileSizeBytes,
+      mimeType: doc.contentType,
+      description: doc.description,
+      uploadedAt: doc.createdOn,
+      uploadedBy: doc.createdBy,
+    }));
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const [documentDescription, setDocumentDescription] = useState('');
   const [selectedDocumentFiles, setSelectedDocumentFiles] = useState<File[]>(
@@ -124,85 +212,122 @@ const PersonFormPage = () => {
 
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
-    if (isEditMode) {
-      loadPerson();
-      loadDocuments();
-    }
-  }, [displayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
+    if (isEditMode && person) {
+      // Map GraphQL uppercase enum strings to form display values
+      const genderMap: Record<string, string> = {
+        MALE: 'Male',
+        FEMALE: 'Female',
+      };
+      const civilStatusMap: Record<string, string> = {
+        SINGLE: 'Single',
+        MARRIED: 'Married',
+        SOLO_PARENT: 'SoloParent',
+        WIDOW: 'Widow',
+        SEPARATED: 'Separated',
+        OTHER: 'Other',
+      };
+      const addressTypeMap: Record<string, string> = {
+        HOME: 'Home',
+        BUSINESS: 'Business',
+        OTHER: 'Other',
+      };
+      const contactTypeMap: Record<string, string> = {
+        PERSONAL: 'Personal',
+        WORK: 'Work',
+        EMERGENCY: 'Emergency',
+        OTHER: 'Other',
+      };
 
-  const loadPerson = async () => {
-    if (!displayId) return;
-    setLoading(true);
-    try {
-      const response = await personsApi.apiV1PersonsDisplayIdGet(
-        Number(displayId)
-      );
-      const person: PersonResponseDto = response.data;
       setFormData({
         firstName: person.firstName || '',
         lastName: person.lastName || '',
         middleName: person.middleName || '',
         dateOfBirth: person.dateOfBirth?.split('T')[0] || '',
-        gender: person.gender || 'Male',
-        civilStatus: person.civilStatus || 'Single',
+        gender: genderMap[person.gender] || 'Male',
+        civilStatus: civilStatusMap[person.civilStatus] || 'Single',
       });
       setProfileImageUrl(person.profileImageUrl || null);
 
       // Load existing addresses
       if (person.addresses && person.addresses.length > 0) {
         setAddresses(
-          person.addresses.map(addr => ({
-            address1: addr.address1 || '',
-            address2: addr.address2 || '',
-            barangay: addr.barangay || '',
-            city: addr.city || '',
-            province: addr.province || '',
-            country: addr.country || 'Philippines',
-            zipCode: addr.zipCode || '',
-            isCurrent: addr.isCurrent || false,
-            isPermanent: addr.isPermanent || false,
-            addressType: addr.addressType || 'Home',
-          }))
+          person.addresses
+            .filter(addr => addr !== null)
+            .map(addr => ({
+              address1: addr.address1 || '',
+              address2: addr.address2 || '',
+              barangay: addr.barangay || '',
+              city: addr.city || '',
+              province: addr.province || '',
+              country: addr.country || 'Philippines',
+              zipCode: addr.zipCode || '',
+              isCurrent: addr.isCurrent || false,
+              isPermanent: addr.isPermanent || false,
+              addressType: addressTypeMap[addr.addressType] || 'Home',
+            }))
         );
       }
 
       // Load existing contacts
       if (person.contacts && person.contacts.length > 0) {
         setContacts(
-          person.contacts.map(contact => ({
-            mobile: contact.mobile || '',
-            landLine: contact.landLine || '',
-            fax: contact.fax || '',
-            email: contact.email || '',
-            contactType: contact.contactType || 'Personal',
-          }))
+          person.contacts
+            .filter(contact => contact !== null)
+            .map(contact => ({
+              mobile: contact.mobile || '',
+              landLine: contact.landLine || '',
+              fax: contact.fax || '',
+              email: contact.email || '',
+              contactType: contactTypeMap[contact.contactType] || 'Personal',
+            }))
         );
       }
-    } catch (err) {
-      console.error('Error loading person:', err);
-      setError('Failed to load person data');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [person, displayId]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
-  const loadDocuments = async () => {
-    if (!displayId) return;
-    setLoadingDocuments(true);
-    try {
-      const response = await documentsApi.apiV1PersonsDisplayIdDocumentsGet(
-        Number(displayId),
-        1,
-        100
-      );
-      setDocuments(response.data.items || []);
-    } catch (err) {
-      console.error('Error loading documents:', err);
-    } finally {
-      setLoadingDocuments(false);
-    }
-  };
+  // Fetch profile image with authentication through Gateway
+  useEffect(() => {
+    let currentBlobUrl: string | null = null;
+
+    const fetchProfileImage = async () => {
+      if (!profileImageUrl || !accessToken || !displayId) {
+        setProfileBlobUrl(null);
+        return;
+      }
+
+      setLoadingProfileImage(true);
+      try {
+        const url = getProfileImageUrl(Number(displayId), profileImageVersion);
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        currentBlobUrl = URL.createObjectURL(blob);
+        setProfileBlobUrl(currentBlobUrl);
+      } catch (err) {
+        console.error('Error loading profile image:', err);
+        setProfileBlobUrl(null);
+      } finally {
+        setLoadingProfileImage(false);
+      }
+    };
+
+    fetchProfileImage();
+
+    return () => {
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
+      }
+    };
+  }, [displayId, profileImageUrl, accessToken, profileImageVersion]);
 
   const handleChange = (field: keyof PersonFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -248,12 +373,12 @@ const PersonFormPage = () => {
     );
   };
 
-  // Profile image handlers
+  // Profile image handlers - using Gateway proxy
   const handleProfileImageSelect = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
-    if (!file || !displayId) return;
+    if (!file || !displayId || !accessToken) return;
 
     if (!['image/jpeg', 'image/png'].includes(file.type)) {
       setError('Only JPEG and PNG images are allowed');
@@ -269,12 +394,18 @@ const PersonFormPage = () => {
     setError(null);
 
     try {
-      await documentsApi.apiV1PersonsDisplayIdDocumentsProfileImagePost(
+      const response = await uploadProfileImage(
         Number(displayId),
-        file
+        file,
+        accessToken
       );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       setProfileImageVersion(v => v + 1);
-      await loadPerson();
+      await refetchPerson();
     } catch (err) {
       console.error('Error uploading profile image:', err);
       setError('Failed to upload profile image');
@@ -289,16 +420,24 @@ const PersonFormPage = () => {
   const handleDeleteProfileImage = async () => {
     if (
       !displayId ||
+      !accessToken ||
       !window.confirm('Are you sure you want to delete the profile image?')
     )
       return;
 
     setUploadingImage(true);
     try {
-      await documentsApi.apiV1PersonsDisplayIdDocumentsProfileImageDelete(
-        Number(displayId)
+      const response = await deleteProfileImageRest(
+        Number(displayId),
+        accessToken
       );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       setProfileImageUrl(null);
+      setProfileBlobUrl(null);
     } catch (err) {
       console.error('Error deleting profile image:', err);
       setError('Failed to delete profile image');
@@ -307,7 +446,7 @@ const PersonFormPage = () => {
     }
   };
 
-  // Document handlers
+  // Document handlers - using Gateway proxy
   const handleDocumentFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -316,7 +455,8 @@ const PersonFormPage = () => {
   };
 
   const handleDocumentUpload = async () => {
-    if (selectedDocumentFiles.length === 0 || !displayId) return;
+    if (selectedDocumentFiles.length === 0 || !displayId || !accessToken)
+      return;
 
     setUploadingDocument(true);
     setError(null);
@@ -326,11 +466,16 @@ const PersonFormPage = () => {
 
     for (const file of selectedDocumentFiles) {
       try {
-        await documentsApi.apiV1PersonsDisplayIdDocumentsPost(
+        const response = await uploadDocument(
           Number(displayId),
           file,
-          documentDescription || undefined
+          documentDescription || undefined,
+          accessToken
         );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         successCount++;
       } catch (err) {
         console.error('Error uploading document:', err);
@@ -350,38 +495,65 @@ const PersonFormPage = () => {
       if (documentInputRef.current) {
         documentInputRef.current.value = '';
       }
-      await loadDocuments();
+      await refetchDocuments();
     }
 
     setUploadingDocument(false);
   };
 
-  const handleDocumentDownload = (
+  const handleDocumentDownload = async (
     documentDisplayId: number,
     fileName: string | null | undefined
   ) => {
-    const url = `${API_BASE_URL}/api/v1/persons/${displayId}/documents/${documentDisplayId}/download`;
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName || 'document';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (!displayId || !accessToken) return;
+
+    try {
+      const url = getDocumentDownloadUrl(Number(displayId), documentDisplayId);
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName || 'document';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Error downloading document:', err);
+      setError('Failed to download document');
+    }
   };
 
   const handleDocumentDelete = async (documentDisplayId: number) => {
     if (
       !displayId ||
+      !accessToken ||
       !window.confirm('Are you sure you want to delete this document?')
     )
       return;
 
     try {
-      await documentsApi.apiV1PersonsDisplayIdDocumentsDocumentDisplayIdDelete(
+      const response = await deleteDocumentRest(
         Number(displayId),
-        documentDisplayId
+        documentDisplayId,
+        accessToken
       );
-      await loadDocuments();
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      await refetchDocuments();
     } catch (err) {
       console.error('Error deleting document:', err);
       setError('Failed to delete document');
@@ -390,64 +562,71 @@ const PersonFormPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError(null);
 
     try {
-      const addressDtos: CreateAddressDto[] = addresses
+      const addressDtos: CreateAddressInput[] = addresses
         .filter(addr => addr.address1 && addr.city && addr.province)
         .map(addr => ({
           address1: addr.address1,
-          address2: addr.address2 || null,
-          barangay: addr.barangay || null,
+          address2: addr.address2 || undefined,
+          barangay: addr.barangay || undefined,
           city: addr.city,
           province: addr.province,
-          country: addr.country || null,
-          zipCode: addr.zipCode || null,
+          country: addr.country || undefined,
+          zipCode: addr.zipCode || undefined,
           isCurrent: addr.isCurrent,
           isPermanent: addr.isPermanent,
-          addressType: addr.addressType as CreateAddressDto['addressType'],
+          addressType:
+            AddressTypeEnum[addr.addressType as keyof typeof AddressTypeEnum],
         }));
 
-      const contactDtos: CreateContactDto[] = contacts
+      const contactDtos: CreateContactInput[] = contacts
         .filter(contact => contact.mobile || contact.email || contact.landLine)
         .map(contact => ({
-          mobile: contact.mobile || null,
-          landLine: contact.landLine || null,
-          fax: contact.fax || null,
-          email: contact.email || null,
-          contactType: contact.contactType as CreateContactDto['contactType'],
+          mobile: contact.mobile || undefined,
+          landLine: contact.landLine || undefined,
+          fax: contact.fax || undefined,
+          email: contact.email || undefined,
+          contactType:
+            ContactTypeEnum[
+              contact.contactType as keyof typeof ContactTypeEnum
+            ],
         }));
 
       if (isEditMode) {
-        const updateDto: UpdatePersonDto = {
+        const updateDto: UpdatePersonInput = {
           firstName: formData.firstName,
           lastName: formData.lastName,
-          middleName: formData.middleName || null,
+          middleName: formData.middleName || undefined,
           dateOfBirth: formData.dateOfBirth,
-          gender: formData.gender as UpdatePersonDto['gender'],
-          civilStatus: formData.civilStatus as UpdatePersonDto['civilStatus'],
+          gender: GenderEnum[formData.gender as keyof typeof GenderEnum],
+          civilStatus:
+            CivilStatusEnum[
+              formData.civilStatus as keyof typeof CivilStatusEnum
+            ],
         };
-        await personsApi.apiV1PersonsDisplayIdPut(Number(displayId), updateDto);
+        await updatePerson(Number(displayId), updateDto);
       } else {
-        const createDto: CreatePersonDto = {
+        const createDto: CreatePersonInput = {
           firstName: formData.firstName,
           lastName: formData.lastName,
-          middleName: formData.middleName || null,
+          middleName: formData.middleName || undefined,
           dateOfBirth: formData.dateOfBirth,
-          gender: formData.gender as CreatePersonDto['gender'],
-          civilStatus: formData.civilStatus as CreatePersonDto['civilStatus'],
-          addresses: addressDtos.length > 0 ? addressDtos : null,
-          contacts: contactDtos.length > 0 ? contactDtos : null,
+          gender: GenderEnum[formData.gender as keyof typeof GenderEnum],
+          civilStatus:
+            CivilStatusEnum[
+              formData.civilStatus as keyof typeof CivilStatusEnum
+            ],
+          addresses: addressDtos.length > 0 ? addressDtos : undefined,
+          contacts: contactDtos.length > 0 ? contactDtos : undefined,
         };
-        await personsApi.apiV1PersonsPost(createDto);
+        await createPerson(createDto);
       }
       navigate('/persons');
     } catch (err) {
       console.error('Error saving person:', err);
       setError('Failed to save person');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -537,11 +716,11 @@ const PersonFormPage = () => {
                         borderWidth={2}
                         borderColor="border.muted"
                       >
-                        {uploadingImage ? (
+                        {uploadingImage || loadingProfileImage ? (
                           <Spinner size="lg" />
-                        ) : profileImageUrl ? (
+                        ) : profileBlobUrl ? (
                           <Image
-                            src={`${API_BASE_URL}/api/v1/persons/${displayId}/documents/profile-image?v=${profileImageVersion}`}
+                            src={profileBlobUrl}
                             alt="Profile"
                             w="100%"
                             h="100%"
@@ -657,13 +836,11 @@ const PersonFormPage = () => {
                               handleChange('gender', e.target.value)
                             }
                           >
-                            {Object.values(CreatePersonDtoGenderEnum).map(
-                              gender => (
-                                <option key={gender} value={gender}>
-                                  {gender}
-                                </option>
-                              )
-                            )}
+                            {GenderOptions.map(gender => (
+                              <option key={gender} value={gender}>
+                                {gender}
+                              </option>
+                            ))}
                           </NativeSelect.Field>
                           <NativeSelect.Indicator />
                         </NativeSelect.Root>
@@ -678,15 +855,13 @@ const PersonFormPage = () => {
                               handleChange('civilStatus', e.target.value)
                             }
                           >
-                            {Object.values(CreatePersonDtoCivilStatusEnum).map(
-                              status => (
-                                <option key={status} value={status}>
-                                  {status === 'SoloParent'
-                                    ? 'Solo Parent'
-                                    : status}
-                                </option>
-                              )
-                            )}
+                            {CivilStatusOptions.map(status => (
+                              <option key={status} value={status}>
+                                {status === 'SoloParent'
+                                  ? 'Solo Parent'
+                                  : status}
+                              </option>
+                            ))}
                           </NativeSelect.Field>
                           <NativeSelect.Indicator />
                         </NativeSelect.Root>
@@ -772,9 +947,7 @@ const PersonFormPage = () => {
                                         )
                                       }
                                     >
-                                      {Object.values(
-                                        CreateAddressDtoAddressTypeEnum
-                                      ).map(type => (
+                                      {AddressTypeOptions.map(type => (
                                         <option key={type} value={type}>
                                           {type}
                                         </option>
@@ -1009,9 +1182,7 @@ const PersonFormPage = () => {
                                       )
                                     }
                                   >
-                                    {Object.values(
-                                      CreateContactDtoContactTypeEnum
-                                    ).map(type => (
+                                    {ContactTypeOptions.map(type => (
                                       <option key={type} value={type}>
                                         {type}
                                       </option>

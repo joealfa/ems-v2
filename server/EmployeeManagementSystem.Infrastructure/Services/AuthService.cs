@@ -1,5 +1,6 @@
 using EmployeeManagementSystem.Application.DTOs.Auth;
 using EmployeeManagementSystem.Application.Interfaces;
+using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Infrastructure.Data;
 using Google.Apis.Auth;
@@ -104,7 +105,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
             AccessToken = accessToken,
             RefreshToken = refreshToken.Token,
             ExpiresOn = DateTime.UtcNow.AddMinutes(GetAccessTokenExpirationMinutes()),
-            User = MapToUserDto(user)
+            User = user.ToDto()
         };
     }
 
@@ -185,7 +186,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
             AccessToken = jwtToken,
             RefreshToken = refreshToken.Token,
             ExpiresOn = DateTime.UtcNow.AddMinutes(GetAccessTokenExpirationMinutes()),
-            User = MapToUserDto(user)
+            User = user.ToDto()
         };
     }
 
@@ -234,7 +235,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
             AccessToken = accessToken,
             RefreshToken = newRefreshToken.Token,
             ExpiresOn = DateTime.UtcNow.AddMinutes(GetAccessTokenExpirationMinutes()),
-            User = MapToUserDto(user)
+            User = user.ToDto()
         };
     }
 
@@ -270,7 +271,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
     public async Task<UserDto?> GetUserByIdAsync(Guid userId)
     {
         User? user = await _context.Users.FindAsync(userId);
-        return user == null ? null : MapToUserDto(user);
+        return user?.ToDto();
     }
 
     /// <summary>
@@ -373,22 +374,6 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
 
             RevokeDescendantTokens(childToken, allTokens, ipAddress, reason);
         }
-    }
-
-    /// <summary>
-    /// Maps a User entity to a UserDto.
-    /// </summary>
-    private static UserDto MapToUserDto(User user)
-    {
-        return new UserDto
-        {
-            Id = user.Id,
-            Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            ProfilePictureUrl = user.ProfilePictureUrl,
-            Role = user.Role
-        };
     }
 
     /// <summary>

@@ -24,7 +24,8 @@ import {
   type ValueFormatterParams,
 } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
-import { salaryGradesApi, type SalaryGradeResponseDto } from '../../api';
+import { useSalaryGradesLazy } from '../../hooks/useSalaryGrades';
+import type { SalaryGradeResponseDto } from '../../graphql/generated/graphql';
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -69,6 +70,7 @@ const SalaryGradesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const theme = useAgGridTheme();
+  const { fetchSalaryGrades } = useSalaryGradesLazy();
 
   useEffect(() => {
     if (gridRef.current?.api) {
@@ -83,17 +85,19 @@ const SalaryGradesPage = () => {
           const sortDescending = sortModel?.sort === 'desc';
 
           try {
-            const response = await salaryGradesApi.apiV1SalarygradesGet(
-              pageNumber,
-              pageSize,
-              debouncedSearchTerm || undefined,
-              sortBy,
-              sortDescending
-            );
+            const result = await fetchSalaryGrades({
+              variables: {
+                pageNumber,
+                pageSize,
+                searchTerm: debouncedSearchTerm || undefined,
+                sortBy,
+                sortDescending,
+              },
+            });
 
-            const data = response.data;
-            const rowsThisPage = data.items || [];
-            const lastRow = data.totalCount ?? -1;
+            const data = result.data?.salaryGrades;
+            const rowsThisPage = data?.items || [];
+            const lastRow = data?.totalCount ?? -1;
 
             rowParams.successCallback(rowsThisPage, lastRow);
           } catch (error) {
@@ -103,7 +107,7 @@ const SalaryGradesPage = () => {
         },
       });
     }
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, fetchSalaryGrades]);
 
   const formatCurrency = useCallback((value: number | undefined): string => {
     if (value === undefined || value === null) return '-';
@@ -262,17 +266,19 @@ const SalaryGradesPage = () => {
           const sortDescending = sortModel?.sort === 'desc';
 
           try {
-            const response = await salaryGradesApi.apiV1SalarygradesGet(
-              pageNumber,
-              pageSize,
-              debouncedSearchTerm || undefined,
-              sortBy,
-              sortDescending
-            );
+            const result = await fetchSalaryGrades({
+              variables: {
+                pageNumber,
+                pageSize,
+                searchTerm: debouncedSearchTerm || undefined,
+                sortBy,
+                sortDescending,
+              },
+            });
 
-            const data = response.data;
-            const rowsThisPage = data.items || [];
-            const lastRow = data.totalCount ?? -1;
+            const data = result.data?.salaryGrades;
+            const rowsThisPage = data?.items || [];
+            const lastRow = data?.totalCount ?? -1;
 
             rowParams.successCallback(rowsThisPage, lastRow);
             setIsLoading(false);
@@ -286,7 +292,7 @@ const SalaryGradesPage = () => {
 
       params.api.setGridOption('datasource', dataSource);
     },
-    [debouncedSearchTerm]
+    [debouncedSearchTerm, fetchSalaryGrades]
   );
 
   return (

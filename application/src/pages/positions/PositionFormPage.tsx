@@ -15,11 +15,14 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  positionsApi,
-  type CreatePositionDto,
-  type UpdatePositionDto,
-  type PositionResponseDto,
-} from '../../api';
+  usePosition,
+  useCreatePosition,
+  useUpdatePosition,
+} from '../../hooks/usePositions';
+import type {
+  CreatePositionInput,
+  UpdatePositionInput,
+} from '../../graphql/generated/graphql';
 
 interface PositionFormData {
   titleName: string;
@@ -38,39 +41,28 @@ const PositionFormPage = () => {
   const { displayId } = useParams<{ displayId: string }>();
   const isEditMode = displayId && displayId !== 'new';
 
+  const { position, loading: loadingPosition } = usePosition(
+    isEditMode ? Number(displayId) : 0
+  );
+  const { createPosition, loading: creating } = useCreatePosition();
+  const { updatePosition, loading: updating } = useUpdatePosition();
+
   const [formData, setFormData] = useState<PositionFormData>(initialFormData);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    if (isEditMode) {
-      loadPosition();
-    }
-  }, [displayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
+  const loading = loadingPosition;
+  const saving = creating || updating;
 
-  const loadPosition = async () => {
-    if (!displayId) return;
-    setLoading(true);
-    try {
-      const response = await positionsApi.apiV1PositionsDisplayIdGet(
-        Number(displayId)
-      );
-      const position: PositionResponseDto = response.data;
+  useEffect(() => {
+    if (isEditMode && position) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Populating form with loaded data is a valid pattern
       setFormData({
         titleName: position.titleName || '',
         description: position.description || '',
         isActive: position.isActive ?? true,
       });
-    } catch (err) {
-      console.error('Error loading position:', err);
-      setError('Failed to load position data');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [isEditMode, position]);
 
   const handleChange = (
     field: keyof PositionFormData,
@@ -81,33 +73,27 @@ const PositionFormPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError(null);
 
     try {
       if (isEditMode) {
-        const updateDto: UpdatePositionDto = {
+        const updateDto: UpdatePositionInput = {
           titleName: formData.titleName,
           description: formData.description || null,
           isActive: formData.isActive,
         };
-        await positionsApi.apiV1PositionsDisplayIdPut(
-          Number(displayId),
-          updateDto
-        );
+        await updatePosition(Number(displayId), updateDto);
       } else {
-        const createDto: CreatePositionDto = {
+        const createDto: CreatePositionInput = {
           titleName: formData.titleName,
           description: formData.description || null,
         };
-        await positionsApi.apiV1PositionsPost(createDto);
+        await createPosition(createDto);
       }
       navigate('/positions');
     } catch (err) {
       console.error('Error saving position:', err);
       setError('Failed to save position');
-    } finally {
-      setSaving(false);
     }
   };
 

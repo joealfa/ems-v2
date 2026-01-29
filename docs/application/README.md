@@ -24,7 +24,7 @@ The Employee Management System (EMS) frontend is a modern React-based single-pag
 - **Position, Salary Grade, and Item Management**
 - **Dark/Light Mode** theming support
 - **AG Grid** integration for powerful data tables with infinite scrolling
-- **Auto-generated API Client** from OpenAPI specification
+- **Apollo Client** with GraphQL Code Generator for type-safe API communication
 - **Protected Routes** with automatic token refresh
 
 ---
@@ -33,9 +33,9 @@ The Employee Management System (EMS) frontend is a modern React-based single-pag
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm 9+
-- Backend API running on `http://localhost:5031`
+- GraphQL Gateway running on `https://localhost:5003`
 - Google OAuth2 Client ID (for authentication)
 
 ### Installation
@@ -48,7 +48,7 @@ cd application
 npm install
 
 # Create .env file with required environment variables
-echo "VITE_API_BASE_URL=http://localhost:5031" > .env
+echo "VITE_GRAPHQL_URL=https://localhost:5003/graphql" > .env
 echo "VITE_GOOGLE_CLIENT_ID=your-google-client-id" >> .env
 
 # Start development server
@@ -61,30 +61,30 @@ The application will be available at `http://localhost:5173`.
 
 | Variable | Description | Default |
 |----------|-------------|--------|
-| `VITE_API_BASE_URL` | Backend API URL | `http://localhost:5031` |
+| `VITE_GRAPHQL_URL` | GraphQL Gateway URL | `https://localhost:5003/graphql` |
 | `VITE_GOOGLE_CLIENT_ID` | Google OAuth2 Client ID | Required |
 
 ### Available Scripts
 
-| Script         | Command                             | Description                                  |
-|----------------|-------------------------------------|----------------------------------------------|
-| `dev`          | `vite`                              | Start development server with hot reload     |
-| `build`        | `tsc -b && vite build`              | Type-check and build for production          |
-| `lint`         | `eslint .`                          | Run ESLint on all files                      |
-| `preview`      | `vite preview`                      | Preview production build locally             |
-| `generate-api` | `openapi-generator-cli generate...` | Generate TypeScript API client from Swagger  |
-| `format`       | `prettier --write src/`             | Format all source files                      |
-| `format:check` | `prettier --check src/`             | Check formatting without modifying files     |
+| Script         | Command                               | Description                                  |
+|----------------|---------------------------------------|----------------------------------------------|
+| `dev`          | `vite`                                | Start development server with hot reload     |
+| `build`        | `tsc -b && vite build`                | Type-check and build for production          |
+| `lint`         | `eslint .`                            | Run ESLint on all files                      |
+| `preview`      | `vite preview`                        | Preview production build locally             |
+| `codegen`      | `graphql-codegen --config codegen.ts` | Generate TypeScript types from GraphQL schema|
+| `format`       | `prettier --write src/`               | Format all source files                      |
+| `format:check` | `prettier --check src/`               | Check formatting without modifying files     |
 
-### Regenerating API Client
+### Regenerating GraphQL Types
 
-When the backend API changes, regenerate the TypeScript client:
+When the GraphQL schema changes on the gateway, regenerate the TypeScript types:
 
 ```bash
-npm run generate-api
+npm run codegen
 ```
 
-This fetches the OpenAPI specification from `http://localhost:5062/swagger/v1/swagger.json` and generates typed API clients and models.
+This fetches the schema from `https://localhost:5003/graphql` and generates typed queries, mutations, and TypeScript interfaces.
 
 ---
 
@@ -94,26 +94,30 @@ This fetches the OpenAPI specification from `http://localhost:5062/swagger/v1/sw
 
 | Package              | Version  | Purpose                                                          |
 |----------------------|----------|------------------------------------------------------------------|
+| `@apollo/client`     | ^3.x     | GraphQL client for data fetching and caching                     |
 | `@chakra-ui/react`   | ^3.31.0  | Component library for UI elements                                |
 | `@emotion/react`     | ^11.14.0 | CSS-in-JS styling (Chakra UI dependency)                         |
 | `@react-oauth/google`| ^0.13.4  | Google OAuth2 authentication for React                           |
 | `ag-grid-react`      | ^35.0.1  | Enterprise data grid with sorting, filtering, infinite scrolling |
-| `axios`              | ^1.13.2  | HTTP client for API communication                                |
+| `graphql`            | ^16.x    | GraphQL language support                                         |
 | `react`              | ^19.2.0  | Core UI framework                                                |
 | `react-dom`          | ^19.2.0  | React DOM rendering                                              |
 | `react-router-dom`   | ^7.12.0  | Client-side routing                                              |
 
 ### Development Dependencies
 
-| Package                                           | Purpose                                                |
-|---------------------------------------------------|--------------------------------------------------------|
-| `@openapitools/openapi-generator-cli`             | Auto-generates TypeScript API client from OpenAPI spec |
-| `@types/node`, `@types/react`, `@types/react-dom` | TypeScript definitions                                 |
-| `@vitejs/plugin-react`                            | Vite React plugin for Fast Refresh                     |
-| `eslint`, `typescript-eslint`                     | Code linting                                           |
-| `prettier`                                        | Code formatting                                        |
-| `typescript`                                      | TypeScript compiler                                    |
-| `vite`                                            | Build tool and dev server                              |
+| Package                                           | Purpose                                       |
+|---------------------------------------------------|-----------------------------------------------|
+| `@graphql-codegen/cli`                            | GraphQL Code Generator CLI                    |
+| `@graphql-codegen/typescript`                     | TypeScript types generation                   |
+| `@graphql-codegen/typescript-operations`          | TypeScript operation types                    |
+| `@graphql-codegen/typescript-react-apollo`        | React Apollo hooks generation                 |
+| `@types/node`, `@types/react`, `@types/react-dom` | TypeScript definitions                        |
+| `@vitejs/plugin-react`                            | Vite React plugin for Fast Refresh            |
+| `eslint`, `typescript-eslint`                     | Code linting                                  |
+| `prettier`                                        | Code formatting                               |
+| `typescript`                                      | TypeScript compiler                           |
+| `vite`                                            | Build tool and dev server                     |
 
 ---
 
@@ -121,18 +125,26 @@ This fetches the OpenAPI specification from `http://localhost:5062/swagger/v1/sw
 
 ```
 src/
-├── api/                          # API layer
-│   ├── config.ts                 # Axios configuration
-│   ├── index.ts                  # API instances & exports
-│   └── generated/                # Auto-generated OpenAPI client
-│       ├── api/                  # API classes
-│       └── models/               # TypeScript interfaces
+├── graphql/                      # GraphQL layer
+│   ├── client.ts                 # Apollo Client configuration
+│   ├── ApolloProvider.tsx        # React provider wrapper
+│   ├── operations/               # GraphQL queries and mutations
+│   │   ├── persons.graphql
+│   │   ├── employments.graphql
+│   │   ├── schools.graphql
+│   │   └── ...
+│   └── generated/                # Auto-generated types (DO NOT EDIT)
+│       └── graphql.ts
 ├── assets/                       # Static assets
 ├── components/                   # Reusable components
 │   ├── documents/                # Document-related components
 │   ├── layout/                   # Layout components (MainLayout, Sidebar, Header)
 │   └── ui/                       # UI utilities (color mode, AG Grid theme)
 ├── hooks/                        # Custom React hooks
+│   ├── usePersons.ts
+│   ├── useEmployments.ts
+│   ├── useSchools.ts
+│   └── ...
 ├── pages/                        # Page components by feature
 │   ├── Dashboard.tsx
 │   ├── persons/
@@ -157,6 +169,7 @@ src/
 | [Architecture](./ARCHITECTURE.md)        | Application architecture and patterns   |
 | [Components](./COMPONENTS.md)            | Component library and usage             |
 | [Pages](./PAGES.md)                      | Page structure and functionality        |
-| [API Integration](./API-INTEGRATION.md)  | API client and data fetching            |
+| [API Integration](./API-INTEGRATION.md)  | GraphQL client and data fetching        |
+| [GraphQL Usage](./GRAPHQL_USAGE.md)      | GraphQL hooks and operations guide      |
 | [Theming](./THEMING.md)                  | Theme configuration and styling         |
 | [Development Guide](./DEVELOPMENT.md)    | Development workflow and best practices |

@@ -1,9 +1,9 @@
 namespace EmployeeManagementSystem.Application.DTOs;
 
 /// <summary>
-/// Base DTO class for all response DTOs with read-only display identifier.
+/// Base record for all response DTOs with read-only display identifier and audit fields.
 /// </summary>
-public abstract class BaseResponseDto
+public abstract record BaseResponseDto
 {
     /// <summary>
     /// Gets the public-facing display identifier (12-digit number).

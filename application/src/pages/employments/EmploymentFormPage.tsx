@@ -15,22 +15,57 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  employmentsApi,
-  positionsApi,
-  salaryGradesApi,
-  itemsApi,
-  type CreateEmploymentDto,
-  type UpdateEmploymentDto,
-  type EmploymentResponseDto,
-  type PositionResponseDto,
-  type SalaryGradeResponseDto,
-  type ItemResponseDto,
-  type PersonListDto,
-  CreateEmploymentDtoAppointmentStatusEnum,
-  CreateEmploymentDtoEmploymentStatusEnum,
-  CreateEmploymentDtoEligibilityEnum,
-} from '../../api';
+  useEmployment,
+  useCreateEmployment,
+  useUpdateEmployment,
+} from '../../hooks/useEmployments';
+import { usePositions } from '../../hooks/usePositions';
+import { useSalaryGrades } from '../../hooks/useSalaryGrades';
+import { useItems } from '../../hooks/useItems';
+import type {
+  CreateEmploymentInput,
+  UpdateEmploymentInput,
+  PersonListFieldsFragment,
+} from '../../graphql/generated/graphql';
 import PersonSearchSelect from '../../components/PersonSearchSelect';
+
+// Enum definitions matching backend values
+const AppointmentStatusEnum = {
+  Original: 1,
+  Promotion: 2,
+  Transfer: 3,
+  Reappointment: 4,
+} as const;
+
+const AppointmentStatusOptions = [
+  'Original',
+  'Promotion',
+  'Transfer',
+  'Reappointment',
+];
+
+const EmploymentStatusEnum = {
+  Regular: 1,
+  Permanent: 2,
+} as const;
+
+const EmploymentStatusOptions = ['Regular', 'Permanent'];
+
+const EligibilityEnum = {
+  LET: 1,
+  PBET: 2,
+  CivilServiceProfessional: 3,
+  CivilServiceSubProfessional: 4,
+  Other: 99,
+} as const;
+
+const EligibilityOptions = [
+  'LET',
+  'PBET',
+  'CivilServiceProfessional',
+  'CivilServiceSubProfessional',
+  'Other',
+];
 
 interface EmploymentFormData {
   depEdId: string;
@@ -71,52 +106,56 @@ const EmploymentFormPage = () => {
   const { displayId } = useParams<{ displayId: string }>();
   const isEditMode = displayId && displayId !== 'new';
 
+  // GraphQL hooks
+  const { employment, loading: loadingEmployment } = useEmployment(
+    isEditMode ? Number(displayId) : 0
+  );
+  const { createEmployment, loading: creating } = useCreateEmployment();
+  const { updateEmployment, loading: updating } = useUpdateEmployment();
+
+  // Lookup data hooks
+  const { positions, loading: loadingPositions } = usePositions({
+    pageSize: 1000,
+  });
+  const { salaryGrades, loading: loadingSalaryGrades } = useSalaryGrades({
+    pageSize: 1000,
+  });
+  const { items, loading: loadingItems } = useItems({ pageSize: 1000 });
+
   const [formData, setFormData] = useState<EmploymentFormData>(initialFormData);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedPerson, setSelectedPerson] =
+    useState<PersonListFieldsFragment | null>(null);
 
-  const [positions, setPositions] = useState<PositionResponseDto[]>([]);
-  const [salaryGrades, setSalaryGrades] = useState<SalaryGradeResponseDto[]>(
-    []
-  );
-  const [items, setItems] = useState<ItemResponseDto[]>([]);
-  const [selectedPerson, setSelectedPerson] = useState<PersonListDto | null>(
-    null
-  );
+  const loading =
+    loadingEmployment ||
+    loadingPositions ||
+    loadingSalaryGrades ||
+    loadingItems;
+  const saving = creating || updating;
 
-  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
-    loadLookupData();
-    if (isEditMode) {
-      loadEmployment();
-    }
-  }, [displayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
+    if (isEditMode && employment) {
+      // Map GraphQL uppercase enum strings to form display values
+      const appointmentStatusMap: Record<string, string> = {
+        ORIGINAL: 'Original',
+        PROMOTION: 'Promotion',
+        TRANSFER: 'Transfer',
+        REAPPOINTMENT: 'Reappointment',
+      };
+      const employmentStatusMap: Record<string, string> = {
+        REGULAR: 'Regular',
+        PERMANENT: 'Permanent',
+      };
+      const eligibilityMap: Record<string, string> = {
+        LET: 'LET',
+        PBET: 'PBET',
+        CIVIL_SERVICE_PROFESSIONAL: 'CivilServiceProfessional',
+        CIVIL_SERVICE_SUB_PROFESSIONAL: 'CivilServiceSubProfessional',
+        OTHER: 'Other',
+      };
 
-  const loadLookupData = async () => {
-    try {
-      const [positionsRes, salaryGradesRes, itemsRes] = await Promise.all([
-        positionsApi.apiV1PositionsGet(1, 1000),
-        salaryGradesApi.apiV1SalarygradesGet(1, 1000),
-        itemsApi.apiV1ItemsGet(1, 1000),
-      ]);
-      setPositions(positionsRes.data.items || []);
-      setSalaryGrades(salaryGradesRes.data.items || []);
-      setItems(itemsRes.data.items || []);
-    } catch (err) {
-      console.error('Error loading lookup data:', err);
-    }
-  };
-
-  const loadEmployment = async () => {
-    if (!displayId) return;
-    setLoading(true);
-    try {
-      const response = await employmentsApi.apiV1EmploymentsDisplayIdGet(
-        Number(displayId)
-      );
-      const employment: EmploymentResponseDto = response.data;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Populating form with loaded data is a valid pattern
       setFormData({
         depEdId: employment.depEdId || '',
         psipopItemNumber: employment.psipopItemNumber || '',
@@ -125,22 +164,20 @@ const EmploymentFormPage = () => {
         philHealthId: employment.philHealthId || '',
         dateOfOriginalAppointment:
           employment.dateOfOriginalAppointment?.split('T')[0] || '',
-        appointmentStatus: employment.appointmentStatus || 'Original',
-        employmentStatus: employment.employmentStatus || 'Regular',
-        eligibility: employment.eligibility || 'LET',
-        personDisplayId: employment.person?.displayId || '',
-        positionDisplayId: employment.position?.displayId || '',
-        salaryGradeDisplayId: employment.salaryGrade?.displayId || '',
-        itemDisplayId: employment.item?.displayId || '',
+        appointmentStatus:
+          appointmentStatusMap[employment.appointmentStatus] || 'Original',
+        employmentStatus:
+          employmentStatusMap[employment.employmentStatus] || 'Regular',
+        eligibility: eligibilityMap[employment.eligibility] || 'LET',
+        personDisplayId: (employment.person?.displayId as number) || '',
+        positionDisplayId: (employment.position?.displayId as number) || '',
+        salaryGradeDisplayId:
+          (employment.salaryGrade?.displayId as number) || '',
+        itemDisplayId: (employment.item?.displayId as number) || '',
         isActive: employment.isActive ?? true,
       });
-    } catch (err) {
-      console.error('Error loading employment:', err);
-      setError('Failed to load employment data');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [isEditMode, employment]);
 
   const handleChange = (
     field: keyof EmploymentFormData,
@@ -151,12 +188,11 @@ const EmploymentFormPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError(null);
 
     try {
       if (isEditMode) {
-        const updateDto: UpdateEmploymentDto = {
+        const updateDto: UpdateEmploymentInput = {
           depEdId: formData.depEdId || null,
           psipopItemNumber: formData.psipopItemNumber || null,
           tinId: formData.tinId || null,
@@ -164,22 +200,25 @@ const EmploymentFormPage = () => {
           philHealthId: formData.philHealthId || null,
           dateOfOriginalAppointment: formData.dateOfOriginalAppointment || null,
           appointmentStatus:
-            formData.appointmentStatus as UpdateEmploymentDto['appointmentStatus'],
+            AppointmentStatusEnum[
+              formData.appointmentStatus as keyof typeof AppointmentStatusEnum
+            ],
           employmentStatus:
-            formData.employmentStatus as UpdateEmploymentDto['employmentStatus'],
+            EmploymentStatusEnum[
+              formData.employmentStatus as keyof typeof EmploymentStatusEnum
+            ],
           eligibility:
-            formData.eligibility as UpdateEmploymentDto['eligibility'],
+            EligibilityEnum[
+              formData.eligibility as keyof typeof EligibilityEnum
+            ],
           positionDisplayId: Number(formData.positionDisplayId),
           salaryGradeDisplayId: Number(formData.salaryGradeDisplayId),
           itemDisplayId: Number(formData.itemDisplayId),
           isActive: formData.isActive,
         };
-        await employmentsApi.apiV1EmploymentsDisplayIdPut(
-          Number(displayId),
-          updateDto
-        );
+        await updateEmployment(Number(displayId), updateDto);
       } else {
-        const createDto: CreateEmploymentDto = {
+        const createDto: CreateEmploymentInput = {
           depEdId: formData.depEdId || null,
           psipopItemNumber: formData.psipopItemNumber || null,
           tinId: formData.tinId || null,
@@ -187,24 +226,28 @@ const EmploymentFormPage = () => {
           philHealthId: formData.philHealthId || null,
           dateOfOriginalAppointment: formData.dateOfOriginalAppointment || null,
           appointmentStatus:
-            formData.appointmentStatus as CreateEmploymentDto['appointmentStatus'],
+            AppointmentStatusEnum[
+              formData.appointmentStatus as keyof typeof AppointmentStatusEnum
+            ],
           employmentStatus:
-            formData.employmentStatus as CreateEmploymentDto['employmentStatus'],
+            EmploymentStatusEnum[
+              formData.employmentStatus as keyof typeof EmploymentStatusEnum
+            ],
           eligibility:
-            formData.eligibility as CreateEmploymentDto['eligibility'],
+            EligibilityEnum[
+              formData.eligibility as keyof typeof EligibilityEnum
+            ],
           personDisplayId: Number(formData.personDisplayId),
           positionDisplayId: Number(formData.positionDisplayId),
           salaryGradeDisplayId: Number(formData.salaryGradeDisplayId),
           itemDisplayId: Number(formData.itemDisplayId),
         };
-        await employmentsApi.apiV1EmploymentsPost(createDto);
+        await createEmployment(createDto);
       }
       navigate('/employments');
     } catch (err) {
       console.error('Error saving employment:', err);
       setError('Failed to save employment');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -394,9 +437,7 @@ const EmploymentFormPage = () => {
                           handleChange('appointmentStatus', e.target.value)
                         }
                       >
-                        {Object.values(
-                          CreateEmploymentDtoAppointmentStatusEnum
-                        ).map(status => (
+                        {AppointmentStatusOptions.map(status => (
                           <option key={status} value={status}>
                             {status}
                           </option>
@@ -417,9 +458,7 @@ const EmploymentFormPage = () => {
                           handleChange('employmentStatus', e.target.value)
                         }
                       >
-                        {Object.values(
-                          CreateEmploymentDtoEmploymentStatusEnum
-                        ).map(status => (
+                        {EmploymentStatusOptions.map(status => (
                           <option key={status} value={status}>
                             {status}
                           </option>
@@ -437,17 +476,15 @@ const EmploymentFormPage = () => {
                           handleChange('eligibility', e.target.value)
                         }
                       >
-                        {Object.values(CreateEmploymentDtoEligibilityEnum).map(
-                          elig => (
-                            <option key={elig} value={elig}>
-                              {elig === 'CivilServiceProfessional'
-                                ? 'Civil Service Professional'
-                                : elig === 'CivilServiceSubProfessional'
-                                  ? 'Civil Service Sub-Professional'
-                                  : elig}
-                            </option>
-                          )
-                        )}
+                        {EligibilityOptions.map(elig => (
+                          <option key={elig} value={elig}>
+                            {elig === 'CivilServiceProfessional'
+                              ? 'Civil Service Professional'
+                              : elig === 'CivilServiceSubProfessional'
+                                ? 'Civil Service Sub-Professional'
+                                : elig}
+                          </option>
+                        ))}
                       </NativeSelect.Field>
                       <NativeSelect.Indicator />
                     </NativeSelect.Root>
@@ -474,11 +511,16 @@ const EmploymentFormPage = () => {
                         }
                       >
                         <option value="">-- Select Position --</option>
-                        {positions.map(pos => (
-                          <option key={pos.displayId} value={pos.displayId}>
-                            {pos.titleName}
-                          </option>
-                        ))}
+                        {positions
+                          .filter(pos => pos !== null)
+                          .map(pos => (
+                            <option
+                              key={pos.displayId as number}
+                              value={pos.displayId as number}
+                            >
+                              {pos.titleName}
+                            </option>
+                          ))}
                       </NativeSelect.Field>
                       <NativeSelect.Indicator />
                     </NativeSelect.Root>
@@ -493,11 +535,16 @@ const EmploymentFormPage = () => {
                         }
                       >
                         <option value="">-- Select Salary Grade --</option>
-                        {salaryGrades.map(sg => (
-                          <option key={sg.displayId} value={sg.displayId}>
-                            {sg.salaryGradeName} - Step {sg.step}
-                          </option>
-                        ))}
+                        {salaryGrades
+                          .filter(sg => sg !== null)
+                          .map(sg => (
+                            <option
+                              key={sg.displayId as number}
+                              value={sg.displayId as number}
+                            >
+                              {sg.salaryGradeName} - Step {sg.step as number}
+                            </option>
+                          ))}
                       </NativeSelect.Field>
                       <NativeSelect.Indicator />
                     </NativeSelect.Root>
@@ -514,11 +561,16 @@ const EmploymentFormPage = () => {
                       }
                     >
                       <option value="">-- Select Item --</option>
-                      {items.map(item => (
-                        <option key={item.displayId} value={item.displayId}>
-                          {item.itemName}
-                        </option>
-                      ))}
+                      {items
+                        .filter(item => item !== null)
+                        .map(item => (
+                          <option
+                            key={item.displayId as number}
+                            value={item.displayId as number}
+                          >
+                            {item.itemName}
+                          </option>
+                        ))}
                     </NativeSelect.Field>
                     <NativeSelect.Indicator />
                   </NativeSelect.Root>

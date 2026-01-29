@@ -2,6 +2,7 @@ using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Person;
 using EmployeeManagementSystem.Application.Interfaces;
+using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,7 +33,9 @@ public class PersonService(
             .Include(p => p.Contacts.Where(c => !c.IsDeleted))
             .FirstOrDefaultAsync(p => p.DisplayId == displayId, cancellationToken);
 
-        return person == null ? Result<PersonResponseDto>.NotFound("Person not found.") : Result<PersonResponseDto>.Success(MapToResponseDto(person));
+        return person == null
+            ? Result<PersonResponseDto>.NotFound("Person not found.")
+            : Result<PersonResponseDto>.Success(person.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -177,7 +180,7 @@ public class PersonService(
             }
         }
 
-        return Result<PersonResponseDto>.Success(MapToResponseDto(person));
+        return Result<PersonResponseDto>.Success(person.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -203,7 +206,7 @@ public class PersonService(
 
         await _personRepository.UpdateAsync(person, cancellationToken);
 
-        return Result<PersonResponseDto>.Success(MapToResponseDto(person));
+        return Result<PersonResponseDto>.Success(person.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -245,59 +248,5 @@ public class PersonService(
         person.ModifiedBy = deletedBy;
         await _personRepository.DeleteAsync(person, cancellationToken);
         return Result.Success();
-    }
-
-    private static PersonResponseDto MapToResponseDto(Person person)
-    {
-        return new PersonResponseDto
-        {
-            DisplayId = person.DisplayId,
-            FirstName = person.FirstName,
-            LastName = person.LastName,
-            MiddleName = person.MiddleName,
-            DateOfBirth = person.DateOfBirth,
-            Gender = person.Gender,
-            CivilStatus = person.CivilStatus,
-            FullName = person.FullName,
-            ProfileImageUrl = person.ProfileImageUrl,
-            CreatedOn = person.CreatedOn,
-            CreatedBy = person.CreatedBy,
-            ModifiedOn = person.ModifiedOn,
-            ModifiedBy = person.ModifiedBy,
-            Addresses = person.Addresses.Select(a => new AddressResponseDto
-            {
-                DisplayId = a.DisplayId,
-                Address1 = a.Address1,
-                Address2 = a.Address2,
-                Barangay = a.Barangay,
-                City = a.City,
-                Province = a.Province,
-                Country = a.Country,
-                ZipCode = a.ZipCode,
-                IsCurrent = a.IsCurrent,
-                IsPermanent = a.IsPermanent,
-                IsActive = a.IsActive,
-                AddressType = a.AddressType,
-                FullAddress = a.FullAddress,
-                CreatedOn = a.CreatedOn,
-                CreatedBy = a.CreatedBy,
-                ModifiedOn = a.ModifiedOn,
-                ModifiedBy = a.ModifiedBy
-            }).ToList(),
-            Contacts = person.Contacts.Select(c => new ContactResponseDto
-            {
-                DisplayId = c.DisplayId,
-                Mobile = c.Mobile,
-                LandLine = c.LandLine,
-                Fax = c.Fax,
-                Email = c.Email,
-                IsActive = c.IsActive,
-                ContactType = c.ContactType,
-                CreatedOn = c.CreatedOn,
-                CreatedBy = c.CreatedBy,
-                ModifiedOn = c.ModifiedOn,
-                ModifiedBy = c.ModifiedBy
-            }).ToList()
-        };
     }
 }

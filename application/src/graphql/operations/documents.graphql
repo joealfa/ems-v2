@@ -1,0 +1,86 @@
+# Document Fragments
+fragment DocumentListFields on DocumentListDto {
+  displayId
+  fileName
+  fileExtension
+  contentType
+  fileSizeBytes
+  documentType
+  description
+  createdOn
+  createdBy
+}
+
+fragment DocumentDetailFields on DocumentResponseDto {
+  displayId
+  personDisplayId
+  blobUrl
+  fileName
+  fileExtension
+  contentType
+  fileSizeBytes
+  documentType
+  description
+  createdOn
+  createdBy
+  modifiedOn
+  modifiedBy
+}
+
+# Document Queries
+query GetPersonDocuments(
+  $personDisplayId: Long!
+  $pageNumber: Int
+  $pageSize: Int
+  $searchTerm: String
+  $sortBy: String
+  $sortDescending: Boolean
+) {
+  personDocuments(
+    personDisplayId: $personDisplayId
+    pageNumber: $pageNumber
+    pageSize: $pageSize
+    searchTerm: $searchTerm
+    sortBy: $sortBy
+    sortDescending: $sortDescending
+  ) {
+    items {
+      ...DocumentListFields
+    }
+    totalCount
+    pageNumber
+    pageSize
+    totalPages
+    hasPreviousPage
+    hasNextPage
+  }
+}
+
+query GetDocument($personDisplayId: Long!, $documentDisplayId: Long!) {
+  document(personDisplayId: $personDisplayId, documentDisplayId: $documentDisplayId) {
+    ...DocumentDetailFields
+  }
+}
+
+# Document Mutations
+mutation UpdateDocument(
+  $personDisplayId: Long!
+  $documentDisplayId: Long!
+  $description: String
+) {
+  updateDocument(
+    personDisplayId: $personDisplayId
+    documentDisplayId: $documentDisplayId
+    description: $description
+  ) {
+    ...DocumentDetailFields
+  }
+}
+
+mutation DeleteDocument($personDisplayId: Long!, $documentDisplayId: Long!) {
+  deleteDocument(personDisplayId: $personDisplayId, documentDisplayId: $documentDisplayId)
+}
+
+mutation DeleteProfileImage($personDisplayId: Long!) {
+  deleteProfileImage(personDisplayId: $personDisplayId)
+}

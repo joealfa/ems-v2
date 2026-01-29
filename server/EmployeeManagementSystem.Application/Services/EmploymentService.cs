@@ -2,6 +2,7 @@ using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Employment;
 using EmployeeManagementSystem.Application.Interfaces;
+using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,7 +45,7 @@ public class EmploymentService(
 
         return employment == null
             ? Result<EmploymentResponseDto>.NotFound("Employment not found.")
-            : Result<EmploymentResponseDto>.Success(MapToResponseDto(employment));
+            : Result<EmploymentResponseDto>.Success(employment.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -211,20 +212,21 @@ public class EmploymentService(
                     StartDate = schoolDto.StartDate,
                     EndDate = schoolDto.EndDate,
                     IsCurrent = schoolDto.IsCurrent,
-                    CreatedBy = createdBy
+                    CreatedBy = createdBy,
+                    School = school
                 };
                 _ = await _employmentSchoolRepository.AddAsync(employmentSchool, cancellationToken);
                 employment.EmploymentSchools.Add(employmentSchool);
             }
         }
 
-        // Reload with navigation properties
+        // Set navigation properties for response
         employment.Person = person;
         employment.Position = position;
         employment.SalaryGrade = salaryGrade;
         employment.Item = item;
 
-        return Result<EmploymentResponseDto>.Success(MapToResponseDto(employment));
+        return Result<EmploymentResponseDto>.Success(employment.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -285,7 +287,7 @@ public class EmploymentService(
         employment.SalaryGrade = salaryGrade;
         employment.Item = item;
 
-        return Result<EmploymentResponseDto>.Success(MapToResponseDto(employment));
+        return Result<EmploymentResponseDto>.Success(employment.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -340,18 +342,10 @@ public class EmploymentService(
 
         _ = await _employmentSchoolRepository.AddAsync(employmentSchool, cancellationToken);
 
-        return Result<EmploymentSchoolResponseDto>.Success(new EmploymentSchoolResponseDto
-        {
-            DisplayId = employmentSchool.DisplayId,
-            SchoolDisplayId = school.DisplayId,
-            SchoolName = school.SchoolName,
-            StartDate = employmentSchool.StartDate,
-            EndDate = employmentSchool.EndDate,
-            IsCurrent = employmentSchool.IsCurrent,
-            IsActive = employmentSchool.IsActive,
-            CreatedOn = employmentSchool.CreatedOn,
-            CreatedBy = employmentSchool.CreatedBy
-        });
+        // Set school for mapping
+        employmentSchool.School = school;
+
+        return Result<EmploymentSchoolResponseDto>.Success(employmentSchool.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -366,63 +360,5 @@ public class EmploymentService(
         employmentSchool.ModifiedBy = deletedBy;
         await _employmentSchoolRepository.DeleteAsync(employmentSchool, cancellationToken);
         return Result.Success();
-    }
-
-    private static EmploymentResponseDto MapToResponseDto(Employment employment)
-    {
-        return new EmploymentResponseDto
-        {
-            DisplayId = employment.DisplayId,
-            DepEdId = employment.DepEdId,
-            PSIPOPItemNumber = employment.PSIPOPItemNumber,
-            TINId = employment.TINId,
-            GSISId = employment.GSISId,
-            PhilHealthId = employment.PhilHealthId,
-            DateOfOriginalAppointment = employment.DateOfOriginalAppointment,
-            AppointmentStatus = employment.AppointmentStatus,
-            EmploymentStatus = employment.EmploymentStatus,
-            Eligibility = employment.Eligibility,
-            IsActive = employment.IsActive,
-            CreatedOn = employment.CreatedOn,
-            CreatedBy = employment.CreatedBy,
-            ModifiedOn = employment.ModifiedOn,
-            ModifiedBy = employment.ModifiedBy,
-            Person = new EmploymentPersonDto
-            {
-                DisplayId = employment.Person.DisplayId,
-                FullName = employment.Person.FullName
-            },
-            Position = new EmploymentPositionDto
-            {
-                DisplayId = employment.Position.DisplayId,
-                TitleName = employment.Position.TitleName
-            },
-            SalaryGrade = new EmploymentSalaryGradeDto
-            {
-                DisplayId = employment.SalaryGrade.DisplayId,
-                SalaryGradeName = employment.SalaryGrade.SalaryGradeName,
-                Step = employment.SalaryGrade.Step,
-                MonthlySalary = employment.SalaryGrade.MonthlySalary
-            },
-            Item = new EmploymentItemDto
-            {
-                DisplayId = employment.Item.DisplayId,
-                ItemName = employment.Item.ItemName
-            },
-            Schools = employment.EmploymentSchools.Select(es => new EmploymentSchoolResponseDto
-            {
-                DisplayId = es.DisplayId,
-                SchoolDisplayId = es.School.DisplayId,
-                SchoolName = es.School.SchoolName,
-                StartDate = es.StartDate,
-                EndDate = es.EndDate,
-                IsCurrent = es.IsCurrent,
-                IsActive = es.IsActive,
-                CreatedOn = es.CreatedOn,
-                CreatedBy = es.CreatedBy,
-                ModifiedOn = es.ModifiedOn,
-                ModifiedBy = es.ModifiedBy
-            }).ToList()
-        };
     }
 }

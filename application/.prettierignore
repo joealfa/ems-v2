@@ -6,8 +6,8 @@ dist
 build
 coverage
 
-# OpenAPI Generated code
-src/api/generated
+# GraphQL Generated code
+src/graphql/generated
 
 # Other files
 *.min.js

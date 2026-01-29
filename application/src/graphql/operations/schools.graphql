@@ -1,0 +1,101 @@
+# School Fragments
+fragment SchoolListFields on SchoolListDto {
+  displayId
+  schoolName
+  isActive
+  createdBy
+  createdOn
+  modifiedBy
+  modifiedOn
+}
+
+fragment SchoolDetailFields on SchoolResponseDto {
+  displayId
+  schoolName
+  isActive
+  createdBy
+  createdOn
+  modifiedBy
+  modifiedOn
+  addresses {
+    displayId
+    address1
+    address2
+    barangay
+    city
+    province
+    country
+    zipCode
+    addressType
+    isCurrent
+    isPermanent
+    isActive
+    createdBy
+    createdOn
+    modifiedBy
+    modifiedOn
+  }
+  contacts {
+    displayId
+    contactType
+    email
+    mobile
+    landLine
+    fax
+    isActive
+    createdBy
+    createdOn
+    modifiedBy
+    modifiedOn
+  }
+}
+
+# School Queries
+query GetSchools(
+  $pageNumber: Int
+  $pageSize: Int
+  $searchTerm: String
+  $sortBy: String
+  $sortDescending: Boolean
+) {
+  schools(
+    pageNumber: $pageNumber
+    pageSize: $pageSize
+    searchTerm: $searchTerm
+    sortBy: $sortBy
+    sortDescending: $sortDescending
+  ) {
+    items {
+      ...SchoolListFields
+    }
+    totalCount
+    pageNumber
+    pageSize
+    totalPages
+    hasPreviousPage
+    hasNextPage
+  }
+}
+
+query GetSchool($displayId: Long!) {
+  school(displayId: $displayId) {
+    ...SchoolDetailFields
+  }
+}
+
+# School Mutations
+mutation CreateSchool($input: CreateSchoolInput!) {
+  createSchool(input: $input) {
+    ...SchoolDetailFields
+  }
+}
+
+mutation UpdateSchool($displayId: Long!, $input: UpdateSchoolInput!) {
+  updateSchool(displayId: $displayId, input: $input) {
+    ...SchoolDetailFields
+  }
+}
+
+mutation DeleteSchool($displayId: Long!) {
+  deleteSchool(displayId: $displayId)
+}

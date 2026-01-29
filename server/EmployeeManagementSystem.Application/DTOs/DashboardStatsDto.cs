@@ -1,37 +1,37 @@
 namespace EmployeeManagementSystem.Application.DTOs;
 
 /// <summary>
-/// DTO containing dashboard statistics.
+/// Record containing dashboard statistics. Immutable by design.
 /// </summary>
-public class DashboardStatsDto
+public record DashboardStatsDto
 {
     /// <summary>
     /// Total number of persons in the system.
     /// </summary>
-    public int TotalPersons { get; set; }
+    public int TotalPersons { get; init; }
 
     /// <summary>
     /// Number of active employments.
     /// </summary>
-    public int ActiveEmployments { get; set; }
+    public int ActiveEmployments { get; init; }
 
     /// <summary>
     /// Total number of schools.
     /// </summary>
-    public int TotalSchools { get; set; }
+    public int TotalSchools { get; init; }
 
     /// <summary>
     /// Total number of positions.
     /// </summary>
-    public int TotalPositions { get; set; }
+    public int TotalPositions { get; init; }
 
     /// <summary>
     /// Total number of salary grades.
     /// </summary>
-    public int TotalSalaryGrades { get; set; }
+    public int TotalSalaryGrades { get; init; }
 
     /// <summary>
     /// Total number of items.
     /// </summary>
-    public int TotalItems { get; set; }
+    public int TotalItems { get; init; }
 }

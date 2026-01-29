@@ -1,35 +1,35 @@
 namespace EmployeeManagementSystem.Application.DTOs;
 
 /// <summary>
-/// Generic paginated result wrapper.
+/// Generic paginated result wrapper. Immutable record for response data.
 /// </summary>
 /// <typeparam name="T">The type of items in the result.</typeparam>
-public class PagedResult<T>
+public record PagedResult<T>
 {
     /// <summary>
-    /// Gets or sets the list of items.
+    /// Gets the list of items.
     /// </summary>
-    public List<T> Items { get; set; } = [];
+    public IReadOnlyList<T> Items { get; init; } = [];
 
     /// <summary>
-    /// Gets or sets the total count of items.
+    /// Gets the total count of items.
     /// </summary>
-    public int TotalCount { get; set; }
+    public int TotalCount { get; init; }
 
     /// <summary>
-    /// Gets or sets the current page number.
+    /// Gets the current page number.
     /// </summary>
-    public int PageNumber { get; set; }
+    public int PageNumber { get; init; }
 
     /// <summary>
-    /// Gets or sets the page size.
+    /// Gets the page size.
     /// </summary>
-    public int PageSize { get; set; }
+    public int PageSize { get; init; }
 
     /// <summary>
     /// Gets the total number of pages.
     /// </summary>
-    public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+    public int TotalPages => PageSize > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0;
 
     /// <summary>
     /// Gets a value indicating whether there is a next page.
@@ -43,7 +43,7 @@ public class PagedResult<T>
 }
 
 /// <summary>
-/// Query parameters for pagination.
+/// Query parameters for pagination. Kept as class for model binding with validation logic.
 /// </summary>
 public class PaginationQuery
 {

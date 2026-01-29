@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Box,
   Heading,
@@ -7,7 +6,7 @@ import {
   Card,
   Spinner,
 } from '@chakra-ui/react';
-import { reportsApi, type DashboardStatsDto } from '../api';
+import { useDashboardStats } from '../hooks/useDashboard';
 
 interface StatCardProps {
   title: string;
@@ -41,25 +40,7 @@ const StatCard = ({ title, value, icon, isLoading }: StatCardProps) => {
 };
 
 const Dashboard = () => {
-  const [stats, setStats] = useState<DashboardStatsDto | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await reportsApi.apiV1ReportsDashboardGet();
-        setStats(response.data);
-      } catch (err) {
-        console.error('Error fetching dashboard stats:', err);
-        setError('Failed to load dashboard statistics');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
+  const { stats, loading, error } = useDashboardStats();
 
   return (
     <Box>
@@ -69,32 +50,32 @@ const Dashboard = () => {
 
       {error && (
         <Box mb={4} p={4} bg="red.100" color="red.800" borderRadius="md">
-          <Text>{error}</Text>
+          <Text>Failed to load dashboard statistics</Text>
         </Box>
       )}
 
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={6}>
         <StatCard
           title="Total Persons"
-          value={stats?.totalPersons ?? '--'}
+          value={(stats?.totalPersons as unknown as number) ?? '--'}
           icon="👤"
           isLoading={loading}
         />
         <StatCard
           title="Active Employments"
-          value={stats?.activeEmployments ?? '--'}
+          value={(stats?.activeEmployments as unknown as number) ?? '--'}
           icon="💼"
           isLoading={loading}
         />
         <StatCard
           title="Schools"
-          value={stats?.totalSchools ?? '--'}
+          value={(stats?.totalSchools as unknown as number) ?? '--'}
           icon="🏫"
           isLoading={loading}
         />
         <StatCard
           title="Positions"
-          value={stats?.totalPositions ?? '--'}
+          value={(stats?.totalPositions as unknown as number) ?? '--'}
           icon="📋"
           isLoading={loading}
         />
@@ -103,13 +84,13 @@ const Dashboard = () => {
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={6} mt={6}>
         <StatCard
           title="Salary Grades"
-          value={stats?.totalSalaryGrades ?? '--'}
+          value={(stats?.totalSalaryGrades as unknown as number) ?? '--'}
           icon="💰"
           isLoading={loading}
         />
         <StatCard
           title="Items"
-          value={stats?.totalItems ?? '--'}
+          value={(stats?.totalItems as unknown as number) ?? '--'}
           icon="📦"
           isLoading={loading}
         />

@@ -23,7 +23,8 @@ import {
   type ICellRendererParams,
 } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
-import { positionsApi, type PositionResponseDto } from '../../api';
+import { usePositionsLazy } from '../../hooks/usePositions';
+import type { PositionResponseDto } from '../../graphql/generated/graphql';
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -68,6 +69,7 @@ const PositionsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const theme = useAgGridTheme();
+  const { fetchPositions } = usePositionsLazy();
 
   useEffect(() => {
     if (gridRef.current?.api) {
@@ -82,17 +84,19 @@ const PositionsPage = () => {
           const sortDescending = sortModel?.sort === 'desc';
 
           try {
-            const response = await positionsApi.apiV1PositionsGet(
-              pageNumber,
-              pageSize,
-              debouncedSearchTerm || undefined,
-              sortBy,
-              sortDescending
-            );
+            const result = await fetchPositions({
+              variables: {
+                pageNumber,
+                pageSize,
+                searchTerm: debouncedSearchTerm || undefined,
+                sortBy,
+                sortDescending,
+              },
+            });
 
-            const data = response.data;
-            const rowsThisPage = data.items || [];
-            const lastRow = data.totalCount ?? -1;
+            const data = result.data?.positions;
+            const rowsThisPage = data?.items || [];
+            const lastRow = data?.totalCount ?? -1;
 
             rowParams.successCallback(rowsThisPage, lastRow);
           } catch (error) {
@@ -102,7 +106,7 @@ const PositionsPage = () => {
         },
       });
     }
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, fetchPositions]);
 
   const columnDefs: ColDef<PositionResponseDto>[] = useMemo(
     () => [
@@ -238,17 +242,19 @@ const PositionsPage = () => {
           const sortDescending = sortModel?.sort === 'desc';
 
           try {
-            const response = await positionsApi.apiV1PositionsGet(
-              pageNumber,
-              pageSize,
-              debouncedSearchTerm || undefined,
-              sortBy,
-              sortDescending
-            );
+            const result = await fetchPositions({
+              variables: {
+                pageNumber,
+                pageSize,
+                searchTerm: debouncedSearchTerm || undefined,
+                sortBy,
+                sortDescending,
+              },
+            });
 
-            const data = response.data;
-            const rowsThisPage = data.items || [];
-            const lastRow = data.totalCount ?? -1;
+            const data = result.data?.positions;
+            const rowsThisPage = data?.items || [];
+            const lastRow = data?.totalCount ?? -1;
 
             rowParams.successCallback(rowsThisPage, lastRow);
             setIsLoading(false);
@@ -262,7 +268,7 @@ const PositionsPage = () => {
 
       params.api.setGridOption('datasource', dataSource);
     },
-    [debouncedSearchTerm]
+    [debouncedSearchTerm, fetchPositions]
   );
 
   return (

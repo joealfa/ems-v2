@@ -1,0 +1,623 @@
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0   0     0   0     0     0     0  --:--:-- --:--:-- --:--:--     0schema {
+  query: Query
+  mutation: Mutation
+}
+
+type AddressResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  address1: String
+  address2: String
+  addressType: Int
+  barangay: String
+  city: String
+  country: String
+  createdBy: String
+  createdOn: DateTime
+  displayId: UntypedNode
+  fullAddress: String
+  isActive: Boolean
+  isCurrent: Boolean
+  isPermanent: Boolean
+  modifiedBy: String
+  modifiedOn: DateTime
+  province: String
+  zipCode: String
+}
+
+type AuthResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  accessToken: String
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  expiresOn: DateTime
+  refreshToken: String
+  user: UserDto
+}
+
+type ContactResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  contactType: Int
+  createdBy: String
+  createdOn: DateTime
+  displayId: UntypedNode
+  email: String
+  fax: String
+  isActive: Boolean
+  landLine: String
+  mobile: String
+  modifiedBy: String
+  modifiedOn: DateTime
+}
+
+type DashboardStatsDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  activeEmployments: UntypedNode
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  totalItems: UntypedNode
+  totalPersons: UntypedNode
+  totalPositions: UntypedNode
+  totalSalaryGrades: UntypedNode
+  totalSchools: UntypedNode
+}
+
+type Date {
+  dateTime: DateTime!
+  year: Int!
+  month: Int!
+  day: Int!
+}
+
+type EmploymentItemDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  displayId: UntypedNode
+  itemName: String
+}
+
+type EmploymentListDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  createdBy: String
+  createdOn: DateTime
+  depEdId: String
+  displayId: UntypedNode
+  employeeFullName: String
+  employmentStatus: Int
+  isActive: Boolean
+  modifiedBy: String
+  modifiedOn: DateTime
+  positionTitle: String
+}
+
+type EmploymentPersonDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  displayId: UntypedNode
+  fullName: String
+}
+
+type EmploymentPositionDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  displayId: UntypedNode
+  titleName: String
+}
+
+type EmploymentResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  appointmentStatus: Int
+  createdBy: String
+  createdOn: DateTime
+  dateOfOriginalAppointment: Date
+  depEdId: String
+  displayId: UntypedNode
+  eligibility: Int
+  employmentStatus: Int
+  gsisId: String
+  isActive: Boolean
+  item: EmploymentItemDto
+  modifiedBy: String
+  modifiedOn: DateTime
+  person: EmploymentPersonDto
+  philHealthId: String
+  position: EmploymentPositionDto
+  psipopItemNumber: String
+  salaryGrade: EmploymentSalaryGradeDto
+  schools: [EmploymentSchoolResponseDto!]
+  tinId: String
+}
+
+type EmploymentSalaryGradeDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  displayId: UntypedNode
+  monthlySalary: UntypedNode
+  salaryGradeName: String
+  step: UntypedNode
+}
+
+type EmploymentSchoolResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  createdBy: String
+  createdOn: DateTime
+  displayId: UntypedNode
+  endDate: Date
+  isActive: Boolean
+  isCurrent: Boolean
+  modifiedBy: String
+  modifiedOn: DateTime
+  schoolDisplayId: UntypedNode
+  schoolName: String
+  startDate: Date
+}
+
+type ItemResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  createdBy: String
+  createdOn: DateTime
+  description: String
+  displayId: UntypedNode
+  isActive: Boolean
+  itemName: String
+  modifiedBy: String
+  modifiedOn: DateTime
+}
+
+type KeyValuePairOfStringAndActionOfIParseNode {
+  key: String!
+}
+
+type KeyValuePairOfStringAndObject {
+  key: String!
+}
+
+type Mutation {
+  "Create a new person"
+  createPerson(input: CreatePersonInput!): PersonResponseDto @cost(weight: "10")
+  "Update an existing person"
+  updatePerson(displayId: Long! input: UpdatePersonInput!): PersonResponseDto @cost(weight: "10")
+  "Delete a person"
+  deletePerson(displayId: Long!): Boolean! @cost(weight: "10")
+  "Create a new employment"
+  createEmployment(input: CreateEmploymentInput!): EmploymentResponseDto @cost(weight: "10")
+  "Update an existing employment"
+  updateEmployment(displayId: Long! input: UpdateEmploymentInput!): EmploymentResponseDto @cost(weight: "10")
+  "Delete an employment"
+  deleteEmployment(displayId: Long!): Boolean! @cost(weight: "10")
+  "Create a new school"
+  createSchool(input: CreateSchoolInput!): SchoolResponseDto @cost(weight: "10")
+  "Update an existing school"
+  updateSchool(displayId: Long! input: UpdateSchoolInput!): SchoolResponseDto @cost(weight: "10")
+  "Delete a school"
+  deleteSchool(displayId: Long!): Boolean! @cost(weight: "10")
+  "Create a new position"
+  createPosition(input: CreatePositionInput!): PositionResponseDto @cost(weight: "10")
+  "Update an existing position"
+  updatePosition(displayId: Long! input: UpdatePositionInput!): PositionResponseDto @cost(weight: "10")
+  "Delete a position"
+  deletePosition(displayId: Long!): Boolean! @cost(weight: "10")
+  "Create a new salary grade"
+  createSalaryGrade(input: CreateSalaryGradeInput!): SalaryGradeResponseDto @cost(weight: "10")
+  "Update an existing salary grade"
+  updateSalaryGrade(displayId: Long! input: UpdateSalaryGradeInput!): SalaryGradeResponseDto @cost(weight: "10")
+  "Delete a salary grade"
+  deleteSalaryGrade(displayId: Long!): Boolean! @cost(weight: "10")
+  "Create a new item"
+  createItem(input: CreateItemInput!): ItemResponseDto @cost(weight: "10")
+  "Update an existing item"
+  updateItem(displayId: Long! input: UpdateItemInput!): ItemResponseDto @cost(weight: "10")
+  "Delete an item"
+  deleteItem(displayId: Long!): Boolean! @cost(weight: "10")
+  "Login with Google ID token"
+  googleLogin(idToken: String!): AuthResponseDto @cost(weight: "10")
+  "Login with Google access token"
+  googleTokenLogin(accessToken: String!): AuthResponseDto @cost(weight: "10")
+  "Refresh authentication token"
+  refreshToken(refreshToken: String): AuthResponseDto @cost(weight: "10")
+  "Logout and revoke tokens"
+  logout(refreshToken: String): Boolean! @cost(weight: "10")
+}
+
+type PagedResultOfEmploymentListDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  hasNextPage: Boolean
+  hasPreviousPage: Boolean
+  items: [EmploymentListDto!]
+  pageNumber: UntypedNode
+  pageSize: UntypedNode
+  totalCount: UntypedNode
+  totalPages: UntypedNode
+}
+
+type PagedResultOfItemResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  hasNextPage: Boolean
+  hasPreviousPage: Boolean
+  items: [ItemResponseDto!]
+  pageNumber: UntypedNode
+  pageSize: UntypedNode
+  totalCount: UntypedNode
+  totalPages: UntypedNode
+}
+
+type PagedResultOfPersonListDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  hasNextPage: Boolean
+  hasPreviousPage: Boolean
+  items: [PersonListDto!]
+  pageNumber: UntypedNode
+  pageSize: UntypedNode
+  totalCount: UntypedNode
+  totalPages: UntypedNode
+}
+
+type PagedResultOfPositionResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  hasNextPage: Boolean
+  hasPreviousPage: Boolean
+  items: [PositionResponseDto!]
+  pageNumber: UntypedNode
+  pageSize: UntypedNode
+  totalCount: UntypedNode
+  totalPages: UntypedNode
+}
+
+type PagedResultOfSalaryGradeResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  hasNextPage: Boolean
+  hasPreviousPage: Boolean
+  items: [SalaryGradeResponseDto!]
+  pageNumber: UntypedNode
+  pageSize: UntypedNode
+  totalCount: UntypedNode
+  totalPages: UntypedNode
+}
+
+type PagedResultOfSchoolListDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  hasNextPage: Boolean
+  hasPreviousPage: Boolean
+  items: [SchoolListDto!]
+  pageNumber: UntypedNode
+  pageSize: UntypedNode
+  totalCount: UntypedNode
+  totalPages: UntypedNode
+}
+
+type PersonListDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  civilStatus: Int
+  createdBy: String
+  createdOn: DateTime
+  dateOfBirth: Date
+  displayId: UntypedNode
+  fullName: String
+  gender: Int
+  modifiedBy: String
+  modifiedOn: DateTime
+  profileImageUrl: String
+}
+
+type PersonResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  addresses: [AddressResponseDto!]
+  civilStatus: Int
+  contacts: [ContactResponseDto!]
+  createdBy: String
+  createdOn: DateTime
+  dateOfBirth: Date
+  displayId: UntypedNode
+  firstName: String
+  fullName: String
+  gender: Int
+  lastName: String
+  middleName: String
+  modifiedBy: String
+  modifiedOn: DateTime
+  profileImageUrl: String
+}
+
+type PositionResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  createdBy: String
+  createdOn: DateTime
+  description: String
+  displayId: UntypedNode
+  isActive: Boolean
+  modifiedBy: String
+  modifiedOn: DateTime
+  titleName: String
+}
+
+type Query {
+  "Get a single person by display ID"
+  person(displayId: Long!): PersonResponseDto @cost(weight: "10")
+  "Get paginated list of persons with optional filtering"
+  persons(pageNumber: Int pageSize: Int searchTerm: String fullNameFilter: String displayIdFilter: String gender: Int civilStatus: Int sortBy: String sortDescending: Boolean): PagedResultOfPersonListDto @cost(weight: "10")
+  "Get a single employment by display ID"
+  employment(displayId: Long!): EmploymentResponseDto @cost(weight: "10")
+  "Get paginated list of employments with optional filtering"
+  employments(pageNumber: Int pageSize: Int searchTerm: String displayIdFilter: String employeeNameFilter: String positionFilter: String depEdIdFilter: String employmentStatus: Int isActive: Boolean sortBy: String sortDescending: Boolean): PagedResultOfEmploymentListDto @cost(weight: "10")
+  "Get a single school by display ID"
+  school(displayId: Long!): SchoolResponseDto @cost(weight: "10")
+  "Get paginated list of schools with optional filtering"
+  schools(pageNumber: Int pageSize: Int searchTerm: String sortBy: String sortDescending: Boolean): PagedResultOfSchoolListDto @cost(weight: "10")
+  "Get a single position by display ID"
+  position(displayId: Long!): PositionResponseDto @cost(weight: "10")
+  "Get paginated list of positions with optional filtering"
+  positions(pageNumber: Int pageSize: Int searchTerm: String sortBy: String sortDescending: Boolean): PagedResultOfPositionResponseDto @cost(weight: "10")
+  "Get a single salary grade by display ID"
+  salaryGrade(displayId: Long!): SalaryGradeResponseDto @cost(weight: "10")
+  "Get paginated list of salary grades with optional filtering"
+  salaryGrades(pageNumber: Int pageSize: Int searchTerm: String sortBy: String sortDescending: Boolean): PagedResultOfSalaryGradeResponseDto @cost(weight: "10")
+  "Get a single item by display ID"
+  item(displayId: Long!): ItemResponseDto @cost(weight: "10")
+  "Get paginated list of items with optional filtering"
+  items(pageNumber: Int pageSize: Int searchTerm: String sortBy: String sortDescending: Boolean): PagedResultOfItemResponseDto @cost(weight: "10")
+  "Get dashboard statistics"
+  dashboardStats: DashboardStatsDto @cost(weight: "10")
+  "Get current authenticated user"
+  currentUser: UserDto @cost(weight: "10")
+}
+
+type SalaryGradeResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  createdBy: String
+  createdOn: DateTime
+  description: String
+  displayId: UntypedNode
+  isActive: Boolean
+  modifiedBy: String
+  modifiedOn: DateTime
+  monthlySalary: UntypedNode
+  salaryGradeName: String
+  step: UntypedNode
+}
+
+type SchoolListDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  createdBy: String
+  createdOn: DateTime
+  displayId: UntypedNode
+  isActive: Boolean
+  modifiedBy: String
+  modifiedOn: DateTime
+  schoolName: String
+}
+
+type SchoolResponseDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  addresses: [AddressResponseDto!]
+  contacts: [ContactResponseDto!]
+  createdBy: String
+  createdOn: DateTime
+  displayId: UntypedNode
+  isActive: Boolean
+  modifiedBy: String
+  modifiedOn: DateTime
+  schoolName: String
+}
+
+type UntypedNode {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+}
+
+type UserDto {
+  fieldDeserializers: [KeyValuePairOfStringAndActionOfIParseNode!]!
+  additionalData: [KeyValuePairOfStringAndObject!]!
+  email: String
+  firstName: String
+  id: UUID
+  lastName: String
+  profilePictureUrl: String
+  role: String
+}
+
+"Input for creating a new address"
+input CreateAddressInput {
+  address1: String
+  address2: String
+  addressType: Int
+  barangay: String
+  city: String
+  country: String
+  isCurrent: Boolean
+  isPermanent: Boolean
+  province: String
+  zipCode: String
+}
+
+"Input for creating a new contact"
+input CreateContactInput {
+  contactType: Int
+  email: String
+  fax: String
+  landLine: String
+  mobile: String
+}
+
+"Input for creating a new employment"
+input CreateEmploymentInput {
+  personDisplayId: Long
+  positionDisplayId: Long
+  salaryGradeDisplayId: Long
+  itemDisplayId: Long
+  employmentStatus: Int
+  appointmentStatus: Int
+  eligibility: Int
+  dateOfOriginalAppointment: DateTime
+  psipopItemNumber: String
+  depEdId: String
+  gsisId: String
+  philHealthId: String
+  tinId: String
+  schools: [CreateEmploymentSchoolInput!]
+}
+
+"Input for associating a school with an employment"
+input CreateEmploymentSchoolInput {
+  schoolDisplayId: Long
+  startDate: DateTime
+  endDate: DateTime
+  isCurrent: Boolean
+}
+
+"Input for creating a new item"
+input CreateItemInput {
+  itemName: String
+  description: String
+}
+
+"Input for creating a new person"
+input CreatePersonInput {
+  firstName: String
+  middleName: String
+  lastName: String
+  dateOfBirth: DateTime
+  gender: Int
+  civilStatus: Int
+  addresses: [CreateAddressInput!]
+  contacts: [CreateContactInput!]
+}
+
+"Input for creating a new position"
+input CreatePositionInput {
+  titleName: String
+  description: String
+}
+
+"Input for creating a new salary grade"
+input CreateSalaryGradeInput {
+  salaryGradeName: String
+  description: String
+  step: Int
+  monthlySalary: Decimal
+}
+
+"Input for creating a new school"
+input CreateSchoolInput {
+  schoolName: String
+  addresses: [CreateAddressInput!]
+  contacts: [CreateContactInput!]
+}
+
+"Input for updating an existing employment"
+input UpdateEmploymentInput {
+  positionDisplayId: Long
+  salaryGradeDisplayId: Long
+  itemDisplayId: Long
+  employmentStatus: Int
+  appointmentStatus: Int
+  eligibility: Int
+  dateOfOriginalAppointment: DateTime
+  psipopItemNumber: String
+  depEdId: String
+  gsisId: String
+  philHealthId: String
+  tinId: String
+  isActive: Boolean
+}
+
+"Input for updating an existing item"
+input UpdateItemInput {
+  itemName: String
+  description: String
+  isActive: Bool100 18967 100 18967   0     0 336718     0  --:--:-- --:--:-- --:--:-- 338696ean
+}
+
+"Input for updating an existing person"
+input UpdatePersonInput {
+  firstName: String
+  middleName: String
+  lastName: String
+  dateOfBirth: DateTime
+  gender: Int
+  civilStatus: Int
+}
+
+"Input for updating an existing position"
+input UpdatePositionInput {
+  titleName: String
+  description: String
+  isActive: Boolean
+}
+
+"Input for updating an existing salary grade"
+input UpdateSalaryGradeInput {
+  salaryGradeName: String
+  description: String
+  step: Int
+  monthlySalary: Decimal
+  isActive: Boolean
+}
+
+"Input for updating an existing school"
+input UpdateSchoolInput {
+  schoolName: String
+  addresses: [UpsertAddressInput!]
+  contacts: [UpsertContactInput!]
+  isActive: Boolean
+}
+
+"Input for upserting an address (create or update)"
+input UpsertAddressInput {
+  displayId: Long
+  address1: String
+  address2: String
+  addressType: Int
+  barangay: String
+  city: String
+  country: String
+  isCurrent: Boolean
+  isPermanent: Boolean
+  province: String
+  zipCode: String
+}
+
+"Input for upserting a contact (create or update)"
+input UpsertContactInput {
+  displayId: Long
+  contactType: Int
+  email: String
+  fax: String
+  landLine: String
+  mobile: String
+}
+
+"The purpose of the `cost` directive is to define a `weight` for GraphQL types, fields, and arguments. Static analysis can use these weights when calculating the overall cost of a query or response."
+directive @cost("The `weight` argument defines what value to add to the overall cost for every appearance, or possible appearance, of a type, field, argument, etc." weight: String!) on SCALAR | OBJECT | FIELD_DEFINITION | ARGUMENT_DEFINITION | ENUM | INPUT_FIELD_DEFINITION
+
+"The `@specifiedBy` directive is used within the type system definition language to provide a URL for specifying the behavior of custom scalar definitions."
+directive @specifiedBy("The specifiedBy URL points to a human-readable specification. This field will only read a result for scalar types." url: String!) on SCALAR
+
+"The `DateTime` scalar represents an ISO-8601 compliant date time type."
+scalar DateTime @specifiedBy(url: "https:\/\/www.graphql-scalars.com\/date-time")
+
+"The `Decimal` scalar type represents a decimal floating-point number."
+scalar Decimal
+
+"The `Long` scalar type represents non-fractional signed whole 64-bit numeric values. Long can represent values between -(2^63) and 2^63 - 1."
+scalar Long
+
+scalar UUID @specifiedBy(url: "https:\/\/tools.ietf.org\/html\/rfc4122")
+
+"The `Upload` scalar type represents a file upload."
+scalar Upload

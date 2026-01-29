@@ -161,62 +161,62 @@ public class UpsertAddressDto
 }
 
 /// <summary>
-/// DTO for address response.
+/// Record for address response data. Immutable by design.
 /// </summary>
-public class AddressResponseDto : BaseResponseDto
+public record AddressResponseDto : BaseResponseDto
 {
     /// <summary>
-    /// Gets or sets the primary address line.
+    /// Gets the primary address line.
     /// </summary>
     public string Address1 { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the secondary address line.
+    /// Gets the secondary address line.
     /// </summary>
     public string? Address2 { get; init; }
 
     /// <summary>
-    /// Gets or sets the barangay.
+    /// Gets the barangay.
     /// </summary>
     public string? Barangay { get; init; }
 
     /// <summary>
-    /// Gets or sets the city or municipality.
+    /// Gets the city or municipality.
     /// </summary>
     public string City { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the province or state.
+    /// Gets the province or state.
     /// </summary>
     public string Province { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the country.
+    /// Gets the country.
     /// </summary>
     public string Country { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the zip or postal code.
+    /// Gets the zip or postal code.
     /// </summary>
     public string? ZipCode { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether this is the current address.
+    /// Gets a value indicating whether this is the current address.
     /// </summary>
     public bool IsCurrent { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether this is the permanent address.
+    /// Gets a value indicating whether this is the permanent address.
     /// </summary>
     public bool IsPermanent { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether this address is active.
+    /// Gets a value indicating whether this address is active.
     /// </summary>
     public bool IsActive { get; init; }
 
     /// <summary>
-    /// Gets or sets the type of address.
+    /// Gets the type of address.
     /// </summary>
     public AddressType AddressType { get; init; }
 

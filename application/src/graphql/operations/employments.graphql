@@ -1,0 +1,124 @@
+# Employment Fragments
+fragment EmploymentListFields on EmploymentListDto {
+  displayId
+  employmentStatus
+  depEdId
+  employeeFullName
+  positionTitle
+  isActive
+  createdBy
+  createdOn
+  modifiedBy
+  modifiedOn
+}
+
+fragment EmploymentDetailFields on EmploymentResponseDto {
+  displayId
+  employmentStatus
+  appointmentStatus
+  eligibility
+  dateOfOriginalAppointment
+  psipopItemNumber
+  depEdId
+  gsisId
+  philHealthId
+  tinId
+  isActive
+  createdBy
+  createdOn
+  modifiedBy
+  modifiedOn
+  person {
+    displayId
+    fullName
+  }
+  position {
+    displayId
+    titleName
+  }
+  salaryGrade {
+    displayId
+    salaryGradeName
+    step
+    monthlySalary
+  }
+  item {
+    displayId
+    itemName
+  }
+  schools {
+    displayId
+    startDate
+    endDate
+    isCurrent
+    isActive
+    schoolDisplayId
+    schoolName
+    createdBy
+    createdOn
+    modifiedBy
+    modifiedOn
+  }
+}
+
+# Employment Queries
+query GetEmployments(
+  $pageNumber: Int
+  $pageSize: Int
+  $searchTerm: String
+  $displayIdFilter: String
+  $employeeNameFilter: String
+  $positionFilter: String
+  $depEdIdFilter: String
+  $employmentStatus: Int
+  $isActive: Boolean
+  $sortBy: String
+  $sortDescending: Boolean
+) {
+  employments(
+    pageNumber: $pageNumber
+    pageSize: $pageSize
+    searchTerm: $searchTerm
+    displayIdFilter: $displayIdFilter
+    employeeNameFilter: $employeeNameFilter
+    positionFilter: $positionFilter
+    depEdIdFilter: $depEdIdFilter
+    employmentStatus: $employmentStatus
+    isActive: $isActive
+    sortBy: $sortBy
+    sortDescending: $sortDescending
+  ) {
+    items {
+      ...EmploymentListFields
+    }
+    totalCount
+    pageNumber
+    pageSize
+    totalPages
+    hasPreviousPage
+    hasNextPage
+  }
+}
+
+query GetEmployment($displayId: Long!) {
+  employment(displayId: $displayId) {
+    ...EmploymentDetailFields
+  }
+}
+
+# Employment Mutations
+mutation CreateEmployment($input: CreateEmploymentInput!) {
+  createEmployment(input: $input) {
+    ...EmploymentDetailFields
+  }
+}
+
+mutation UpdateEmployment($displayId: Long!, $input: UpdateEmploymentInput!) {
+  updateEmployment(displayId: $displayId, input: $input) {
+    ...EmploymentDetailFields
+  }
+}
+
+mutation DeleteEmployment($displayId: Long!) {
+  deleteEmployment(displayId: $displayId)
+}

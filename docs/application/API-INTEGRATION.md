@@ -1,12 +1,12 @@
 # API Integration
 
-This document describes how the frontend application integrates with the backend API.
+This document describes how the frontend application integrates with the backend API through the GraphQL Gateway.
 
 ---
 
 ## Overview
 
-The EMS frontend uses **OpenAPI Generator** to automatically generate TypeScript API clients from the backend's Swagger specification. This ensures type safety and keeps the frontend in sync with backend changes.
+The EMS frontend uses **Apollo Client** with **GraphQL Code Generator** to communicate with the backend via a GraphQL Gateway (HotChocolate). This ensures type safety and provides a great developer experience with auto-generated types and hooks.
 
 ---
 
@@ -20,28 +20,35 @@ The EMS frontend uses **OpenAPI Generator** to automatically generate TypeScript
 │       │                                                     │
 │       ▼                                                     │
 │  ┌─────────────────┐                                        │
-│  │   API Exports   │  ← src/api/index.ts                    │
-│  │   (Instances)   │                                        │
+│  │  Custom Hooks   │  ← src/hooks/                          │
+│  │  (usePersons,   │                                        │
+│  │   useSchools)   │                                        │
 │  └────────┬────────┘                                        │
 │           │                                                 │
 │           ▼                                                 │
 │  ┌─────────────────┐    ┌─────────────────┐                 │
-│  │  Generated API  │    │  Axios Config   │                 │
-│  │    Classes      │◄───│   (Interceptors)│                 │
+│  │  Apollo Client  │    │  Generated Types│                 │
+│  │  (GraphQL)      │◄───│  & Documents    │                 │
 │  └────────┬────────┘    └─────────────────┘                 │
-│           │                    src/api/config.ts            │
+│           │                    src/graphql/generated/       │
 │           ▼                                                 │
 │  ┌─────────────────┐                                        │
-│  │  Generated      │                                        │
-│  │  TypeScript     │  ← src/api/generated/                  │
-│  │  Models         │                                        │
+│  │  GraphQL        │                                        │
+│  │  Operations     │  ← src/graphql/operations/*.graphql    │
 │  └─────────────────┘                                        │
 └─────────────────────────────────────────────────────────────┘
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
+│                    GraphQL Gateway                          │
+│                 https://localhost:5003/graphql              │
+│                    (HotChocolate)                           │
+└─────────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
 │                    Backend API                              │
-│                 http://localhost:5062                       │
+│                 https://localhost:5001                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -71,178 +78,215 @@ The application uses a dual-token authentication system:
 
 1. **Access tokens in localStorage**: Required for making API calls with custom headers
 2. **Refresh tokens in cookies**: Maximum security for long-lived credentials
-3. **Automatic refresh**: Seamless token renewal via axios interceptors
+3. **Automatic refresh**: Seamless token renewal via Apollo link
 4. **No token exposure**: Refresh tokens never touch JavaScript code
 
 ---
 
 ## Configuration
 
-### Base Configuration
+### Apollo Client Configuration
 
-**File:** `src/api/config.ts`
+**File:** `src/graphql/client.ts`
+
+The Apollo Client is configured with:
+- Authentication link for adding Bearer tokens
+- Error link for handling token refresh
+- HTTP link pointing to the GraphQL Gateway
+
+### GraphQL Code Generator
+
+**File:** `codegen.ts`
 
 ```typescript
-import axios from 'axios';
-import { Configuration } from './generated';
+import type { CodegenConfig } from '@graphql-codegen/cli';
 
-// Base URL for all API requests
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5031';
-
-// Configured Axios instance
-export const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true, // Enable sending cookies with requests
-});
-
-// API configuration for generated clients
-export const apiConfiguration = new Configuration({
-  basePath: API_BASE_URL,
-});
-
-const ACCESS_TOKEN_KEY = 'accessToken';
-
-// Request interceptor for adding auth tokens
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+const config: CodegenConfig = {
+  schema: 'https://localhost:5003/graphql',
+  documents: ['src/graphql/operations/**/*.graphql'],
+  generates: {
+    './src/graphql/generated/graphql.ts': {
+      plugins: [
+        'typescript',
+        'typescript-operations',
+        'typescript-react-apollo'
+      ]
     }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor for handling errors and token refresh
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // Handle 401 Unauthorized with automatic token refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      // Skip refresh for auth endpoints
-      if (originalRequest.url?.includes('/auth/')) {
-        return Promise.reject(error);
-      }
-
-      originalRequest._retry = true;
-
-      try {
-        // Refresh token is sent automatically via HttpOnly cookie
-        const response = await axiosInstance.post('/api/v1/auth/refresh');
-        const { accessToken } = response.data;
-        localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return axiosInstance(originalRequest);
-      } catch {
-        // Refresh failed, redirect to login
-        localStorage.clear();
-        window.location.href = '/login';
-      }
-    }
-    return Promise.reject(error);
   }
-);
+};
+
+export default config;
 ```
 
 ---
 
-## Generated API Client
+## GraphQL Operations
 
-### Generation Process
+### Query Files
 
-The API client is generated using OpenAPI Generator CLI:
+GraphQL operations are defined in `.graphql` files in `src/graphql/operations/`:
 
-```bash
-npm run generate-api
-```
+| File | Description |
+|------|-------------|
+| `auth.graphql` | Authentication mutations |
+| `dashboard.graphql` | Dashboard statistics query |
+| `documents.graphql` | Document queries and mutations |
+| `employments.graphql` | Employment queries and mutations |
+| `items.graphql` | Item queries and mutations |
+| `persons.graphql` | Person queries and mutations |
+| `positions.graphql` | Position queries and mutations |
+| `salary-grades.graphql` | Salary grade queries and mutations |
+| `schools.graphql` | School queries and mutations |
 
-This command:
-1. Fetches OpenAPI spec from `http://localhost:5062/swagger/v1/swagger.json`
-2. Generates TypeScript/Axios client code
-3. Outputs to `src/api/generated/`
+### Example Operations
 
-### OpenAPI Generator Configuration
-
-**File:** `openapitools.json`
-
-```json
-{
-  "$schema": "node_modules/@openapitools/openapi-generator-cli/config.schema.json",
-  "spaces": 2,
-  "generator-cli": {
-    "version": "7.13.0"
+**Query:**
+```graphql
+query GetPersons($pageNumber: Int, $pageSize: Int, $searchTerm: String) {
+  persons(pageNumber: $pageNumber, pageSize: $pageSize, searchTerm: $searchTerm) {
+    items {
+      displayId
+      fullName
+      gender
+      civilStatus
+    }
+    totalCount
+    pageNumber
+    pageSize
   }
 }
 ```
 
-**Generation Command (in package.json):**
-
-```json
-{
-  "scripts": {
-    "generate-api": "openapi-generator-cli generate -i http://localhost:5062/swagger/v1/swagger.json -g typescript-axios -o src/api/generated --additional-properties=supportsES6=true,withSeparateModelsAndApi=true,modelPackage=models,apiPackage=api"
+**Mutation:**
+```graphql
+mutation CreatePerson($input: CreatePersonInput!) {
+  createPerson(input: $input) {
+    displayId
+    firstName
+    lastName
+    fullName
   }
 }
 ```
 
 ---
 
-## API Classes
+## Custom Hooks
 
-### Available API Classes
+### Available Hooks
 
-|       Class       |             Base Path            |           Purpose            |
-|-------------------|----------------------------------|------------------------------|
-| `AuthApi`         | `/api/v1/auth`                   | Authentication operations    |
-| `PersonsApi`      | `/api/v1/persons`                | Person CRUD operations       |
-| `EmploymentsApi`  | `/api/v1/employments`            | Employment CRUD operations   |
-| `SchoolsApi`      | `/api/v1/schools`                | School CRUD operations       |
-| `PositionsApi`    | `/api/v1/positions`              | Position CRUD operations     |
-| `SalaryGradesApi` | `/api/v1/salarygrades`           | Salary grade CRUD operations |
-| `ItemsApi`        | `/api/v1/items`                  | Item CRUD operations         |
-| `DocumentsApi`    | `/api/v1/persons/{id}/documents` | Document management          |
-| `ReportsApi`      | `/api/v1/reports`                | Dashboard statistics         |
+| Hook | Purpose |
+|------|---------|
+| `usePersons()` | Get paginated list of persons |
+| `usePerson()` | Get single person by ID |
+| `useCreatePerson()` | Create a new person |
+| `useUpdatePerson()` | Update an existing person |
+| `useDeletePerson()` | Delete a person |
+| `useEmployments()` | Get paginated list of employments |
+| `useSchools()` | Get paginated list of schools |
+| `usePositions()` | Get paginated list of positions |
+| `useSalaryGrades()` | Get paginated list of salary grades |
+| `useItems()` | Get paginated list of items |
+| `useDashboard()` | Get dashboard statistics |
+| `usePersonDocuments()` | Get paginated list of documents for a person |
+| `useDocument()` | Get single document by display ID |
+| `useUpdateDocument()` | Update document metadata |
+| `useDeleteDocument()` | Delete a document |
+| `useDeleteProfileImage()` | Delete a person's profile image |
 
-### API Instance Exports
+### Usage Examples
 
-**File:** `src/api/index.ts`
+#### Get List (Paginated)
 
 ```typescript
-import {
-  PersonsApi,
-  SchoolsApi,
-  EmploymentsApi,
-  PositionsApi,
-  SalaryGradesApi,
-  ItemsApi,
-  DocumentsApi,
-  ReportsApi,
-} from './generated';
-import { apiConfiguration, axiosInstance } from './config';
+import { usePersons } from '../hooks';
 
-// Pre-configured API instances
-export const personsApi = new PersonsApi(apiConfiguration, undefined, axiosInstance);
-export const schoolsApi = new SchoolsApi(apiConfiguration, undefined, axiosInstance);
-export const employmentsApi = new EmploymentsApi(apiConfiguration, undefined, axiosInstance);
-export const positionsApi = new PositionsApi(apiConfiguration, undefined, axiosInstance);
-export const salaryGradesApi = new SalaryGradesApi(apiConfiguration, undefined, axiosInstance);
-export const itemsApi = new ItemsApi(apiConfiguration, undefined, axiosInstance);
-export const documentsApi = new DocumentsApi(apiConfiguration, undefined, axiosInstance);
-export const reportsApi = new ReportsApi(apiConfiguration, undefined, axiosInstance);
+const PersonsPage = () => {
+  const { persons, loading, error, totalCount, refetch } = usePersons({
+    pageNumber: 1,
+    pageSize: 10,
+    searchTerm: 'John'
+  });
 
-// Re-export models and BASE_URL
-export * from './generated/models';
-export { API_BASE_URL } from './config';
+  if (loading) return <Spinner />;
+  if (error) return <Alert>{error.message}</Alert>;
+
+  return <PersonsTable data={persons} total={totalCount} />;
+};
 ```
 
-> **Note:** The `AuthApi` is not exported as a pre-configured instance because it's used directly in the `AuthContext` with special handling for token management.
+#### Get Single Record
+
+```typescript
+import { usePerson } from '../hooks';
+
+const PersonDetail = ({ displayId }: { displayId: number }) => {
+  const { person, loading, error } = usePerson(displayId);
+
+  if (loading) return <Spinner />;
+  if (error) return <Alert>{error.message}</Alert>;
+  if (!person) return <NotFound />;
+
+  return <PersonCard person={person} />;
+};
+```
+
+#### Create Record
+
+```typescript
+import { useCreatePerson } from '../hooks';
+
+const PersonForm = () => {
+  const { createPerson, loading, error } = useCreatePerson();
+
+  const handleSubmit = async (data: CreatePersonInput) => {
+    const result = await createPerson(data);
+    if (result) {
+      navigate(`/persons/${result.displayId}`);
+    }
+  };
+
+  return <form onSubmit={handleSubmit}>...</form>;
+};
+```
+
+#### Update Record
+
+```typescript
+import { useUpdatePerson } from '../hooks';
+
+const EditPersonForm = ({ displayId }: { displayId: number }) => {
+  const { updatePerson, loading, error } = useUpdatePerson();
+
+  const handleSubmit = async (data: UpdatePersonInput) => {
+    const result = await updatePerson(displayId, data);
+    if (result) {
+      navigate(`/persons/${displayId}`);
+    }
+  };
+
+  return <form onSubmit={handleSubmit}>...</form>;
+};
+```
+
+#### Delete Record
+
+```typescript
+import { useDeletePerson } from '../hooks';
+
+const DeleteButton = ({ displayId }: { displayId: number }) => {
+  const { deletePerson, loading } = useDeletePerson();
+
+  const handleDelete = async () => {
+    const success = await deletePerson(displayId);
+    if (success) {
+      navigate('/persons');
+    }
+  };
+
+  return <Button onClick={handleDelete} loading={loading}>Delete</Button>;
+};
+```
 
 ---
 
@@ -272,391 +316,100 @@ interface AuthContextType {
 }
 ```
 
-**Usage:**
-```tsx
-import { useAuth } from '../hooks/useAuth';
-
-const MyComponent = () => {
-  const { user, isAuthenticated, logout } = useAuth();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-
-  return (
-    <div>
-      <p>Welcome, {user?.firstName}</p>
-      <button onClick={logout}>Logout</button>
-    </div>
-  );
-};
-```
-
 ### Authentication Flow
 
 1. User clicks Google Sign-In button on Login page
 2. Google returns an ID token via `@react-oauth/google`
-3. Frontend sends ID token to backend `/api/v1/auth/google`
-4. Backend validates token with Google and creates/retrieves user
+3. Frontend sends ID token to GraphQL Gateway via `googleLogin` mutation
+4. Gateway forwards to backend which validates token with Google
 5. Backend returns JWT access token, refresh token, and user info
-6. Frontend stores tokens in localStorage and user in context
-7. Subsequent API calls include Bearer token in Authorization header
-8. When access token expires, interceptor automatically refreshes using refresh token
-
----
-
-## TypeScript Models
-
-### Model Categories
-
-#### Authentication DTOs
-
-```typescript
-interface GoogleAuthRequestDto {
-  idToken: string;
-}
-
-interface AuthResponseDto {
-  accessToken: string;
-  refreshToken: string;
-  expiresOn: string;
-  user: UserDto;
-}
-
-interface UserDto {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  profilePictureUrl?: string | null;
-  role: string;
-}
-```
-
-#### Entity Response DTOs
-
-```typescript
-interface PersonResponseDto {
-  displayId: number;
-  firstName: string;
-  lastName: string;
-  middleName?: string | null;
-  fullName: string;
-  dateOfBirth: string;
-  gender: Gender;
-  civilStatus: CivilStatus;
-  profileImageUrl?: string | null;
-  addresses: AddressResponseDto[];
-  contacts: ContactResponseDto[];
-  createdAt: string;
-  createdBy: string;
-  modifiedAt?: string | null;
-  modifiedBy?: string | null;
-}
-```
-
-#### Create/Update DTOs
-
-```typescript
-interface CreatePersonDto {
-  firstName: string;
-  lastName: string;
-  middleName?: string | null;
-  dateOfBirth: string;
-  gender: Gender;
-  civilStatus: CivilStatus;
-}
-
-interface UpdatePersonDto extends CreatePersonDto {
-  // Same fields, used for PUT requests
-}
-```
-
-#### Paged Results
-
-```typescript
-interface PersonListDtoPagedResult {
-  items: PersonListDto[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}
-```
-
-#### Enums
-
-```typescript
-enum Gender {
-  Male = 'Male',
-  Female = 'Female'
-}
-
-enum CivilStatus {
-  Single = 'Single',
-  Married = 'Married',
-  SoloParent = 'SoloParent',
-  Widow = 'Widow',
-  Separated = 'Separated',
-  Other = 'Other'
-}
-
-enum DocumentType {
-  Pdf = 'Pdf',
-  Word = 'Word',
-  Excel = 'Excel',
-  PowerPoint = 'PowerPoint',
-  ImageJpeg = 'ImageJpeg',
-  ImagePng = 'ImagePng',
-  Other = 'Other'
-}
-```
-
----
-
-## Usage Patterns
-
-### Basic CRUD Operations
-
-#### Get List (Paginated)
-
-```typescript
-import { personsApi, type PersonListDtoPagedResult } from '../../api';
-
-const loadPersons = async (
-  page: number, 
-  pageSize: number, 
-  search?: string
-): Promise<PersonListDtoPagedResult> => {
-  const response = await personsApi.apiV1PersonsGet(page, pageSize, search);
-  return response.data;
-};
-```
-
-#### Get Single Record
-
-```typescript
-import { personsApi, type PersonResponseDto } from '../../api';
-
-const loadPerson = async (displayId: number): Promise<PersonResponseDto | null> => {
-  try {
-    const response = await personsApi.apiV1PersonsDisplayIdGet(displayId);
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
-      return null;
-    }
-    throw error;
-  }
-};
-```
-
-#### Create Record
-
-```typescript
-import { personsApi, type CreatePersonDto, type PersonResponseDto } from '../../api';
-
-const createPerson = async (data: CreatePersonDto): Promise<PersonResponseDto> => {
-  const response = await personsApi.apiV1PersonsPost(data);
-  return response.data;
-};
-```
-
-#### Update Record
-
-```typescript
-import { personsApi, type UpdatePersonDto, type PersonResponseDto } from '../../api';
-
-const updatePerson = async (
-  displayId: number, 
-  data: UpdatePersonDto
-): Promise<PersonResponseDto> => {
-  const response = await personsApi.apiV1PersonsDisplayIdPut(displayId, data);
-  return response.data;
-};
-```
-
-#### Delete Record
-
-```typescript
-import { personsApi } from '../../api';
-
-const deletePerson = async (displayId: number): Promise<void> => {
-  await personsApi.apiV1PersonsDisplayIdDelete(displayId);
-};
-```
-
----
-
-### File Upload
-
-#### Document Upload
-
-```typescript
-import { documentsApi, DocumentType } from '../../api';
-
-const uploadDocument = async (
-  personDisplayId: number,
-  file: File,
-  documentType: DocumentType,
-  description?: string
-): Promise<void> => {
-  await documentsApi.apiV1PersonsPersonDisplayIdDocumentsPost(
-    personDisplayId,
-    file,
-    documentType,
-    description
-  );
-};
-```
-
-#### Profile Image Upload
-
-```typescript
-import { documentsApi } from '../../api';
-
-const uploadProfileImage = async (
-  personDisplayId: number,
-  file: File
-): Promise<string> => {
-  const response = await documentsApi.apiV1PersonsPersonDisplayIdDocumentsProfileImagePost(
-    personDisplayId,
-    file
-  );
-  return response.data.url;
-};
-```
-
----
-
-### File Download
-
-```typescript
-import { documentsApi, API_BASE_URL } from '../../api';
-
-const downloadDocument = async (
-  personDisplayId: number,
-  documentDisplayId: number,
-  fileName: string
-): Promise<void> => {
-  const response = await documentsApi.apiV1PersonsPersonDisplayIdDocumentsDocumentDisplayIdDownloadGet(
-    personDisplayId,
-    documentDisplayId,
-    { responseType: 'blob' }
-  );
-  
-  // Create download link
-  const url = window.URL.createObjectURL(new Blob([response.data]));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
-};
-```
-
----
-
-### AG Grid Server-Side Data
-
-```typescript
-import { personsApi, type PersonListDto } from '../../api';
-import { IDatasource, IGetRowsParams } from 'ag-grid-community';
-
-const createDataSource = (
-  pageSize: number, 
-  searchTerm: string
-): IDatasource => ({
-  getRows: async (params: IGetRowsParams) => {
-    try {
-      const page = Math.floor(params.startRow / pageSize) + 1;
-      
-      const response = await personsApi.apiV1PersonsGet(
-        page,
-        pageSize,
-        searchTerm || undefined
-      );
-      
-      const { items, totalCount } = response.data;
-      
-      params.successCallback(
-        items,
-        totalCount
-      );
-    } catch (error) {
-      console.error('Error loading data:', error);
-      params.failCallback();
-    }
-  }
-});
-```
+6. Frontend stores access token in localStorage and user in context
+7. Subsequent GraphQL requests include Bearer token in Authorization header
+8. When access token expires, Apollo link automatically refreshes using refresh token
 
 ---
 
 ## Error Handling
 
-### Standard Error Handler
+### Apollo Error Link
+
+Errors are handled at the Apollo Client level with an error link that:
+- Logs errors for debugging
+- Handles 401 Unauthorized by attempting token refresh
+- Redirects to login on authentication failure
+
+### Component-Level Handling
 
 ```typescript
-import axios, { AxiosError } from 'axios';
+const { data, loading, error } = usePersons();
 
-interface ApiError {
-  message: string;
-  statusCode: number;
-  details?: string[];
-}
+if (loading) return <Spinner />;
 
-const handleApiError = (error: unknown): ApiError => {
-  if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError<{ message?: string; errors?: string[] }>;
-    
-    return {
-      message: axiosError.response?.data?.message || 'An error occurred',
-      statusCode: axiosError.response?.status || 500,
-      details: axiosError.response?.data?.errors
-    };
+if (error) {
+  if (error.networkError) {
+    return <Alert>Network error. Please check your connection.</Alert>;
   }
-  
-  return {
-    message: 'An unexpected error occurred',
-    statusCode: 500
-  };
-};
-```
-
-### Usage in Components
-
-```typescript
-try {
-  await personsApi.apiV1PersonsPost(formData);
-  navigate('/persons');
-} catch (error) {
-  const { message, statusCode } = handleApiError(error);
-  
-  if (statusCode === 400) {
-    setError('Invalid data. Please check your input.');
-  } else if (statusCode === 409) {
-    setError('A record with this information already exists.');
-  } else {
-    setError(message);
+  if (error.graphQLErrors) {
+    return <Alert>{error.graphQLErrors[0].message}</Alert>;
   }
+  return <Alert>An unexpected error occurred.</Alert>;
 }
 ```
 
 ---
 
-## Regenerating the API Client
+## Gateway REST Endpoints (File Operations)
 
-When the backend API changes:
+The Gateway provides REST endpoints for file operations because GraphQL doesn't natively support multipart file uploads. These endpoints proxy requests to the Backend API with proper authentication.
 
-1. **Ensure backend is running** on `http://localhost:5062`
-2. **Run generation command:**
+### Base URL
+`https://localhost:5003/api/persons/{personDisplayId}/documents`
+
+### Available Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/persons/{personDisplayId}/documents` | Upload a document |
+| `GET` | `/api/persons/{personDisplayId}/documents/{documentDisplayId}/download` | Download a document |
+| `DELETE` | `/api/persons/{personDisplayId}/documents/{documentDisplayId}` | Delete a document |
+| `POST` | `/api/persons/{personDisplayId}/documents/profile-image` | Upload profile image |
+| `GET` | `/api/persons/{personDisplayId}/documents/profile-image` | Get profile image |
+| `DELETE` | `/api/persons/{personDisplayId}/documents/profile-image` | Delete profile image |
+
+### Usage Example
+
+```typescript
+import {
+  uploadDocument,
+  uploadProfileImage,
+  getDocumentDownloadUrl,
+  getProfileImageUrl,
+} from '../hooks/useDocuments';
+
+// Upload document
+const accessToken = localStorage.getItem('accessToken');
+await uploadDocument(personDisplayId, file, 'Description', accessToken!);
+
+// Upload profile image
+await uploadProfileImage(personDisplayId, imageFile, accessToken!);
+
+// Get download URL
+const downloadUrl = getDocumentDownloadUrl(personDisplayId, documentDisplayId);
+
+// Get profile image URL (with cache busting version)
+const imageUrl = getProfileImageUrl(personDisplayId, Date.now());
+```
+
+---
+
+## Regenerating Types
+
+When the GraphQL schema changes on the gateway:
+
+1. **Ensure gateway is running** on `https://localhost:5003`
+2. **Run codegen command:**
    ```bash
-   npm run generate-api
+   npm run codegen
    ```
 3. **Check for breaking changes** in generated code
 4. **Update components** if needed
@@ -664,8 +417,7 @@ When the backend API changes:
 
 ### Post-Generation Checklist
 
-- [ ] New models generated correctly
+- [ ] New types generated correctly
 - [ ] Existing imports still work
-- [ ] New endpoints accessible
-- [ ] Enum values match backend
+- [ ] New queries/mutations accessible
 - [ ] No TypeScript compilation errors

@@ -78,6 +78,15 @@ The backend follows Clean Architecture with the following layers:
 - `ItemsController` - Item management
 - `ReportsController` - Report generation
 
+### API Client Layer (`EmployeeManagementSystem.ApiClient`)
+- NSwag-generated HTTP client for the API
+- Used by the GraphQL Gateway to communicate with the Backend
+- Auto-generated from OpenAPI specification
+
+**Components:**
+- `Generated/EmsApiClient.cs` - Auto-generated client (DO NOT EDIT)
+- `nswag.json` - NSwag configuration file
+
 ## Project Structure
 
 ```
@@ -89,6 +98,7 @@ server/
 │   ├── Common/             # Shared utilities (Result pattern)
 │   ├── DTOs/               # Data transfer objects
 │   ├── Interfaces/         # Service interfaces
+│   ├── Mappings/           # Entity to DTO mapping extensions
 │   └── Services/           # Business logic services
 ├── EmployeeManagementSystem.Infrastructure/
 │   ├── Data/               # DbContext and seeding
@@ -100,6 +110,9 @@ server/
 │   ├── v1/Controllers/     # API v1 endpoints
 │   ├── v2/                 # API v2 endpoints (future)
 │   └── Properties/         # Launch settings
+├── EmployeeManagementSystem.ApiClient/
+│   ├── Generated/          # NSwag-generated client (DO NOT EDIT)
+│   └── nswag.json          # NSwag configuration
 └── tests/
     └── EmployeeManagementSystem.Tests/
 ```
@@ -135,6 +148,7 @@ Once running, access Swagger UI at: `https://localhost:5001/swagger`
 - **Microsoft.AspNetCore.OpenApi** - OpenAPI support
 - **Swashbuckle.AspNetCore** - Swagger documentation
 - **Microsoft.EntityFrameworkCore** - ORM
+- **NSwag.ApiDescription.Client** - API client generation
 
 ## Modern C# Features
 
@@ -150,3 +164,19 @@ Configuration is managed through:
 - `appsettings.json` - Base configuration
 - `appsettings.Development.json` - Development overrides
 - User Secrets - Sensitive data (connection strings, API keys)
+
+## Regenerating API Client
+
+The NSwag-generated API client is used by the Gateway. To regenerate it after API changes:
+
+```bash
+# Ensure the API is running first
+cd EmployeeManagementSystem.Api
+dotnet run --launch-profile https
+
+# In another terminal, regenerate the client
+cd ../EmployeeManagementSystem.ApiClient
+nswag run nswag.json
+```
+
+The client is generated from the OpenAPI specification at `https://localhost:7166/openapi/v1.json`.

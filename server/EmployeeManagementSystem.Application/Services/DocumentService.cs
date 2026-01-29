@@ -2,6 +2,7 @@ using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Document;
 using EmployeeManagementSystem.Application.Interfaces;
+using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -69,7 +70,7 @@ public class DocumentService(
 
         return document == null
             ? Result<DocumentResponseDto>.NotFound("Document not found.")
-            : Result<DocumentResponseDto>.Success(MapToResponseDto(document, personDisplayId));
+            : Result<DocumentResponseDto>.Success(document.ToResponseDto(personDisplayId));
     }
 
     /// <inheritdoc />
@@ -183,7 +184,7 @@ public class DocumentService(
 
         _ = await _documentRepository.AddAsync(document, cancellationToken);
 
-        return Result<DocumentResponseDto>.Success(MapToResponseDto(document, personDisplayId));
+        return Result<DocumentResponseDto>.Success(document.ToResponseDto(personDisplayId));
     }
 
     /// <inheritdoc />
@@ -215,7 +216,7 @@ public class DocumentService(
 
         await _documentRepository.UpdateAsync(document, cancellationToken);
 
-        return Result<DocumentResponseDto>.Success(MapToResponseDto(document, personDisplayId));
+        return Result<DocumentResponseDto>.Success(document.ToResponseDto(personDisplayId));
     }
 
     /// <inheritdoc />
@@ -414,25 +415,5 @@ public class DocumentService(
         string extension = Path.GetExtension(fileName);
         string uniqueId = Guid.NewGuid().ToString("N");
         return $"{personId}/{uniqueId}{extension}";
-    }
-
-    private static DocumentResponseDto MapToResponseDto(Document document, long personDisplayId)
-    {
-        return new DocumentResponseDto
-        {
-            DisplayId = document.DisplayId,
-            FileName = document.FileName,
-            FileExtension = document.FileExtension,
-            ContentType = document.ContentType,
-            FileSizeBytes = document.FileSizeBytes,
-            DocumentType = document.DocumentType,
-            Description = document.Description,
-            BlobUrl = document.BlobUrl,
-            PersonDisplayId = personDisplayId,
-            CreatedOn = document.CreatedOn,
-            CreatedBy = document.CreatedBy,
-            ModifiedOn = document.ModifiedOn,
-            ModifiedBy = document.ModifiedBy
-        };
     }
 }

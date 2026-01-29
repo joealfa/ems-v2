@@ -2,6 +2,7 @@ using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Item;
 using EmployeeManagementSystem.Application.Interfaces;
+using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,7 +24,7 @@ public class ItemService(IRepository<Item> itemRepository) : IItemService
         Item? item = await _itemRepository.GetByDisplayIdAsync(displayId, cancellationToken);
         return item == null
             ? Result<ItemResponseDto>.NotFound($"Item with ID {displayId} not found.")
-            : Result<ItemResponseDto>.Success(MapToResponseDto(item));
+            : Result<ItemResponseDto>.Success(item.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -82,7 +83,7 @@ public class ItemService(IRepository<Item> itemRepository) : IItemService
 
         _ = await _itemRepository.AddAsync(item, cancellationToken);
 
-        return Result<ItemResponseDto>.Success(MapToResponseDto(item));
+        return Result<ItemResponseDto>.Success(item.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -101,7 +102,7 @@ public class ItemService(IRepository<Item> itemRepository) : IItemService
 
         await _itemRepository.UpdateAsync(item, cancellationToken);
 
-        return Result<ItemResponseDto>.Success(MapToResponseDto(item));
+        return Result<ItemResponseDto>.Success(item.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -117,20 +118,5 @@ public class ItemService(IRepository<Item> itemRepository) : IItemService
         await _itemRepository.DeleteAsync(item, cancellationToken);
 
         return Result.Success();
-    }
-
-    private static ItemResponseDto MapToResponseDto(Item item)
-    {
-        return new ItemResponseDto
-        {
-            DisplayId = item.DisplayId,
-            ItemName = item.ItemName,
-            Description = item.Description,
-            IsActive = item.IsActive,
-            CreatedOn = item.CreatedOn,
-            CreatedBy = item.CreatedBy,
-            ModifiedOn = item.ModifiedOn,
-            ModifiedBy = item.ModifiedBy
-        };
     }
 }

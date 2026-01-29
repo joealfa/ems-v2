@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { Box, Input, Spinner, Text, Flex } from '@chakra-ui/react';
-import { personsApi, type PersonListDto } from '../api';
+import { usePersonsLazy } from '../hooks/usePersons';
+import type { PersonListFieldsFragment } from '../graphql/generated/graphql';
 import { useDebounce } from '../hooks/useDebounce';
 
 interface PersonSearchSelectProps {
   value: number | '';
-  onChange: (displayId: number | '', person: PersonListDto | null) => void;
+  onChange: (
+    displayId: number | '',
+    person: PersonListFieldsFragment | null
+  ) => void;
   placeholder?: string;
 }
 
@@ -15,13 +19,13 @@ const PersonSearchSelect = ({
   placeholder = 'Search by name or ID...',
 }: PersonSearchSelectProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [results, setResults] = useState<PersonListDto[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<PersonListFieldsFragment[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedPerson, setSelectedPerson] = useState<PersonListDto | null>(
-    null
-  );
+  const [selectedPerson, setSelectedPerson] =
+    useState<PersonListFieldsFragment | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const { fetchPersons, loading } = usePersonsLazy();
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -35,16 +39,15 @@ const PersonSearchSelect = ({
 
   const loadPersonByDisplayId = async (displayId: number) => {
     try {
-      const response = await personsApi.apiV1PersonsGet(
-        undefined,
-        undefined,
-        String(displayId),
-        undefined,
-        1,
-        1
-      );
-      if (response.data.items && response.data.items.length > 0) {
-        setSelectedPerson(response.data.items[0]);
+      const result = await fetchPersons({
+        variables: {
+          displayIdFilter: String(displayId),
+          pageNumber: 1,
+          pageSize: 1,
+        },
+      });
+      if (result.data?.persons?.items && result.data.persons.items.length > 0) {
+        setSelectedPerson(result.data.persons.items[0]);
       }
     } catch (err) {
       console.error('Error loading person:', err);
@@ -58,6 +61,7 @@ const PersonSearchSelect = ({
     } else {
       setResults([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
   // Close dropdown when clicking outside
@@ -76,34 +80,34 @@ const PersonSearchSelect = ({
   }, []);
 
   const searchPersons = async (term: string) => {
-    setLoading(true);
     try {
       // Check if the term looks like an ID (all digits)
       const isNumeric = /^\d+$/.test(term);
 
-      const response = await personsApi.apiV1PersonsGet(
-        undefined, // gender
-        undefined, // civilStatus
-        isNumeric ? term : undefined, // displayIdFilter - use if numeric
-        undefined, // fullNameFilter
-        1, // pageNumber
-        20, // pageSize
-        isNumeric ? undefined : term // searchTerm - use if not numeric (name search)
+      const result = await fetchPersons({
+        variables: {
+          displayIdFilter: isNumeric ? term : undefined,
+          searchTerm: isNumeric ? undefined : term,
+          pageNumber: 1,
+          pageSize: 20,
+        },
+      });
+      setResults(
+        result.data?.persons?.items?.filter(
+          (item): item is NonNullable<typeof item> => item !== null
+        ) || []
       );
-      setResults(response.data.items || []);
     } catch (err) {
       console.error('Error searching persons:', err);
       setResults([]);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleSelect = (person: PersonListDto) => {
+  const handleSelect = (person: PersonListFieldsFragment) => {
     setSelectedPerson(person);
     setSearchTerm('');
     setIsOpen(false);
-    onChange(person.displayId!, person);
+    onChange(person.displayId as number, person);
   };
 
   const handleClear = () => {
@@ -135,7 +139,7 @@ const PersonSearchSelect = ({
           bg="bg"
         >
           <Text>
-            {selectedPerson.fullName} ({selectedPerson.displayId})
+            {selectedPerson.fullName} ({selectedPerson.displayId as number})
           </Text>
           <button
             type="button"
@@ -184,7 +188,7 @@ const PersonSearchSelect = ({
           ) : results.length > 0 ? (
             results.map(person => (
               <Box
-                key={person.displayId}
+                key={person.displayId as React.Key}
                 p={3}
                 cursor="pointer"
                 _hover={{ bg: 'bg.muted' }}
@@ -194,7 +198,7 @@ const PersonSearchSelect = ({
               >
                 <Text fontWeight="medium">{person.fullName}</Text>
                 <Text fontSize="sm" color="fg.muted">
-                  ID: {person.displayId}
+                  ID: {person.displayId as number}
                 </Text>
               </Box>
             ))

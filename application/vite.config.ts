@@ -28,7 +28,7 @@ export default defineConfig({
           // AG Grid
           'vendor-ag-grid': ['ag-grid-react'],
           // Other vendors
-          'vendor-misc': ['axios', '@react-oauth/google'],
+          'vendor-misc': ['@react-oauth/google'],
         },
       },
     },

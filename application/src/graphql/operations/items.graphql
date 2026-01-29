@@ -1,0 +1,61 @@
+# Item Fragments
+fragment ItemFields on ItemResponseDto {
+  displayId
+  itemName
+  description
+  isActive
+  createdBy
+  createdOn
+  modifiedBy
+  modifiedOn
+}
+
+# Item Queries
+query GetItems(
+  $pageNumber: Int
+  $pageSize: Int
+  $searchTerm: String
+  $sortBy: String
+  $sortDescending: Boolean
+) {
+  items(
+    pageNumber: $pageNumber
+    pageSize: $pageSize
+    searchTerm: $searchTerm
+    sortBy: $sortBy
+    sortDescending: $sortDescending
+  ) {
+    items {
+      ...ItemFields
+    }
+    totalCount
+    pageNumber
+    pageSize
+    totalPages
+    hasPreviousPage
+    hasNextPage
+  }
+}
+
+query GetItem($displayId: Long!) {
+  item(displayId: $displayId) {
+    ...ItemFields
+  }
+}
+
+# Item Mutations
+mutation CreateItem($input: CreateItemInput!) {
+  createItem(input: $input) {
+    ...ItemFields
+  }
+}
+
+mutation UpdateItem($displayId: Long!, $input: UpdateItemInput!) {
+  updateItem(displayId: $displayId, input: $input) {
+    ...ItemFields
+  }
+}
+
+mutation DeleteItem($displayId: Long!) {
+  deleteItem(displayId: $displayId)
+}

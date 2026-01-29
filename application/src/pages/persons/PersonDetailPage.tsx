@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Box,
   Heading,
@@ -11,7 +10,44 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { personsApi, type PersonResponseDto } from '../../api';
+import { usePerson, useDeletePerson } from '../../hooks/usePersons';
+
+// Enum display mappings
+const GenderDisplay: Record<number, string> = {
+  0: 'Male',
+  1: 'Female',
+};
+
+const CivilStatusDisplay: Record<number, string> = {
+  0: 'Single',
+  1: 'Married',
+  2: 'Solo Parent',
+  3: 'Widow',
+  4: 'Separated',
+  5: 'Other',
+};
+
+const formatAddress = (address: {
+  address1?: string | null;
+  address2?: string | null;
+  barangay?: string | null;
+  city?: string | null;
+  province?: string | null;
+  country?: string | null;
+  zipCode?: string | null;
+}): string => {
+  const parts = [
+    address.address1,
+    address.address2,
+    address.barangay,
+    address.city,
+    address.province,
+    address.country,
+    address.zipCode,
+  ].filter(Boolean);
+  return parts.join(', ') || '-';
+};
+
 import {
   PersonDocuments,
   ProfileImageUpload,
@@ -21,32 +57,8 @@ const PersonDetailPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
 
-  const [person, setPerson] = useState<PersonResponseDto | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    loadPerson();
-  }, [displayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
-
-  const loadPerson = async () => {
-    if (!displayId) return;
-    setLoading(true);
-    try {
-      const response = await personsApi.apiV1PersonsDisplayIdGet(
-        Number(displayId)
-      );
-      setPerson(response.data);
-    } catch (err) {
-      console.error('Error loading person:', err);
-      setError('Failed to load person data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { person, loading, error, refetch } = usePerson(Number(displayId));
+  const { deletePerson, loading: deleting } = useDeletePerson();
 
   const handleDelete = async () => {
     if (
@@ -54,15 +66,12 @@ const PersonDetailPage = () => {
       !window.confirm('Are you sure you want to delete this person?')
     )
       return;
-    setDeleting(true);
+
     try {
-      await personsApi.apiV1PersonsDisplayIdDelete(Number(displayId));
+      await deletePerson(Number(displayId));
       navigate('/persons');
     } catch (err) {
       console.error('Error deleting person:', err);
-      setError('Failed to delete person');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -77,7 +86,7 @@ const PersonDetailPage = () => {
   if (error || !person) {
     return (
       <Box>
-        <Text color="red.500">{error || 'Person not found'}</Text>
+        <Text color="red.500">{error?.message || 'Person not found'}</Text>
         <Button mt={4} onClick={() => navigate('/persons')}>
           Back to Persons
         </Button>
@@ -127,7 +136,7 @@ const PersonDetailPage = () => {
                 <ProfileImageUpload
                   personDisplayId={Number(displayId)}
                   currentImageUrl={person.profileImageUrl}
-                  onImageUpdated={loadPerson}
+                  onImageUpdated={refetch}
                 />
               </Box>
 
@@ -139,7 +148,9 @@ const PersonDetailPage = () => {
                       <Text color="fg.muted" fontSize="sm">
                         Display ID
                       </Text>
-                      <Text fontWeight="medium">{person.displayId}</Text>
+                      <Text fontWeight="medium">
+                        {person.displayId as unknown as number}
+                      </Text>
                     </Box>
                     <Box flex={1}>
                       <Text color="fg.muted" fontSize="sm">
@@ -189,10 +200,13 @@ const PersonDetailPage = () => {
                       </Text>
                       <Badge
                         colorPalette={
-                          person.gender === 'Male' ? 'blue' : 'pink'
+                          (person.gender as unknown as number) === 0
+                            ? 'blue'
+                            : 'pink'
                         }
                       >
-                        {person.gender}
+                        {GenderDisplay[person.gender as unknown as number] ||
+                          person.gender}
                       </Badge>
                     </Box>
                     <Box flex={1}>
@@ -200,9 +214,9 @@ const PersonDetailPage = () => {
                         Civil Status
                       </Text>
                       <Badge colorPalette="gray">
-                        {person.civilStatus === 'SoloParent'
-                          ? 'Solo Parent'
-                          : person.civilStatus}
+                        {CivilStatusDisplay[
+                          person.civilStatus as unknown as number
+                        ] || person.civilStatus}
                       </Badge>
                     </Box>
                   </Flex>
@@ -220,20 +234,22 @@ const PersonDetailPage = () => {
             </Card.Header>
             <Card.Body>
               <Stack gap={4}>
-                {person.addresses.map((address, index) => (
-                  <Box key={index} p={4} borderWidth={1} borderRadius="md">
-                    <Flex gap={2} mb={2}>
-                      <Badge colorPalette="blue">{address.addressType}</Badge>
-                      {address.isCurrent && (
-                        <Badge colorPalette="green">Current</Badge>
-                      )}
-                      {address.isPermanent && (
-                        <Badge colorPalette="purple">Permanent</Badge>
-                      )}
-                    </Flex>
-                    <Text>{address.fullAddress}</Text>
-                  </Box>
-                ))}
+                {person.addresses.map((address, index) =>
+                  address ? (
+                    <Box key={index} p={4} borderWidth={1} borderRadius="md">
+                      <Flex gap={2} mb={2}>
+                        <Badge colorPalette="blue">{address.addressType}</Badge>
+                        {address.isCurrent && (
+                          <Badge colorPalette="green">Current</Badge>
+                        )}
+                        {address.isPermanent && (
+                          <Badge colorPalette="purple">Permanent</Badge>
+                        )}
+                      </Flex>
+                      <Text>{formatAddress(address)}</Text>
+                    </Box>
+                  ) : null
+                )}
               </Stack>
             </Card.Body>
           </Card.Root>
@@ -247,37 +263,39 @@ const PersonDetailPage = () => {
             </Card.Header>
             <Card.Body>
               <Stack gap={4}>
-                {person.contacts.map((contact, index) => (
-                  <Box key={index} p={4} borderWidth={1} borderRadius="md">
-                    <Badge colorPalette="blue" mb={2}>
-                      {contact.contactType}
-                    </Badge>
-                    {contact.email && (
-                      <Text>
-                        <Text as="span" color="fg.muted">
-                          Email:{' '}
+                {person.contacts.map((contact, index) =>
+                  contact ? (
+                    <Box key={index} p={4} borderWidth={1} borderRadius="md">
+                      <Badge colorPalette="blue" mb={2}>
+                        {contact.contactType}
+                      </Badge>
+                      {contact.email && (
+                        <Text>
+                          <Text as="span" color="fg.muted">
+                            Email:{' '}
+                          </Text>
+                          {contact.email}
                         </Text>
-                        {contact.email}
-                      </Text>
-                    )}
-                    {contact.mobile && (
-                      <Text>
-                        <Text as="span" color="fg.muted">
-                          Mobile:{' '}
+                      )}
+                      {contact.mobile && (
+                        <Text>
+                          <Text as="span" color="fg.muted">
+                            Mobile:{' '}
+                          </Text>
+                          {contact.mobile}
                         </Text>
-                        {contact.mobile}
-                      </Text>
-                    )}
-                    {contact.landLine && (
-                      <Text>
-                        <Text as="span" color="fg.muted">
-                          Landline:{' '}
+                      )}
+                      {contact.landLine && (
+                        <Text>
+                          <Text as="span" color="fg.muted">
+                            Landline:{' '}
+                          </Text>
+                          {contact.landLine}
                         </Text>
-                        {contact.landLine}
-                      </Text>
-                    )}
-                  </Box>
-                ))}
+                      )}
+                    </Box>
+                  ) : null
+                )}
               </Stack>
             </Card.Body>
           </Card.Root>

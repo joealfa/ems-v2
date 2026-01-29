@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>d5f56e0f-1368-4b36-991d-815b1521dbd8</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- HotChocolate GraphQL -->
+    <PackageReference Include="EmployeeManagementSystem.ApiClient" Version="1.0.0" />
+    <PackageReference Include="HotChocolate.AspNetCore" Version="15.*" />
+    <PackageReference Include="HotChocolate.Data" Version="15.*" />
+
+    <!-- Redis -->
+    <PackageReference Include="StackExchange.Redis" Version="2.10.1" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.*" />
+
+    <!-- ApiClient (local NuGet) -->
+  </ItemGroup>
+</Project>

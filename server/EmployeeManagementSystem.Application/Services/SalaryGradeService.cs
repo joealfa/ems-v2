@@ -2,6 +2,7 @@ using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.SalaryGrade;
 using EmployeeManagementSystem.Application.Interfaces;
+using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,7 +22,9 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
     public async Task<Result<SalaryGradeResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
         SalaryGrade? salaryGrade = await _salaryGradeRepository.GetByDisplayIdAsync(displayId, cancellationToken);
-        return salaryGrade == null ? Result<SalaryGradeResponseDto>.NotFound("Salary grade not found.") : Result<SalaryGradeResponseDto>.Success(MapToResponseDto(salaryGrade));
+        return salaryGrade == null
+            ? Result<SalaryGradeResponseDto>.NotFound("Salary grade not found.")
+            : Result<SalaryGradeResponseDto>.Success(salaryGrade.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -84,7 +87,7 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
 
         _ = await _salaryGradeRepository.AddAsync(salaryGrade, cancellationToken);
 
-        return Result<SalaryGradeResponseDto>.Success(MapToResponseDto(salaryGrade));
+        return Result<SalaryGradeResponseDto>.Success(salaryGrade.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -105,7 +108,7 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
 
         await _salaryGradeRepository.UpdateAsync(salaryGrade, cancellationToken);
 
-        return Result<SalaryGradeResponseDto>.Success(MapToResponseDto(salaryGrade));
+        return Result<SalaryGradeResponseDto>.Success(salaryGrade.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -120,22 +123,5 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
         salaryGrade.ModifiedBy = deletedBy;
         await _salaryGradeRepository.DeleteAsync(salaryGrade, cancellationToken);
         return Result.Success();
-    }
-
-    private static SalaryGradeResponseDto MapToResponseDto(SalaryGrade salaryGrade)
-    {
-        return new SalaryGradeResponseDto
-        {
-            DisplayId = salaryGrade.DisplayId,
-            SalaryGradeName = salaryGrade.SalaryGradeName,
-            Description = salaryGrade.Description,
-            Step = salaryGrade.Step,
-            MonthlySalary = salaryGrade.MonthlySalary,
-            IsActive = salaryGrade.IsActive,
-            CreatedOn = salaryGrade.CreatedOn,
-            CreatedBy = salaryGrade.CreatedBy,
-            ModifiedOn = salaryGrade.ModifiedOn,
-            ModifiedBy = salaryGrade.ModifiedBy
-        };
     }
 }

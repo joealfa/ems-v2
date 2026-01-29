@@ -9,19 +9,20 @@ Modern desktop and web application built with React, TypeScript, and Vite.
 - **Vite** - Build tool and dev server
 - **Chakra-UI** - Component library
 - **AG Grid** - Data grid component
-- **Axios** - HTTP client for API communication
+- **Apollo Client** - GraphQL client
+- **GraphQL Code Generator** - Auto-generated types and hooks
 - **React Router** - Client-side routing
-- **OpenAPI Generator** - Auto-generated API client
 
 ## Project Structure
 
 ```
 application/
 ├── src/
-│   ├── api/              # API client and configuration
-│   │   ├── config.ts     # Axios configuration
-│   │   ├── generated/    # Auto-generated API client from OpenAPI
-│   │   └── index.ts      # API exports
+│   ├── graphql/          # GraphQL configuration
+│   │   ├── client.ts     # Apollo Client setup
+│   │   ├── ApolloProvider.tsx
+│   │   ├── operations/   # GraphQL queries and mutations (.graphql files)
+│   │   └── generated/    # Auto-generated types (DO NOT EDIT)
 │   ├── assets/           # Static assets (images, fonts, etc.)
 │   ├── components/       # Reusable UI components
 │   │   ├── auth/         # Authentication components
@@ -31,8 +32,13 @@ application/
 │   ├── contexts/         # React context providers
 │   │   └── AuthContext.tsx
 │   ├── hooks/            # Custom React hooks
+│   │   ├── index.ts        # Barrel exports
 │   │   ├── useAuth.ts
-│   │   └── useDebounce.ts
+│   │   ├── useAuthMutations.ts
+│   │   ├── useDebounce.ts
+│   │   ├── useDocuments.ts
+│   │   ├── useEmployments.ts
+│   │   └── usePersons.ts
 │   ├── pages/            # Page components
 │   │   ├── Dashboard.tsx
 │   │   ├── LoginPage.tsx
@@ -82,15 +88,15 @@ npm run preview
 ## Available Scripts
 
 
-| Script                 | Description                           |
-|------------------------|---------------------------------------|
-| `npm run dev`          | Start development server              |
-| `npm run build`        | Build for production                  |
-| `npm run preview`      | Preview production build              |
-| `npm run lint`         | Run ESLint                            |
-| `npm run format`       | Format code with Prettier             |
-| `npm run format:check` | Check code formatting                 |
-| `npm run generate-api` | Generate API client from OpenAPI spec |
+| Script                 | Description                              |
+|------------------------|------------------------------------------|
+| `npm run dev`          | Start development server                 |
+| `npm run build`        | Build for production                     |
+| `npm run preview`      | Preview production build                 |
+| `npm run lint`         | Run ESLint                               |
+| `npm run format`       | Format code with Prettier                |
+| `npm run format:check` | Check code formatting                    |
+| `npm run codegen`      | Generate TypeScript types from GraphQL   |
 
 ## Coding Standards
 
@@ -110,19 +116,19 @@ npm run preview
 
 ## Security
 
-- **Access Tokens** - Stored in localStorage for API authorization (short-lived)
-- **Refresh Tokens** - Stored as HttpOnly cookies for enhanced security (long-lived)
-- **Automatic Token Refresh** - Axios interceptors handle token expiration seamlessly
+- **Access Tokens** - Stored in localStorage for API authorization (short-lived, 15 minutes)
+- **Refresh Tokens** - Stored as HttpOnly cookies for enhanced security (long-lived, 7 days)
+- **Automatic Token Refresh** - Apollo Client handles token expiration seamlessly
 - **CSRF Protection** - SameSite cookie policy prevents cross-site attacks
 
 ## API Integration
 
-The application uses an auto-generated API client from the backend's OpenAPI specification. To regenerate the client after API changes:
+The application uses **Apollo Client** with **GraphQL Code Generator** to communicate with the backend via a GraphQL Gateway. To regenerate types after schema changes:
 
 ```bash
-npm run generate-api
+npm run codegen
 ```
 
-The generated client is located in `src/api/generated/`.
+The generated types are located in `src/graphql/generated/`.
 
-**Note**: The API uses lowercase routes (e.g., `/api/v1/persons`, `/api/v1/salarygrades`) following REST API conventions.
+For detailed usage, see [GraphQL Usage Guide](../docs/application/GRAPHQL_USAGE.md).

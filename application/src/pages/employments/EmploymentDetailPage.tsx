@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Box,
   Heading,
@@ -11,18 +10,34 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { employmentsApi, type EmploymentResponseDto } from '../../api';
+import { useEmployment, useDeleteEmployment } from '../../hooks/useEmployments';
+
+// Enum display mappings
+const AppointmentStatusDisplay: Record<number, string> = {
+  1: 'Original',
+  2: 'Promotion',
+  3: 'Transfer',
+  4: 'Reappointment',
+};
+
+const EmploymentStatusDisplay: Record<number, string> = {
+  1: 'Regular',
+  2: 'Permanent',
+};
+
+const EligibilityDisplay: Record<number, string> = {
+  1: 'LET',
+  2: 'CivilServiceProfessional',
+  3: 'CivilServiceSubProfessional',
+  4: 'Other',
+};
 
 const EmploymentDetailPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
 
-  const [employment, setEmployment] = useState<EmploymentResponseDto | null>(
-    null
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const { employment, loading, error } = useEmployment(Number(displayId));
+  const { deleteEmployment, loading: deleting } = useDeleteEmployment();
 
   const formatCurrency = (value: number | undefined): string => {
     if (value === undefined || value === null) return '-';
@@ -32,43 +47,18 @@ const EmploymentDetailPage = () => {
     }).format(value);
   };
 
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    loadEmployment();
-  }, [displayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
-
-  const loadEmployment = async () => {
-    if (!displayId) return;
-    setLoading(true);
-    try {
-      const response = await employmentsApi.apiV1EmploymentsDisplayIdGet(
-        Number(displayId)
-      );
-      setEmployment(response.data);
-    } catch (err) {
-      console.error('Error loading employment:', err);
-      setError('Failed to load employment data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDelete = async () => {
     if (
       !displayId ||
       !window.confirm('Are you sure you want to delete this employment record?')
     )
       return;
-    setDeleting(true);
+
     try {
-      await employmentsApi.apiV1EmploymentsDisplayIdDelete(Number(displayId));
+      await deleteEmployment(Number(displayId));
       navigate('/employments');
     } catch (err) {
       console.error('Error deleting employment:', err);
-      setError('Failed to delete employment');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -83,7 +73,7 @@ const EmploymentDetailPage = () => {
   if (error || !employment) {
     return (
       <Box>
-        <Text color="red.500">{error || 'Employment not found'}</Text>
+        <Text color="red.500">{error?.message || 'Employment not found'}</Text>
         <Button mt={4} onClick={() => navigate('/employments')}>
           Back to Employments
         </Button>
@@ -137,7 +127,9 @@ const EmploymentDetailPage = () => {
                   <Text color="fg.muted" fontSize="sm">
                     Display ID
                   </Text>
-                  <Text fontWeight="medium">{employment.displayId}</Text>
+                  <Text fontWeight="medium">
+                    {employment.displayId as unknown as number}
+                  </Text>
                 </Box>
                 <Box flex={1}>
                   <Text color="fg.muted" fontSize="sm">
@@ -228,7 +220,9 @@ const EmploymentDetailPage = () => {
                     Appointment Status
                   </Text>
                   <Badge colorPalette="blue">
-                    {employment.appointmentStatus}
+                    {AppointmentStatusDisplay[
+                      employment.appointmentStatus as unknown as number
+                    ] || employment.appointmentStatus}
                   </Badge>
                 </Box>
               </Flex>
@@ -240,12 +234,14 @@ const EmploymentDetailPage = () => {
                   </Text>
                   <Badge
                     colorPalette={
-                      employment.employmentStatus === 'Permanent'
+                      (employment.employmentStatus as unknown as number) === 1
                         ? 'green'
                         : 'blue'
                     }
                   >
-                    {employment.employmentStatus}
+                    {EmploymentStatusDisplay[
+                      employment.employmentStatus as unknown as number
+                    ] || employment.employmentStatus}
                   </Badge>
                 </Box>
                 <Box flex={1}>
@@ -253,11 +249,13 @@ const EmploymentDetailPage = () => {
                     Eligibility
                   </Text>
                   <Badge colorPalette="purple">
-                    {employment.eligibility === 'CivilServiceProfessional'
+                    {(employment.eligibility as unknown as number) === 1
                       ? 'Civil Service Professional'
-                      : employment.eligibility === 'CivilServiceSubProfessional'
+                      : (employment.eligibility as unknown as number) === 2
                         ? 'Civil Service Sub-Professional'
-                        : employment.eligibility}
+                        : EligibilityDisplay[
+                            employment.eligibility as unknown as number
+                          ] || employment.eligibility}
                   </Badge>
                 </Box>
               </Flex>
@@ -306,7 +304,9 @@ const EmploymentDetailPage = () => {
                     Monthly Salary
                   </Text>
                   <Text fontWeight="medium" fontSize="lg" color="green.600">
-                    {formatCurrency(employment.salaryGrade?.monthlySalary)}
+                    {formatCurrency(
+                      employment.salaryGrade?.monthlySalary as unknown as number
+                    )}
                   </Text>
                 </Box>
               </Flex>
@@ -321,31 +321,33 @@ const EmploymentDetailPage = () => {
             </Card.Header>
             <Card.Body>
               <Stack gap={4}>
-                {employment.schools.map((school, index) => (
-                  <Box key={index} p={4} borderWidth={1} borderRadius="md">
-                    <Flex justify="space-between" align="center">
-                      <Box>
-                        <Text fontWeight="medium">{school.schoolName}</Text>
-                        <Text fontSize="sm" color="fg.muted">
-                          {school.startDate &&
-                            `From: ${new Date(school.startDate).toLocaleDateString()}`}
-                          {school.endDate &&
-                            ` To: ${new Date(school.endDate).toLocaleDateString()}`}
-                        </Text>
-                      </Box>
-                      <Flex gap={2}>
-                        {school.isCurrent && (
-                          <Badge colorPalette="green">Current</Badge>
-                        )}
-                        <Badge
-                          colorPalette={school.isActive ? 'green' : 'gray'}
-                        >
-                          {school.isActive ? 'Active' : 'Inactive'}
-                        </Badge>
+                {employment.schools.map((school, index) =>
+                  school ? (
+                    <Box key={index} p={4} borderWidth={1} borderRadius="md">
+                      <Flex justify="space-between" align="center">
+                        <Box>
+                          <Text fontWeight="medium">{school.schoolName}</Text>
+                          <Text fontSize="sm" color="fg.muted">
+                            {school.startDate &&
+                              `From: ${new Date(school.startDate).toLocaleDateString()}`}
+                            {school.endDate &&
+                              ` To: ${new Date(school.endDate).toLocaleDateString()}`}
+                          </Text>
+                        </Box>
+                        <Flex gap={2}>
+                          {school.isCurrent && (
+                            <Badge colorPalette="green">Current</Badge>
+                          )}
+                          <Badge
+                            colorPalette={school.isActive ? 'green' : 'gray'}
+                          >
+                            {school.isActive ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </Flex>
                       </Flex>
-                    </Flex>
-                  </Box>
-                ))}
+                    </Box>
+                  ) : null
+                )}
               </Stack>
             </Card.Body>
           </Card.Root>

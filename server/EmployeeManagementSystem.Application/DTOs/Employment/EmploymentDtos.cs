@@ -174,187 +174,187 @@ public class UpdateEmploymentDto
 }
 
 /// <summary>
-/// DTO for employment response.
+/// Record for employment response data. Immutable by design.
 /// </summary>
-public class EmploymentResponseDto : BaseResponseDto
+public record EmploymentResponseDto : BaseResponseDto
 {
     /// <summary>
-    /// Gets or sets the DepEd Employee ID.
+    /// Gets the DepEd Employee ID.
     /// </summary>
     public string? DepEdId { get; init; }
 
     /// <summary>
-    /// Gets or sets the PSIPOP Item Number.
+    /// Gets the PSIPOP Item Number.
     /// </summary>
     public string? PSIPOPItemNumber { get; init; }
 
     /// <summary>
-    /// Gets or sets the Tax Identification Number.
+    /// Gets the Tax Identification Number.
     /// </summary>
     public string? TINId { get; init; }
 
     /// <summary>
-    /// Gets or sets the GSIS ID.
+    /// Gets the GSIS ID.
     /// </summary>
     public string? GSISId { get; init; }
 
     /// <summary>
-    /// Gets or sets the PhilHealth ID.
+    /// Gets the PhilHealth ID.
     /// </summary>
     public string? PhilHealthId { get; init; }
 
     /// <summary>
-    /// Gets or sets the date of original appointment.
+    /// Gets the date of original appointment.
     /// </summary>
     public DateOnly? DateOfOriginalAppointment { get; init; }
 
     /// <summary>
-    /// Gets or sets the appointment status.
+    /// Gets the appointment status.
     /// </summary>
     public AppointmentStatus AppointmentStatus { get; init; }
 
     /// <summary>
-    /// Gets or sets the employment status.
+    /// Gets the employment status.
     /// </summary>
     public EmploymentStatus EmploymentStatus { get; init; }
 
     /// <summary>
-    /// Gets or sets the eligibility.
+    /// Gets the eligibility.
     /// </summary>
     public Eligibility Eligibility { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether this employment is active.
+    /// Gets a value indicating whether this employment is active.
     /// </summary>
     public bool IsActive { get; init; }
 
     /// <summary>
-    /// Gets or sets the associated person.
+    /// Gets the associated person.
     /// </summary>
     public EmploymentPersonDto Person { get; init; } = null!;
 
     /// <summary>
-    /// Gets or sets the associated position.
+    /// Gets the associated position.
     /// </summary>
     public EmploymentPositionDto Position { get; init; } = null!;
 
     /// <summary>
-    /// Gets or sets the associated salary grade.
+    /// Gets the associated salary grade.
     /// </summary>
     public EmploymentSalaryGradeDto SalaryGrade { get; init; } = null!;
 
     /// <summary>
-    /// Gets or sets the associated item.
+    /// Gets the associated item.
     /// </summary>
     public EmploymentItemDto Item { get; init; } = null!;
 
     /// <summary>
-    /// Gets or sets the school assignments.
+    /// Gets the school assignments.
     /// </summary>
-    public List<EmploymentSchoolResponseDto> Schools { get; init; } = [];
+    public IReadOnlyList<EmploymentSchoolResponseDto> Schools { get; init; } = [];
 }
 
 /// <summary>
-/// DTO for employment list response (simplified).
+/// Record for employment list response (simplified). Immutable by design.
 /// </summary>
-public class EmploymentListDto : BaseResponseDto
+public record EmploymentListDto : BaseResponseDto
 {
     /// <summary>
-    /// Gets or sets the DepEd Employee ID.
+    /// Gets the DepEd Employee ID.
     /// </summary>
     public string? DepEdId { get; init; }
 
     /// <summary>
-    /// Gets or sets the employee's full name.
+    /// Gets the employee's full name.
     /// </summary>
     public string EmployeeFullName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the position title.
+    /// Gets the position title.
     /// </summary>
     public string PositionTitle { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the employment status.
+    /// Gets the employment status.
     /// </summary>
     public EmploymentStatus EmploymentStatus { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether this employment is active.
+    /// Gets a value indicating whether this employment is active.
     /// </summary>
     public bool IsActive { get; init; }
 }
 
 /// <summary>
-/// Simplified person DTO for employment responses.
+/// Simplified person record for employment responses. Immutable by design.
 /// </summary>
-public class EmploymentPersonDto
+public record EmploymentPersonDto
 {
     /// <summary>
-    /// Gets or sets the display ID of the person.
+    /// Gets the display ID of the person.
     /// </summary>
     public long DisplayId { get; init; }
 
     /// <summary>
-    /// Gets or sets the full name of the person.
+    /// Gets the full name of the person.
     /// </summary>
     public string FullName { get; init; } = string.Empty;
 }
 
 /// <summary>
-/// Simplified position DTO for employment responses.
+/// Simplified position record for employment responses. Immutable by design.
 /// </summary>
-public class EmploymentPositionDto
+public record EmploymentPositionDto
 {
     /// <summary>
-    /// Gets or sets the display ID of the position.
+    /// Gets the display ID of the position.
     /// </summary>
     public long DisplayId { get; init; }
 
     /// <summary>
-    /// Gets or sets the title name of the position.
+    /// Gets the title name of the position.
     /// </summary>
     public string TitleName { get; init; } = string.Empty;
 }
 
 /// <summary>
-/// Simplified salary grade DTO for employment responses.
+/// Simplified salary grade record for employment responses. Immutable by design.
 /// </summary>
-public class EmploymentSalaryGradeDto
+public record EmploymentSalaryGradeDto
 {
     /// <summary>
-    /// Gets or sets the display ID of the salary grade.
+    /// Gets the display ID of the salary grade.
     /// </summary>
     public long DisplayId { get; init; }
 
     /// <summary>
-    /// Gets or sets the salary grade name.
+    /// Gets the salary grade name.
     /// </summary>
     public string SalaryGradeName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the step.
+    /// Gets the step.
     /// </summary>
     public int Step { get; init; }
 
     /// <summary>
-    /// Gets or sets the monthly salary.
+    /// Gets the monthly salary.
     /// </summary>
     public decimal MonthlySalary { get; init; }
 }
 
 /// <summary>
-/// Simplified item DTO for employment responses.
+/// Simplified item record for employment responses. Immutable by design.
 /// </summary>
-public class EmploymentItemDto
+public record EmploymentItemDto
 {
     /// <summary>
-    /// Gets or sets the display ID of the item.
+    /// Gets the display ID of the item.
     /// </summary>
     public long DisplayId { get; init; }
 
     /// <summary>
-    /// Gets or sets the item name.
+    /// Gets the item name.
     /// </summary>
     public string ItemName { get; init; } = string.Empty;
 }
@@ -387,37 +387,37 @@ public class CreateEmploymentSchoolDto
 }
 
 /// <summary>
-/// DTO for employment-school assignment response.
+/// Record for employment-school assignment response. Immutable by design.
 /// </summary>
-public class EmploymentSchoolResponseDto : BaseResponseDto
+public record EmploymentSchoolResponseDto : BaseResponseDto
 {
     /// <summary>
-    /// Gets or sets the display ID of the school.
+    /// Gets the display ID of the school.
     /// </summary>
     public long SchoolDisplayId { get; init; }
 
     /// <summary>
-    /// Gets or sets the school name.
+    /// Gets the school name.
     /// </summary>
     public string SchoolName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the start date of the assignment.
+    /// Gets the start date of the assignment.
     /// </summary>
     public DateOnly? StartDate { get; init; }
 
     /// <summary>
-    /// Gets or sets the end date of the assignment.
+    /// Gets the end date of the assignment.
     /// </summary>
     public DateOnly? EndDate { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether this is the current assignment.
+    /// Gets a value indicating whether this is the current assignment.
     /// </summary>
     public bool IsCurrent { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether this assignment is active.
+    /// Gets a value indicating whether this assignment is active.
     /// </summary>
     public bool IsActive { get; init; }
 }

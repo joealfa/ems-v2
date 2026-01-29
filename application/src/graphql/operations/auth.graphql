@@ -1,0 +1,53 @@
+# Auth Fragments
+fragment AuthResponseFields on AuthResponseDto {
+  accessToken
+  expiresOn
+  refreshToken
+  user {
+    id
+    email
+    firstName
+    lastName
+    profilePictureUrl
+    role
+  }
+}
+
+fragment UserFields on UserDto {
+  id
+  email
+  firstName
+  lastName
+  profilePictureUrl
+  role
+}
+
+# Auth Queries
+query GetCurrentUser {
+  currentUser {
+    ...UserFields
+  }
+}
+
+# Auth Mutations
+mutation GoogleLogin($idToken: String!) {
+  googleLogin(idToken: $idToken) {
+    ...AuthResponseFields
+  }
+}
+
+mutation GoogleTokenLogin($accessToken: String!) {
+  googleTokenLogin(accessToken: $accessToken) {
+    ...AuthResponseFields
+  }
+}
+
+mutation RefreshToken($refreshToken: String) {
+  refreshToken(refreshToken: $refreshToken) {
+    ...AuthResponseFields
+  }
+}
+
+mutation Logout($refreshToken: String) {
+  logout(refreshToken: $refreshToken)
+}

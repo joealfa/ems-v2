@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Box,
   Heading,
@@ -11,36 +10,14 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { itemsApi, type ItemResponseDto } from '../../api';
+import { useItem, useDeleteItem } from '../../hooks/useItems';
 
 const ItemDetailPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
 
-  const [item, setItem] = useState<ItemResponseDto | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    loadItem();
-  }, [displayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
-
-  const loadItem = async () => {
-    if (!displayId) return;
-    setLoading(true);
-    try {
-      const response = await itemsApi.apiV1ItemsDisplayIdGet(Number(displayId));
-      setItem(response.data);
-    } catch (err) {
-      console.error('Error loading item:', err);
-      setError('Failed to load item data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { item, loading, error } = useItem(Number(displayId));
+  const { deleteItem, loading: deleting } = useDeleteItem();
 
   const handleDelete = async () => {
     if (
@@ -48,15 +25,12 @@ const ItemDetailPage = () => {
       !window.confirm('Are you sure you want to delete this item?')
     )
       return;
-    setDeleting(true);
+
     try {
-      await itemsApi.apiV1ItemsDisplayIdDelete(Number(displayId));
+      await deleteItem(Number(displayId));
       navigate('/items');
     } catch (err) {
       console.error('Error deleting item:', err);
-      setError('Failed to delete item');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -71,7 +45,7 @@ const ItemDetailPage = () => {
   if (error || !item) {
     return (
       <Box>
-        <Text color="red.500">{error || 'Item not found'}</Text>
+        <Text color="red.500">{error?.message || 'Item not found'}</Text>
         <Button mt={4} onClick={() => navigate('/items')}>
           Back to Items
         </Button>
@@ -120,7 +94,9 @@ const ItemDetailPage = () => {
                   <Text color="fg.muted" fontSize="sm">
                     Display ID
                   </Text>
-                  <Text fontWeight="medium">{item.displayId}</Text>
+                  <Text fontWeight="medium">
+                    {item.displayId as unknown as number}
+                  </Text>
                 </Box>
                 <Box flex={1}>
                   <Text color="fg.muted" fontSize="sm">

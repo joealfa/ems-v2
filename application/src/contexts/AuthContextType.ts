@@ -1,5 +1,13 @@
 import { createContext } from 'react';
-import type { UserDto } from '../api/generated/models';
+
+export interface UserDto {
+  id?: string | null;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  profilePictureUrl?: string | null;
+  role?: string | null;
+}
 
 export interface AuthContextType {
   user: UserDto | null;

@@ -46,22 +46,22 @@ public class UpdateItemDto
 }
 
 /// <summary>
-/// DTO for item response.
+/// Record for item response data. Immutable by design.
 /// </summary>
-public class ItemResponseDto : BaseResponseDto
+public record ItemResponseDto : BaseResponseDto
 {
     /// <summary>
-    /// Gets or sets the name of the item.
+    /// Gets the name of the item.
     /// </summary>
     public string ItemName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the description of the item.
+    /// Gets the description of the item.
     /// </summary>
     public string? Description { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether this item is active.
+    /// Gets a value indicating whether this item is active.
     /// </summary>
     public bool IsActive { get; init; }
 }

@@ -97,6 +97,7 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
     [RequestSizeLimit(MaxFileSizeBytes)]
     public async Task<ActionResult<DocumentResponseDto>> Upload(
         long displayId,
+        [FromForm]
         IFormFile file,
         [FromForm] string? description,
         CancellationToken cancellationToken)
@@ -203,6 +204,7 @@ public class DocumentsController(IDocumentService documentService) : ApiControll
     [RequestSizeLimit(MaxImageSizeBytes)]
     public async Task<ActionResult<string>> UploadProfileImage(
         long displayId,
+        [FromForm]
         IFormFile file,
         CancellationToken cancellationToken)
     {

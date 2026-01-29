@@ -23,7 +23,7 @@ Each major feature (persons, schools, positions, etc.) has its own folder under 
 
 ### 3. Centralized API Layer
 
-All API communication goes through the auto-generated OpenAPI client with a configured Axios instance.
+All API communication goes through Apollo Client for GraphQL operations and direct fetch calls for file operations via the Gateway REST endpoints.
 
 ---
 
@@ -163,23 +163,20 @@ const [error, setError] = useState<string | null>(null);
 
 ### Server State
 
-Data from the API is fetched and managed within each component:
+Data from the API is fetched using custom GraphQL hooks:
 
 ```tsx
-useEffect(() => {
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const response = await personsApi.apiV1PersonsDisplayIdGet(displayId);
-      setData(response.data);
-    } catch (err) {
-      setError('Failed to load data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  loadData();
-}, [displayId]);
+import { usePerson } from '../hooks';
+
+const PersonDetail = ({ displayId }: { displayId: number }) => {
+  const { person, loading, error } = usePerson(displayId);
+
+  if (loading) return <Spinner />;
+  if (error) return <Alert>{error.message}</Alert>;
+  if (!person) return <NotFound />;
+
+  return <PersonCard person={person} />;
+};
 ```
 
 ### Global State
@@ -227,21 +224,19 @@ useEffect(() => {
 
 ## Error Handling Strategy
 
-### API Errors
+### GraphQL Errors
 
 ```tsx
-try {
-  await apiCall();
-} catch (error) {
-  if (axios.isAxiosError(error)) {
-    if (error.response?.status === 404) {
-      setError('Resource not found');
-    } else if (error.response?.status === 400) {
-      setError('Invalid data provided');
-    } else {
-      setError('An unexpected error occurred');
-    }
+const { data, loading, error } = usePersons();
+
+if (error) {
+  if (error.networkError) {
+    return <Alert>Network error. Please check your connection.</Alert>;
   }
+  if (error.graphQLErrors) {
+    return <Alert>{error.graphQLErrors[0].message}</Alert>;
+  }
+  return <Alert>An unexpected error occurred.</Alert>;
 }
 ```
 
@@ -298,38 +293,37 @@ import { PersonsPage, PersonFormPage, PersonDetailPage } from './pages/persons';
 
 ```tsx
 // 1. Imports
-import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Heading } from '@chakra-ui/react';
-import { personsApi, type PersonResponseDto } from '../../api';
+import { Box, Heading, Spinner, Alert } from '@chakra-ui/react';
+import { usePerson, type PersonResponseDto } from '../hooks';
 
 // 2. Type definitions (if needed)
-interface FormData {
+interface PersonDetailProps {
   // ...
 }
 
 // 3. Component definition
 const PersonDetailPage = () => {
-  // 3a. Hooks
+  // 3a. Router hooks
   const { displayId } = useParams();
   const navigate = useNavigate();
-  
-  // 3b. State
-  const [data, setData] = useState<PersonResponseDto | null>(null);
-  
-  // 3c. Effects
-  useEffect(() => {
-    // Load data
-  }, [displayId]);
-  
-  // 3d. Handlers
+
+  // 3b. Data fetching with GraphQL hooks
+  const { person, loading, error } = usePerson(Number(displayId));
+
+  // 3c. Handlers
   const handleEdit = () => {
     navigate(`/persons/${displayId}/edit`);
   };
-  
-  // 3e. Render
+
+  // 3d. Render with loading/error states
+  if (loading) return <Spinner />;
+  if (error) return <Alert>{error.message}</Alert>;
+  if (!person) return <Box>Person not found</Box>;
+
   return (
     <Box>
+      <Heading>{person.fullName}</Heading>
       {/* Component JSX */}
     </Box>
   );
@@ -368,12 +362,13 @@ export default PersonDetailPage;
 ### Strict Typing
 
 ```typescript
-// API response typing
-const [person, setPerson] = useState<PersonResponseDto | null>(null);
+// GraphQL-generated types from codegen
+import { type PersonResponseDto, type CreatePersonInput } from '../graphql/generated/graphql';
 
-// Form data typing
-interface CreatePersonFormData extends CreatePersonDto {
-  // Additional UI-only fields if needed
+// Component with typed props
+interface PersonFormProps {
+  initialData?: PersonResponseDto;
+  onSubmit: (data: CreatePersonInput) => void;
 }
 
 // Event handler typing
@@ -398,7 +393,7 @@ if (person) {
 ### Enum Usage
 
 ```tsx
-import { Gender, CivilStatus } from '../../api';
+import { Gender, CivilStatus } from '../graphql/generated/graphql';
 
 // Enum in select options
 <option value={Gender.Male}>Male</option>

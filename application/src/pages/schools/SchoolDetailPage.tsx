@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Box,
   Heading,
@@ -11,38 +10,35 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { schoolsApi, type SchoolResponseDto } from '../../api';
+import { useSchool, useDeleteSchool } from '../../hooks/useSchools';
+
+const formatAddress = (address: {
+  address1?: string | null;
+  address2?: string | null;
+  barangay?: string | null;
+  city?: string | null;
+  province?: string | null;
+  country?: string | null;
+  zipCode?: string | null;
+}): string => {
+  const parts = [
+    address.address1,
+    address.address2,
+    address.barangay,
+    address.city,
+    address.province,
+    address.country,
+    address.zipCode,
+  ].filter(Boolean);
+  return parts.join(', ') || '-';
+};
 
 const SchoolDetailPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
 
-  const [school, setSchool] = useState<SchoolResponseDto | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    loadSchool();
-  }, [displayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
-
-  const loadSchool = async () => {
-    if (!displayId) return;
-    setLoading(true);
-    try {
-      const response = await schoolsApi.apiV1SchoolsDisplayIdGet(
-        Number(displayId)
-      );
-      setSchool(response.data);
-    } catch (err) {
-      console.error('Error loading school:', err);
-      setError('Failed to load school data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { school, loading, error } = useSchool(Number(displayId));
+  const { deleteSchool, loading: deleting } = useDeleteSchool();
 
   const handleDelete = async () => {
     if (
@@ -50,15 +46,12 @@ const SchoolDetailPage = () => {
       !window.confirm('Are you sure you want to delete this school?')
     )
       return;
-    setDeleting(true);
+
     try {
-      await schoolsApi.apiV1SchoolsDisplayIdDelete(Number(displayId));
+      await deleteSchool(Number(displayId));
       navigate('/schools');
     } catch (err) {
       console.error('Error deleting school:', err);
-      setError('Failed to delete school');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -73,7 +66,7 @@ const SchoolDetailPage = () => {
   if (error || !school) {
     return (
       <Box>
-        <Text color="red.500">{error || 'School not found'}</Text>
+        <Text color="red.500">{error?.message || 'School not found'}</Text>
         <Button mt={4} onClick={() => navigate('/schools')}>
           Back to Schools
         </Button>
@@ -122,7 +115,9 @@ const SchoolDetailPage = () => {
                   <Text color="fg.muted" fontSize="sm">
                     Display ID
                   </Text>
-                  <Text fontWeight="medium">{school.displayId}</Text>
+                  <Text fontWeight="medium">
+                    {school.displayId as unknown as number}
+                  </Text>
                 </Box>
                 <Box flex={1}>
                   <Text color="fg.muted" fontSize="sm">
@@ -150,17 +145,19 @@ const SchoolDetailPage = () => {
             </Card.Header>
             <Card.Body>
               <Stack gap={4}>
-                {school.addresses.map((address, index) => (
-                  <Box key={index} p={4} borderWidth={1} borderRadius="md">
-                    <Flex gap={2} mb={2}>
-                      <Badge colorPalette="blue">{address.addressType}</Badge>
-                      {address.isCurrent && (
-                        <Badge colorPalette="green">Current</Badge>
-                      )}
-                    </Flex>
-                    <Text>{address.fullAddress}</Text>
-                  </Box>
-                ))}
+                {school.addresses.map((address, index) =>
+                  address ? (
+                    <Box key={index} p={4} borderWidth={1} borderRadius="md">
+                      <Flex gap={2} mb={2}>
+                        <Badge colorPalette="blue">{address.addressType}</Badge>
+                        {address.isCurrent && (
+                          <Badge colorPalette="green">Current</Badge>
+                        )}
+                      </Flex>
+                      <Text>{formatAddress(address)}</Text>
+                    </Box>
+                  ) : null
+                )}
               </Stack>
             </Card.Body>
           </Card.Root>
@@ -173,37 +170,39 @@ const SchoolDetailPage = () => {
             </Card.Header>
             <Card.Body>
               <Stack gap={4}>
-                {school.contacts.map((contact, index) => (
-                  <Box key={index} p={4} borderWidth={1} borderRadius="md">
-                    <Badge colorPalette="blue" mb={2}>
-                      {contact.contactType}
-                    </Badge>
-                    {contact.email && (
-                      <Text>
-                        <Text as="span" color="fg.muted">
-                          Email:{' '}
+                {school.contacts.map((contact, index) =>
+                  contact ? (
+                    <Box key={index} p={4} borderWidth={1} borderRadius="md">
+                      <Badge colorPalette="blue" mb={2}>
+                        {contact.contactType}
+                      </Badge>
+                      {contact.email && (
+                        <Text>
+                          <Text as="span" color="fg.muted">
+                            Email:{' '}
+                          </Text>
+                          {contact.email}
                         </Text>
-                        {contact.email}
-                      </Text>
-                    )}
-                    {contact.mobile && (
-                      <Text>
-                        <Text as="span" color="fg.muted">
-                          Mobile:{' '}
+                      )}
+                      {contact.mobile && (
+                        <Text>
+                          <Text as="span" color="fg.muted">
+                            Mobile:{' '}
+                          </Text>
+                          {contact.mobile}
                         </Text>
-                        {contact.mobile}
-                      </Text>
-                    )}
-                    {contact.landLine && (
-                      <Text>
-                        <Text as="span" color="fg.muted">
-                          Landline:{' '}
+                      )}
+                      {contact.landLine && (
+                        <Text>
+                          <Text as="span" color="fg.muted">
+                            Landline:{' '}
+                          </Text>
+                          {contact.landLine}
                         </Text>
-                        {contact.landLine}
-                      </Text>
-                    )}
-                  </Box>
-                ))}
+                      )}
+                    </Box>
+                  ) : null
+                )}
               </Stack>
             </Card.Body>
           </Card.Root>

@@ -102,37 +102,37 @@ public class UpdatePersonDto
 }
 
 /// <summary>
-/// DTO for person response.
+/// Record for person response data. Immutable by design.
 /// </summary>
-public class PersonResponseDto : BaseResponseDto
+public record PersonResponseDto : BaseResponseDto
 {
     /// <summary>
-    /// Gets or sets the first name of the person.
+    /// Gets the first name of the person.
     /// </summary>
     public string FirstName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the last name of the person.
+    /// Gets the last name of the person.
     /// </summary>
     public string LastName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the middle name of the person.
+    /// Gets the middle name of the person.
     /// </summary>
     public string? MiddleName { get; init; }
 
     /// <summary>
-    /// Gets or sets the date of birth of the person.
+    /// Gets the date of birth of the person.
     /// </summary>
     public DateOnly DateOfBirth { get; init; }
 
     /// <summary>
-    /// Gets or sets the gender of the person.
+    /// Gets the gender of the person.
     /// </summary>
     public Gender Gender { get; init; }
 
     /// <summary>
-    /// Gets or sets the civil status of the person.
+    /// Gets the civil status of the person.
     /// </summary>
     public CivilStatus CivilStatus { get; init; }
 
@@ -142,25 +142,25 @@ public class PersonResponseDto : BaseResponseDto
     public string FullName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the addresses associated with the person.
+    /// Gets the addresses associated with the person.
     /// </summary>
-    public List<AddressResponseDto> Addresses { get; init; } = [];
+    public IReadOnlyList<AddressResponseDto> Addresses { get; init; } = [];
 
     /// <summary>
-    /// Gets or sets the contacts associated with the person.
+    /// Gets the contacts associated with the person.
     /// </summary>
-    public List<ContactResponseDto> Contacts { get; init; } = [];
+    public IReadOnlyList<ContactResponseDto> Contacts { get; init; } = [];
 
     /// <summary>
-    /// Gets or sets the URL of the person's profile image.
+    /// Gets the URL of the person's profile image.
     /// </summary>
     public string? ProfileImageUrl { get; init; }
 }
 
 /// <summary>
-/// DTO for person list response (simplified).
+/// Record for person list response (simplified). Immutable by design.
 /// </summary>
-public class PersonListDto : BaseResponseDto
+public record PersonListDto : BaseResponseDto
 {
     /// <summary>
     /// Gets the full name of the person.
@@ -168,22 +168,22 @@ public class PersonListDto : BaseResponseDto
     public string FullName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the date of birth of the person.
+    /// Gets the date of birth of the person.
     /// </summary>
     public DateOnly DateOfBirth { get; init; }
 
     /// <summary>
-    /// Gets or sets the gender of the person.
+    /// Gets the gender of the person.
     /// </summary>
     public Gender Gender { get; init; }
 
     /// <summary>
-    /// Gets or sets the civil status of the person.
+    /// Gets the civil status of the person.
     /// </summary>
     public CivilStatus CivilStatus { get; init; }
 
     /// <summary>
-    /// Gets or sets the URL of the person's profile image.
+    /// Gets the URL of the person's profile image.
     /// </summary>
     public string? ProfileImageUrl { get; init; }
 }

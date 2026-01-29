@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', 'src/api/generated']),
+  globalIgnores(['dist', 'src/graphql/generated']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

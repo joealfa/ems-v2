@@ -1,30 +1,35 @@
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  type ReactNode,
-} from 'react';
-import type { AuthResponseDto, UserDto } from '../api/generated/models';
-import { AuthApi } from '../api/generated/api';
-import { axiosInstance, API_BASE_URL } from '../api/config';
-import { AuthContext, type AuthContextType } from './AuthContextType';
+  AuthContext,
+  type AuthContextType,
+  type UserDto,
+} from './AuthContextType';
 
-export { AuthContext, type AuthContextType } from './AuthContextType';
+export {
+  AuthContext,
+  type AuthContextType,
+  type UserDto,
+} from './AuthContextType';
+
+// Gateway base URL for proxied API requests
+const GATEWAY_BASE_URL =
+  import.meta.env.VITE_GRAPHQL_URL?.replace('/graphql', '') ||
+  'http://localhost:5100';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
 const USER_KEY = 'user';
 const TOKEN_EXPIRY_KEY = 'tokenExpiry';
 
+interface AuthResponseDto {
+  accessToken?: string | null;
+  expiresOn?: string | null;
+  user?: UserDto | null;
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserDto | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const authApi = useMemo(
-    () => new AuthApi(undefined, API_BASE_URL, axiosInstance),
-    []
-  );
 
   const clearAuthData = useCallback(() => {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -53,28 +58,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshToken = useCallback(async (): Promise<string | null> => {
     try {
       // Refresh token is sent automatically via HttpOnly cookie
-      const response = await authApi.apiV1AuthRefreshPost({});
-      saveAuthData(response.data);
-      return response.data.accessToken || null;
+      const response = await fetch(`${GATEWAY_BASE_URL}/api/v1/Auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: AuthResponseDto = await response.json();
+      saveAuthData(data);
+      return data.accessToken || null;
     } catch {
       clearAuthData();
       return null;
     }
-  }, [authApi, clearAuthData, saveAuthData]);
+  }, [clearAuthData, saveAuthData]);
 
   const login = useCallback(
     async (googleIdToken: string) => {
       setIsLoading(true);
       try {
-        const response = await authApi.apiV1AuthGooglePost({
-          idToken: googleIdToken,
+        const response = await fetch(`${GATEWAY_BASE_URL}/api/v1/Auth/google`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ idToken: googleIdToken }),
         });
-        saveAuthData(response.data);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: AuthResponseDto = await response.json();
+        saveAuthData(data);
       } finally {
         setIsLoading(false);
       }
     },
-    [authApi, saveAuthData]
+    [saveAuthData]
   );
 
   const logout = useCallback(async () => {
@@ -83,15 +112,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (storedAccessToken) {
       try {
         // Refresh token is sent automatically via HttpOnly cookie
-        await axiosInstance.post(
-          '/api/v1/Auth/revoke',
-          {}, // Empty body - refresh token is in cookie
-          {
-            headers: {
-              Authorization: `Bearer ${storedAccessToken}`,
-            },
-          }
-        );
+        await fetch(`${GATEWAY_BASE_URL}/api/v1/Auth/revoke`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${storedAccessToken}`,
+          },
+          credentials: 'include',
+          body: JSON.stringify({}),
+        });
       } catch {
         // Ignore errors during logout
       }

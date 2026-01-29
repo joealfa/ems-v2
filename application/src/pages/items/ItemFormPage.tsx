@@ -14,12 +14,11 @@ import {
   Checkbox,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  itemsApi,
-  type CreateItemDto,
-  type UpdateItemDto,
-  type ItemResponseDto,
-} from '../../api';
+import { useItem, useCreateItem, useUpdateItem } from '../../hooks/useItems';
+import type {
+  CreateItemInput,
+  UpdateItemInput,
+} from '../../graphql/generated/graphql';
 
 interface ItemFormData {
   itemName: string;
@@ -38,37 +37,28 @@ const ItemFormPage = () => {
   const { displayId } = useParams<{ displayId: string }>();
   const isEditMode = displayId && displayId !== 'new';
 
+  const { item, loading: loadingItem } = useItem(
+    isEditMode ? Number(displayId) : 0
+  );
+  const { createItem, loading: creating } = useCreateItem();
+  const { updateItem, loading: updating } = useUpdateItem();
+
   const [formData, setFormData] = useState<ItemFormData>(initialFormData);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    if (isEditMode) {
-      loadItem();
-    }
-  }, [displayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
+  const loading = loadingItem;
+  const saving = creating || updating;
 
-  const loadItem = async () => {
-    if (!displayId) return;
-    setLoading(true);
-    try {
-      const response = await itemsApi.apiV1ItemsDisplayIdGet(Number(displayId));
-      const item: ItemResponseDto = response.data;
+  useEffect(() => {
+    if (isEditMode && item) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Populating form with loaded data is a valid pattern
       setFormData({
         itemName: item.itemName || '',
         description: item.description || '',
         isActive: item.isActive ?? true,
       });
-    } catch (err) {
-      console.error('Error loading item:', err);
-      setError('Failed to load item data');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [isEditMode, item]);
 
   const handleChange = (field: keyof ItemFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -76,30 +66,27 @@ const ItemFormPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError(null);
 
     try {
       if (isEditMode) {
-        const updateDto: UpdateItemDto = {
+        const updateDto: UpdateItemInput = {
           itemName: formData.itemName,
           description: formData.description || null,
           isActive: formData.isActive,
         };
-        await itemsApi.apiV1ItemsDisplayIdPut(Number(displayId), updateDto);
+        await updateItem(Number(displayId), updateDto);
       } else {
-        const createDto: CreateItemDto = {
+        const createDto: CreateItemInput = {
           itemName: formData.itemName,
           description: formData.description || null,
         };
-        await itemsApi.apiV1ItemsPost(createDto);
+        await createItem(createDto);
       }
       navigate('/items');
     } catch (err) {
       console.error('Error saving item:', err);
       setError('Failed to save item');
-    } finally {
-      setSaving(false);
     }
   };
 

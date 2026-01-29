@@ -2,6 +2,7 @@ using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Position;
 using EmployeeManagementSystem.Application.Interfaces;
+using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,7 +22,9 @@ public class PositionService(IRepository<Position> positionRepository) : IPositi
     public async Task<Result<PositionResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
     {
         Position? position = await _positionRepository.GetByDisplayIdAsync(displayId, cancellationToken);
-        return position == null ? Result<PositionResponseDto>.NotFound("Position not found.") : Result<PositionResponseDto>.Success(MapToResponseDto(position));
+        return position == null
+            ? Result<PositionResponseDto>.NotFound("Position not found.")
+            : Result<PositionResponseDto>.Success(position.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -80,7 +83,7 @@ public class PositionService(IRepository<Position> positionRepository) : IPositi
 
         _ = await _positionRepository.AddAsync(position, cancellationToken);
 
-        return Result<PositionResponseDto>.Success(MapToResponseDto(position));
+        return Result<PositionResponseDto>.Success(position.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -99,7 +102,7 @@ public class PositionService(IRepository<Position> positionRepository) : IPositi
 
         await _positionRepository.UpdateAsync(position, cancellationToken);
 
-        return Result<PositionResponseDto>.Success(MapToResponseDto(position));
+        return Result<PositionResponseDto>.Success(position.ToResponseDto());
     }
 
     /// <inheritdoc />
@@ -114,20 +117,5 @@ public class PositionService(IRepository<Position> positionRepository) : IPositi
         position.ModifiedBy = deletedBy;
         await _positionRepository.DeleteAsync(position, cancellationToken);
         return Result.Success();
-    }
-
-    private static PositionResponseDto MapToResponseDto(Position position)
-    {
-        return new PositionResponseDto
-        {
-            DisplayId = position.DisplayId,
-            TitleName = position.TitleName,
-            Description = position.Description,
-            IsActive = position.IsActive,
-            CreatedOn = position.CreatedOn,
-            CreatedBy = position.CreatedBy,
-            ModifiedOn = position.ModifiedOn,
-            ModifiedBy = position.ModifiedBy
-        };
     }
 }

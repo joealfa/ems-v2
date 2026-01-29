@@ -16,11 +16,14 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  salaryGradesApi,
-  type CreateSalaryGradeDto,
-  type UpdateSalaryGradeDto,
-  type SalaryGradeResponseDto,
-} from '../../api';
+  useSalaryGrade,
+  useCreateSalaryGrade,
+  useUpdateSalaryGrade,
+} from '../../hooks/useSalaryGrades';
+import type {
+  CreateSalaryGradeInput,
+  UpdateSalaryGradeInput,
+} from '../../graphql/generated/graphql';
 
 interface SalaryGradeFormData {
   salaryGradeName: string;
@@ -43,42 +46,31 @@ const SalaryGradeFormPage = () => {
   const { displayId } = useParams<{ displayId: string }>();
   const isEditMode = displayId && displayId !== 'new';
 
+  const { salaryGrade, loading: loadingSalaryGrade } = useSalaryGrade(
+    isEditMode ? Number(displayId) : 0
+  );
+  const { createSalaryGrade, loading: creating } = useCreateSalaryGrade();
+  const { updateSalaryGrade, loading: updating } = useUpdateSalaryGrade();
+
   const [formData, setFormData] =
     useState<SalaryGradeFormData>(initialFormData);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* eslint-disable react-hooks/exhaustive-deps */
-  useEffect(() => {
-    if (isEditMode) {
-      loadSalaryGrade();
-    }
-  }, [displayId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
+  const loading = loadingSalaryGrade;
+  const saving = creating || updating;
 
-  const loadSalaryGrade = async () => {
-    if (!displayId) return;
-    setLoading(true);
-    try {
-      const response = await salaryGradesApi.apiV1SalarygradesDisplayIdGet(
-        Number(displayId)
-      );
-      const salaryGrade: SalaryGradeResponseDto = response.data;
+  useEffect(() => {
+    if (isEditMode && salaryGrade) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Populating form with loaded data is a valid pattern
       setFormData({
         salaryGradeName: salaryGrade.salaryGradeName || '',
         description: salaryGrade.description || '',
-        step: salaryGrade.step || 1,
-        monthlySalary: salaryGrade.monthlySalary || 0,
+        step: (salaryGrade.step as unknown as number) || 1,
+        monthlySalary: (salaryGrade.monthlySalary as unknown as number) || 0,
         isActive: salaryGrade.isActive ?? true,
       });
-    } catch (err) {
-      console.error('Error loading salary grade:', err);
-      setError('Failed to load salary grade data');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [isEditMode, salaryGrade]);
 
   const handleChange = (
     field: keyof SalaryGradeFormData,
@@ -89,37 +81,31 @@ const SalaryGradeFormPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError(null);
 
     try {
       if (isEditMode) {
-        const updateDto: UpdateSalaryGradeDto = {
+        const updateDto: UpdateSalaryGradeInput = {
           salaryGradeName: formData.salaryGradeName,
           description: formData.description || null,
           step: formData.step,
           monthlySalary: formData.monthlySalary,
           isActive: formData.isActive,
         };
-        await salaryGradesApi.apiV1SalarygradesDisplayIdPut(
-          Number(displayId),
-          updateDto
-        );
+        await updateSalaryGrade(Number(displayId), updateDto);
       } else {
-        const createDto: CreateSalaryGradeDto = {
+        const createDto: CreateSalaryGradeInput = {
           salaryGradeName: formData.salaryGradeName,
           description: formData.description || null,
           step: formData.step,
           monthlySalary: formData.monthlySalary,
         };
-        await salaryGradesApi.apiV1SalarygradesPost(createDto);
+        await createSalaryGrade(createDto);
       }
       navigate('/salary-grades');
     } catch (err) {
       console.error('Error saving salary grade:', err);
       setError('Failed to save salary grade');
-    } finally {
-      setSaving(false);
     }
   };
 

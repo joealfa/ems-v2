@@ -3,84 +3,84 @@ using EmployeeManagementSystem.Domain.Enums;
 namespace EmployeeManagementSystem.Application.DTOs.Document;
 
 /// <summary>
-/// DTO for document list items.
+/// Record for document list items. Immutable by design.
 /// </summary>
-public class DocumentListDto
+public record DocumentListDto
 {
     /// <summary>
-    /// Gets or sets the display ID of the document.
+    /// Gets the display ID of the document.
     /// </summary>
-    public long DisplayId { get; set; }
+    public long DisplayId { get; init; }
 
     /// <summary>
-    /// Gets or sets the original file name.
+    /// Gets the original file name.
     /// </summary>
-    public string FileName { get; set; } = string.Empty;
+    public string FileName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the file extension.
+    /// Gets the file extension.
     /// </summary>
-    public string FileExtension { get; set; } = string.Empty;
+    public string FileExtension { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the content type (MIME type).
+    /// Gets the content type (MIME type).
     /// </summary>
-    public string ContentType { get; set; } = string.Empty;
+    public string ContentType { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the file size in bytes.
+    /// Gets the file size in bytes.
     /// </summary>
-    public long FileSizeBytes { get; set; }
+    public long FileSizeBytes { get; init; }
 
     /// <summary>
-    /// Gets or sets the document type.
+    /// Gets the document type.
     /// </summary>
-    public DocumentType DocumentType { get; set; }
+    public DocumentType DocumentType { get; init; }
 
     /// <summary>
-    /// Gets or sets the description.
+    /// Gets the description.
     /// </summary>
-    public string? Description { get; set; }
+    public string? Description { get; init; }
 
     /// <summary>
-    /// Gets or sets when the document was created.
+    /// Gets when the document was created.
     /// </summary>
-    public DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; init; }
 
     /// <summary>
-    /// Gets or sets who created the document.
+    /// Gets who created the document.
     /// </summary>
-    public string CreatedBy { get; set; } = string.Empty;
+    public string CreatedBy { get; init; } = string.Empty;
 }
 
 /// <summary>
-/// DTO for document response with full details.
+/// Record for document response with full details. Immutable by design.
 /// </summary>
-public class DocumentResponseDto : DocumentListDto
+public record DocumentResponseDto : DocumentListDto
 {
     /// <summary>
-    /// Gets or sets the blob URL for downloading the document.
+    /// Gets the blob URL for downloading the document.
     /// </summary>
-    public string BlobUrl { get; set; } = string.Empty;
+    public string BlobUrl { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the person's display ID this document belongs to.
+    /// Gets the person's display ID this document belongs to.
     /// </summary>
-    public long PersonDisplayId { get; set; }
+    public long PersonDisplayId { get; init; }
 
     /// <summary>
-    /// Gets or sets the date and time when the document was last modified.
+    /// Gets the date and time when the document was last modified.
     /// </summary>
-    public DateTime? ModifiedOn { get; set; }
+    public DateTime? ModifiedOn { get; init; }
 
     /// <summary>
-    /// Gets or sets who last modified the document.
+    /// Gets who last modified the document.
     /// </summary>
-    public string? ModifiedBy { get; set; }
+    public string? ModifiedBy { get; init; }
 }
 
 /// <summary>
-/// DTO for uploading a document.
+/// DTO for uploading a document. Kept as class due to required Stream property.
 /// </summary>
 public class UploadDocumentDto
 {
@@ -122,7 +122,7 @@ public class UpdateDocumentDto
 }
 
 /// <summary>
-/// DTO for blob download result.
+/// DTO for blob download result. Kept as class due to required Stream property.
 /// </summary>
 public class BlobDownloadResultDto
 {

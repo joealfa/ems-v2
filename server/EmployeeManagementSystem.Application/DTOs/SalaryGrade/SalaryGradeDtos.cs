@@ -70,32 +70,32 @@ public class UpdateSalaryGradeDto
 }
 
 /// <summary>
-/// DTO for salary grade response.
+/// Record for salary grade response data. Immutable by design.
 /// </summary>
-public class SalaryGradeResponseDto : BaseResponseDto
+public record SalaryGradeResponseDto : BaseResponseDto
 {
     /// <summary>
-    /// Gets or sets the salary grade name/number.
+    /// Gets the salary grade name/number.
     /// </summary>
     public string SalaryGradeName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the description of the salary grade.
+    /// Gets the description of the salary grade.
     /// </summary>
     public string? Description { get; init; }
 
     /// <summary>
-    /// Gets or sets the step increment level.
+    /// Gets the step increment level.
     /// </summary>
     public int Step { get; init; }
 
     /// <summary>
-    /// Gets or sets the monthly salary amount.
+    /// Gets the monthly salary amount.
     /// </summary>
     public decimal MonthlySalary { get; init; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether this salary grade is active.
+    /// Gets a value indicating whether this salary grade is active.
     /// </summary>
     public bool IsActive { get; init; }
 }
