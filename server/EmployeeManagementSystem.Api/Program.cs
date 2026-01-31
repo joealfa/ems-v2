@@ -58,6 +58,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
+        // Use string enum values for better compatibility with Gateway and Frontend
+        // This ensures the API accepts and returns string enum values (e.g., "Regular", "Permanent")
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
@@ -68,25 +70,30 @@ builder.Services.AddOpenApi(options =>
     // Use OpenAPI 3.1 specification
     options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_1;
 
-    // Transform enum schemas to use string values (matching JsonStringEnumConverter runtime behavior)
+    // Transform enum schemas to use string values
+    // This ensures NSwag generates enums with string values for better Gateway/Frontend compatibility
     _ = options.AddSchemaTransformer((schema, context, cancellationToken) =>
     {
         // Check if this is an enum type
         if (context.JsonTypeInfo.Type.IsEnum)
         {
-            // Get enum values as strings
+            // Get enum names
             string[] enumNames = Enum.GetNames(context.JsonTypeInfo.Type);
+            Array enumValues = Enum.GetValues(context.JsonTypeInfo.Type);
 
-            // Clear integer-based enum definition and use string
+            // Clear any existing enum definition
             schema.Enum?.Clear();
             schema.Type = JsonSchemaType.String;
 
-            // Add string enum values using JsonNode
+            // Add string enum values
             foreach (string name in enumNames)
             {
                 schema.Enum ??= [];
                 schema.Enum.Add(System.Text.Json.Nodes.JsonValue.Create(name));
             }
+
+            // Add description with enum names and their numeric values for documentation
+            schema.Description = string.Join(", ", enumNames.Select((name, i) => $"{name} = {Convert.ToInt32(enumValues.GetValue(i))}"));
         }
         return Task.CompletedTask;
     });

@@ -13,7 +13,7 @@ public static class InputMappingExtensions
         {
             Address1 = input.Address1 ?? string.Empty,
             Address2 = input.Address2,
-            AddressType = (AddressType)(input.AddressType ?? 0),
+            AddressType = input.AddressType ?? AddressType.Business,
             Barangay = input.Barangay,
             City = input.City ?? string.Empty,
             Country = input.Country,
@@ -31,7 +31,7 @@ public static class InputMappingExtensions
             DisplayId = input.DisplayId ?? 0,
             Address1 = input.Address1 ?? string.Empty,
             Address2 = input.Address2,
-            AddressType = (AddressType)(input.AddressType ?? 0),
+            AddressType = input.AddressType ?? AddressType.Business,
             Barangay = input.Barangay,
             City = input.City ?? string.Empty,
             Country = input.Country,
@@ -60,7 +60,7 @@ public static class InputMappingExtensions
     {
         return new CreateContactDto
         {
-            ContactType = (ContactType)(input.ContactType ?? 0),
+            ContactType = input.ContactType ?? ContactType.Work,
             Email = input.Email,
             Fax = input.Fax,
             LandLine = input.LandLine,
@@ -73,7 +73,7 @@ public static class InputMappingExtensions
         return new UpsertContactDto
         {
             DisplayId = input.DisplayId ?? 0,
-            ContactType = (ContactType)(input.ContactType ?? 0),
+            ContactType = input.ContactType ?? ContactType.Work,
             Email = input.Email,
             Fax = input.Fax,
             LandLine = input.LandLine,
@@ -103,8 +103,8 @@ public static class InputMappingExtensions
             MiddleName = input.MiddleName,
             LastName = input.LastName ?? string.Empty,
             DateOfBirth = input.DateOfBirth.HasValue ? new DateTimeOffset(input.DateOfBirth.Value) : DateTimeOffset.MinValue,
-            Gender = (Gender)(input.Gender ?? 0),
-            CivilStatus = (CivilStatus)(input.CivilStatus ?? 0),
+            Gender = input.Gender ?? Gender.Male,
+            CivilStatus = input.CivilStatus ?? CivilStatus.Single,
             Addresses = input.Addresses?.ToDtos(),
             Contacts = input.Contacts?.ToDtos()
         };
@@ -118,8 +118,8 @@ public static class InputMappingExtensions
             MiddleName = input.MiddleName,
             LastName = input.LastName ?? string.Empty,
             DateOfBirth = input.DateOfBirth.HasValue ? new DateTimeOffset(input.DateOfBirth.Value) : DateTimeOffset.MinValue,
-            Gender = (Gender)(input.Gender ?? 0),
-            CivilStatus = (CivilStatus)(input.CivilStatus ?? 0)
+            Gender = input.Gender ?? Gender.Male,
+            CivilStatus = input.CivilStatus ?? CivilStatus.Single
         };
     }
 
@@ -151,9 +151,9 @@ public static class InputMappingExtensions
             PositionDisplayId = input.PositionDisplayId ?? 0,
             SalaryGradeDisplayId = input.SalaryGradeDisplayId ?? 0,
             ItemDisplayId = input.ItemDisplayId ?? 0,
-            EmploymentStatus = (EmploymentStatus)(input.EmploymentStatus ?? 0),
-            AppointmentStatus = (AppointmentStatus)(input.AppointmentStatus ?? 0),
-            Eligibility = (Eligibility)(input.Eligibility ?? 0),
+            EmploymentStatus = input.EmploymentStatus ?? EmploymentStatus.Regular,
+            AppointmentStatus = input.AppointmentStatus ?? AppointmentStatus.Original,
+            Eligibility = input.Eligibility ?? Eligibility.LET,
             DateOfOriginalAppointment = input.DateOfOriginalAppointment.HasValue ? new DateTimeOffset(input.DateOfOriginalAppointment.Value) : null,
             PsipopItemNumber = input.PsipopItemNumber,
             DepEdId = input.DepEdId,
@@ -171,9 +171,9 @@ public static class InputMappingExtensions
             PositionDisplayId = input.PositionDisplayId ?? 0,
             SalaryGradeDisplayId = input.SalaryGradeDisplayId ?? 0,
             ItemDisplayId = input.ItemDisplayId ?? 0,
-            EmploymentStatus = (EmploymentStatus)(input.EmploymentStatus ?? 0),
-            AppointmentStatus = (AppointmentStatus)(input.AppointmentStatus ?? 0),
-            Eligibility = (Eligibility)(input.Eligibility ?? 0),
+            EmploymentStatus = input.EmploymentStatus ?? EmploymentStatus.Regular,
+            AppointmentStatus = input.AppointmentStatus ?? AppointmentStatus.Original,
+            Eligibility = input.Eligibility ?? Eligibility.LET,
             DateOfOriginalAppointment = input.DateOfOriginalAppointment.HasValue ? new DateTimeOffset(input.DateOfOriginalAppointment.Value) : null,
             PsipopItemNumber = input.PsipopItemNumber,
             DepEdId = input.DepEdId,

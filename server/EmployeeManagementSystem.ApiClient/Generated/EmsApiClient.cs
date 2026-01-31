@@ -5304,6 +5304,9 @@ namespace EmployeeManagementSystem.ApiClient.Generated
 
     }
 
+    /// <summary>
+    /// Business = 1, Home = 2
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.3.0 (NJsonSchema v11.5.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum AddressType
     {
@@ -5316,6 +5319,9 @@ namespace EmployeeManagementSystem.ApiClient.Generated
 
     }
 
+    /// <summary>
+    /// Original = 1, Promotion = 2, Transfer = 3, Reappointment = 4
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.3.0 (NJsonSchema v11.5.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum AppointmentStatus
     {
@@ -5361,6 +5367,9 @@ namespace EmployeeManagementSystem.ApiClient.Generated
 
     }
 
+    /// <summary>
+    /// Single = 1, Married = 2, SoloParent = 3, Widow = 4, Separated = 5, Other = 99
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.3.0 (NJsonSchema v11.5.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum CivilStatus
     {
@@ -5435,6 +5444,9 @@ namespace EmployeeManagementSystem.ApiClient.Generated
 
     }
 
+    /// <summary>
+    /// Work = 1, Personal = 2
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.3.0 (NJsonSchema v11.5.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum ContactType
     {
@@ -5948,6 +5960,9 @@ namespace EmployeeManagementSystem.ApiClient.Generated
 
     }
 
+    /// <summary>
+    /// Pdf = 0, Word = 1, Excel = 2, PowerPoint = 3, ImageJpeg = 4, ImagePng = 5, Other = 6
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.3.0 (NJsonSchema v11.5.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum DocumentType
     {
@@ -5975,6 +5990,9 @@ namespace EmployeeManagementSystem.ApiClient.Generated
 
     }
 
+    /// <summary>
+    /// LET = 1, PBET = 2, CivilServiceProfessional = 3, CivilServiceSubProfessional = 4, Other = 99
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.3.0 (NJsonSchema v11.5.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum Eligibility
     {
@@ -6271,6 +6289,9 @@ namespace EmployeeManagementSystem.ApiClient.Generated
 
     }
 
+    /// <summary>
+    /// Regular = 1, Permanent = 2
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.3.0 (NJsonSchema v11.5.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum EmploymentStatus
     {
@@ -6337,6 +6358,9 @@ namespace EmployeeManagementSystem.ApiClient.Generated
 
     }
 
+    /// <summary>
+    /// Male = 1, Female = 2
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.3.0 (NJsonSchema v11.5.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum Gender
     {

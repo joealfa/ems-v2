@@ -5,11 +5,11 @@ import {
   Button,
   Flex,
   Input,
-  Card,
   Stack,
-  Field,
   Spinner,
   Text,
+  Card,
+  Field,
   Checkbox,
   NativeSelect,
   Accordion,
@@ -27,25 +27,14 @@ import type {
   CreateContactInput,
   UpsertAddressInput,
   UpsertContactInput,
+  AddressType,
+  ContactType,
 } from '../../graphql/generated/graphql';
+import { formatEnumLabel } from '../../utils/formatters';
 
-// Enum definitions matching backend values
-const AddressTypeEnum = {
-  Home: 0,
-  Business: 1,
-  Other: 2,
-} as const;
-
-const AddressTypeOptions = ['Home', 'Business', 'Other'];
-
-const ContactTypeEnum = {
-  Personal: 0,
-  Work: 1,
-  Emergency: 2,
-  Other: 3,
-} as const;
-
-const ContactTypeOptions = ['Personal', 'Work', 'Emergency', 'Other'];
+// GraphQL enum values - used directly for both display and API calls
+const AddressTypeOptions: AddressType[] = ['Business', 'Home'];
+const ContactTypeOptions: ContactType[] = ['Work', 'Personal'];
 
 interface AddressFormData {
   displayId?: number;
@@ -58,7 +47,7 @@ interface AddressFormData {
   zipCode: string;
   isCurrent: boolean;
   isPermanent: boolean;
-  addressType: string;
+  addressType: AddressType;
 }
 
 interface ContactFormData {
@@ -67,7 +56,7 @@ interface ContactFormData {
   landLine: string;
   fax: string;
   email: string;
-  contactType: string;
+  contactType: ContactType;
 }
 
 interface SchoolFormData {
@@ -123,19 +112,6 @@ const SchoolFormPage = () => {
 
   useEffect(() => {
     if (isEditMode && school) {
-      // Map GraphQL uppercase enum strings to form display values
-      const addressTypeMap: Record<string, string> = {
-        HOME: 'Home',
-        BUSINESS: 'Business',
-        OTHER: 'Other',
-      };
-      const contactTypeMap: Record<string, string> = {
-        PERSONAL: 'Personal',
-        WORK: 'Work',
-        EMERGENCY: 'Emergency',
-        OTHER: 'Other',
-      };
-
       // eslint-disable-next-line react-hooks/set-state-in-effect -- Populating form with loaded data is a valid pattern
       setFormData({
         schoolName: school.schoolName || '',
@@ -158,7 +134,7 @@ const SchoolFormPage = () => {
               zipCode: addr.zipCode || '',
               isCurrent: addr.isCurrent || false,
               isPermanent: addr.isPermanent || false,
-              addressType: addressTypeMap[addr.addressType] || 'Business',
+              addressType: addr.addressType || 'BUSINESS',
             }))
         );
       }
@@ -174,7 +150,7 @@ const SchoolFormPage = () => {
               landLine: contact.landLine || '',
               fax: contact.fax || '',
               email: contact.email || '',
-              contactType: contactTypeMap[contact.contactType] || 'Work',
+              contactType: contact.contactType || 'WORK',
             }))
         );
       }
@@ -242,7 +218,7 @@ const SchoolFormPage = () => {
     const summary =
       parts.length > 0 ? parts.join(', ') : `Address ${index + 1}`;
     const tagText = tags.length > 0 ? ` (${tags.join(', ')})` : '';
-    return `${address.addressType}: ${summary}${tagText}`;
+    return `${formatEnumLabel(address.addressType)}: ${summary}${tagText}`;
   };
 
   // Generate contact summary for accordion header
@@ -254,7 +230,7 @@ const SchoolFormPage = () => {
 
     const summary =
       parts.length > 0 ? parts.join(' | ') : `Contact ${index + 1}`;
-    return `${contact.contactType}: ${summary}`;
+    return `${formatEnumLabel(contact.contactType)}: ${summary}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -276,8 +252,7 @@ const SchoolFormPage = () => {
             zipCode: addr.zipCode || null,
             isCurrent: addr.isCurrent,
             isPermanent: addr.isPermanent,
-            addressType:
-              AddressTypeEnum[addr.addressType as keyof typeof AddressTypeEnum],
+            addressType: addr.addressType,
           }));
 
         const contactDtos: UpsertContactInput[] = contacts
@@ -290,10 +265,7 @@ const SchoolFormPage = () => {
             landLine: contact.landLine || null,
             fax: contact.fax || null,
             email: contact.email || null,
-            contactType:
-              ContactTypeEnum[
-                contact.contactType as keyof typeof ContactTypeEnum
-              ],
+            contactType: contact.contactType,
           }));
 
         const updateDto: UpdateSchoolInput = {
@@ -316,8 +288,7 @@ const SchoolFormPage = () => {
             zipCode: addr.zipCode || null,
             isCurrent: addr.isCurrent,
             isPermanent: addr.isPermanent,
-            addressType:
-              AddressTypeEnum[addr.addressType as keyof typeof AddressTypeEnum],
+            addressType: addr.addressType,
           }));
 
         const contactDtos: CreateContactInput[] = contacts
@@ -329,10 +300,7 @@ const SchoolFormPage = () => {
             landLine: contact.landLine || null,
             fax: contact.fax || null,
             email: contact.email || null,
-            contactType:
-              ContactTypeEnum[
-                contact.contactType as keyof typeof ContactTypeEnum
-              ],
+            contactType: contact.contactType,
           }));
 
         const createDto: CreateSchoolInput = {
@@ -395,7 +363,9 @@ const SchoolFormPage = () => {
                 {isEditMode && (
                   <Checkbox.Root
                     checked={formData.isActive}
-                    onCheckedChange={e => handleChange('isActive', !!e.checked)}
+                    onCheckedChange={(e: { checked: boolean | string }) =>
+                      handleChange('isActive', !!e.checked)
+                    }
                   >
                     <Checkbox.HiddenInput />
                     <Checkbox.Control />
@@ -472,17 +442,19 @@ const SchoolFormPage = () => {
                                   <NativeSelect.Root>
                                     <NativeSelect.Field
                                       value={address.addressType}
-                                      onChange={e =>
+                                      onChange={(
+                                        e: React.ChangeEvent<HTMLSelectElement>
+                                      ) =>
                                         updateAddress(
                                           index,
                                           'addressType',
-                                          e.target.value
+                                          e.target.value as AddressType
                                         )
                                       }
                                     >
                                       {AddressTypeOptions.map((type, idx) => (
                                         <option key={idx} value={type}>
-                                          {type}
+                                          {formatEnumLabel(type)}
                                         </option>
                                       ))}
                                     </NativeSelect.Field>
@@ -493,7 +465,9 @@ const SchoolFormPage = () => {
                                 <Flex gap={4} align="flex-end">
                                   <Checkbox.Root
                                     checked={address.isCurrent}
-                                    onCheckedChange={e =>
+                                    onCheckedChange={(e: {
+                                      checked: boolean | string;
+                                    }) =>
                                       updateAddress(
                                         index,
                                         'isCurrent',
@@ -508,7 +482,9 @@ const SchoolFormPage = () => {
 
                                   <Checkbox.Root
                                     checked={address.isPermanent}
-                                    onCheckedChange={e =>
+                                    onCheckedChange={(e: {
+                                      checked: boolean | string;
+                                    }) =>
                                       updateAddress(
                                         index,
                                         'isPermanent',
@@ -707,17 +683,19 @@ const SchoolFormPage = () => {
                                 <NativeSelect.Root>
                                   <NativeSelect.Field
                                     value={contact.contactType}
-                                    onChange={e =>
+                                    onChange={(
+                                      e: React.ChangeEvent<HTMLSelectElement>
+                                    ) =>
                                       updateContact(
                                         index,
                                         'contactType',
-                                        e.target.value
+                                        e.target.value as ContactType
                                       )
                                     }
                                   >
                                     {ContactTypeOptions.map(type => (
                                       <option key={type} value={type}>
-                                        {type}
+                                        {formatEnumLabel(type)}
                                       </option>
                                     ))}
                                   </NativeSelect.Field>

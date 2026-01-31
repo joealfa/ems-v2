@@ -20,7 +20,7 @@ export function useEmployments(variables?: {
   employeeNameFilter?: string;
   positionFilter?: string;
   depEdIdFilter?: string;
-  employmentStatus?: number;
+  employmentStatus?: string;
   isActive?: boolean;
   sortBy?: string;
   sortDescending?: boolean;

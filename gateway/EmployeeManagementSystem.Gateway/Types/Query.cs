@@ -24,8 +24,8 @@ public class Query
         string? searchTerm,
         string? fullNameFilter,
         string? displayIdFilter,
-        int? gender,
-        int? civilStatus,
+        string? gender,
+        string? civilStatus,
         string? sortBy,
         bool? sortDescending,
         [Service] EmsApiClient client,
@@ -36,8 +36,8 @@ public class Query
         return await cache.GetOrSetAsync(
             cacheKey,
             async token => await client.PersonsGETAsync(
-                gender.HasValue ? (Gender)gender.Value : null,
-                civilStatus.HasValue ? (CivilStatus)civilStatus.Value : null,
+                gender != null ? Enum.Parse<Gender>(gender, ignoreCase: true) : null,
+                civilStatus != null ? Enum.Parse<CivilStatus>(civilStatus, ignoreCase: true) : null,
                 displayIdFilter,
                 fullNameFilter,
                 pageNumber,
@@ -72,7 +72,7 @@ public class Query
         string? employeeNameFilter,
         string? positionFilter,
         string? depEdIdFilter,
-        int? employmentStatus,
+        string? employmentStatus,
         bool? isActive,
         string? sortBy,
         bool? sortDescending,
@@ -84,7 +84,7 @@ public class Query
         return await cache.GetOrSetAsync(
             cacheKey,
             async token => await client.EmploymentsGETAsync(
-                employmentStatus.HasValue ? (EmploymentStatus)employmentStatus.Value : null,
+                employmentStatus != null ? Enum.Parse<EmploymentStatus>(employmentStatus, ignoreCase: true) : null,
                 isActive,
                 displayIdFilter,
                 employeeNameFilter,

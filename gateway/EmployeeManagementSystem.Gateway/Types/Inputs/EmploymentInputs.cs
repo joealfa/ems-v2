@@ -1,3 +1,5 @@
+using EmployeeManagementSystem.ApiClient.Generated;
+
 namespace EmployeeManagementSystem.Gateway.Types.Inputs;
 
 [GraphQLDescription("Input for creating a new employment")]
@@ -7,9 +9,9 @@ public class CreateEmploymentInput
     public long? PositionDisplayId { get; set; }
     public long? SalaryGradeDisplayId { get; set; }
     public long? ItemDisplayId { get; set; }
-    public int? EmploymentStatus { get; set; }
-    public int? AppointmentStatus { get; set; }
-    public int? Eligibility { get; set; }
+    public EmploymentStatus? EmploymentStatus { get; set; }
+    public AppointmentStatus? AppointmentStatus { get; set; }
+    public Eligibility? Eligibility { get; set; }
     public DateTime? DateOfOriginalAppointment { get; set; }
     public string? PsipopItemNumber { get; set; }
     public string? DepEdId { get; set; }
@@ -25,9 +27,9 @@ public class UpdateEmploymentInput
     public long? PositionDisplayId { get; set; }
     public long? SalaryGradeDisplayId { get; set; }
     public long? ItemDisplayId { get; set; }
-    public int? EmploymentStatus { get; set; }
-    public int? AppointmentStatus { get; set; }
-    public int? Eligibility { get; set; }
+    public EmploymentStatus? EmploymentStatus { get; set; }
+    public AppointmentStatus? AppointmentStatus { get; set; }
+    public Eligibility? Eligibility { get; set; }
     public DateTime? DateOfOriginalAppointment { get; set; }
     public string? PsipopItemNumber { get; set; }
     public string? DepEdId { get; set; }

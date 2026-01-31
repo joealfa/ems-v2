@@ -33,64 +33,36 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { usePersonsLazy } from '../../hooks/usePersons';
 import { AuthContext } from '../../contexts/AuthContext';
-import type { PersonListDto } from '../../graphql/generated/graphql';
+import type {
+  PersonListDto,
+  Gender,
+  CivilStatus,
+} from '../../graphql/generated/graphql';
 
 // Gateway base URL for proxied API requests
 const GATEWAY_BASE_URL =
   import.meta.env.VITE_GRAPHQL_URL?.replace('/graphql', '') ||
   'http://localhost:5100';
 
-// Gender enum values matching backend
-const GenderEnum = {
-  Male: 0,
-  Female: 1,
-} as const;
+// Display mapping for Gender using GraphQL generated enum
+const GenderDisplay: Record<Gender, string> = {
+  Male: 'Male',
+  Female: 'Female',
+};
 
-// Civil status enum values matching backend
-const CivilStatusEnum = {
-  Single: 0,
-  Married: 1,
-  SoloParent: 2,
-  Widow: 3,
-  Separated: 4,
-  Other: 5,
-} as const;
+// Display mapping for CivilStatus using GraphQL generated enum
+const CivilStatusDisplay: Record<CivilStatus, string> = {
+  Single: 'Single',
+  Married: 'Married',
+  SoloParent: 'Solo Parent',
+  Widow: 'Widow',
+  Separated: 'Separated',
+  Other: 'Other',
+};
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
+import { EyeIcon, EditIcon } from '../../components/icons';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
-
-// Icon components for action buttons
-const EyeIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-
-const EditIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-  </svg>
-);
 
 // Profile image cell renderer with authenticated image fetching
 interface ProfileImageCellProps {
@@ -288,8 +260,8 @@ interface FilterModel {
 // Helper function to extract filter values from AG Grid filter model
 const extractFilters = (filterModel: FilterModel) => {
   const filters: {
-    gender?: number;
-    civilStatus?: number;
+    gender?: Gender;
+    civilStatus?: CivilStatus;
     displayIdFilter?: string;
     fullNameFilter?: string;
   } = {};
@@ -304,27 +276,49 @@ const extractFilters = (filterModel: FilterModel) => {
     filters.fullNameFilter = String(filterModel.fullName.filter);
   }
 
-  // Extract gender filter (set filter or text filter)
+  // Extract gender filter - convert display value to GraphQL enum
   if (filterModel.gender?.values && filterModel.gender.values.length > 0) {
-    const genderValue = filterModel.gender.values[0] as keyof typeof GenderEnum;
-    filters.gender = GenderEnum[genderValue];
+    const displayValue = filterModel.gender.values[0];
+    // Find the enum key by matching the display value
+    const enumKey = Object.entries(GenderDisplay).find(
+      ([, display]) => display === displayValue
+    )?.[0] as Gender | undefined;
+    if (enumKey) {
+      filters.gender = enumKey;
+    }
   } else if (filterModel.gender?.filter) {
-    const genderValue = filterModel.gender.filter as keyof typeof GenderEnum;
-    filters.gender = GenderEnum[genderValue];
+    const displayValue = String(filterModel.gender.filter);
+    // Find the enum key by matching the display value
+    const enumKey = Object.entries(GenderDisplay).find(
+      ([, display]) => display === displayValue
+    )?.[0] as Gender | undefined;
+    if (enumKey) {
+      filters.gender = enumKey;
+    }
   }
 
-  // Extract civilStatus filter (set filter or text filter)
+  // Extract civilStatus filter - convert display value to GraphQL enum
   if (
     filterModel.civilStatus?.values &&
     filterModel.civilStatus.values.length > 0
   ) {
-    const civilStatusValue = filterModel.civilStatus
-      .values[0] as keyof typeof CivilStatusEnum;
-    filters.civilStatus = CivilStatusEnum[civilStatusValue];
+    const displayValue = filterModel.civilStatus.values[0];
+    // Find the enum key by matching the display value
+    const enumKey = Object.entries(CivilStatusDisplay).find(
+      ([, display]) => display === displayValue
+    )?.[0] as CivilStatus | undefined;
+    if (enumKey) {
+      filters.civilStatus = enumKey;
+    }
   } else if (filterModel.civilStatus?.filter) {
-    const civilStatusValue = filterModel.civilStatus
-      .filter as keyof typeof CivilStatusEnum;
-    filters.civilStatus = CivilStatusEnum[civilStatusValue];
+    const displayValue = String(filterModel.civilStatus.filter);
+    // Find the enum key by matching the display value
+    const enumKey = Object.entries(CivilStatusDisplay).find(
+      ([, display]) => display === displayValue
+    )?.[0] as CivilStatus | undefined;
+    if (enumKey) {
+      filters.civilStatus = enumKey;
+    }
   }
 
   return filters;
@@ -532,6 +526,10 @@ const PersonsPage = () => {
           filterOptions: ['equals'],
           maxNumConditions: 1,
         },
+        valueFormatter: params => {
+          if (!params.value) return '';
+          return GenderDisplay[params.value as Gender] || params.value;
+        },
       },
       {
         field: 'civilStatus',
@@ -546,7 +544,7 @@ const PersonsPage = () => {
           values: [
             'Single',
             'Married',
-            'SoloParent',
+            'Solo Parent',
             'Widow',
             'Separated',
             'Other',
@@ -555,6 +553,12 @@ const PersonsPage = () => {
         filterParams: {
           filterOptions: ['equals'],
           maxNumConditions: 1,
+        },
+        valueFormatter: params => {
+          if (!params.value) return '';
+          return (
+            CivilStatusDisplay[params.value as CivilStatus] || params.value
+          );
         },
       },
     ],

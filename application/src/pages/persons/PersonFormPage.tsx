@@ -37,26 +37,17 @@ import type {
   UpdatePersonInput,
   CreateAddressInput,
   CreateContactInput,
+  Gender,
+  CivilStatus,
+  AddressType,
+  ContactType,
 } from '../../graphql/generated/graphql';
+import { DocumentsTable, formatFileSize } from '../../components/documents';
+import { formatEnumLabel } from '../../utils/formatters';
 
-// Enum definitions matching backend values
-const GenderEnum = {
-  Male: 0,
-  Female: 1,
-} as const;
-
-const GenderOptions = ['Male', 'Female'];
-
-const CivilStatusEnum = {
-  Single: 0,
-  Married: 1,
-  SoloParent: 2,
-  Widow: 3,
-  Separated: 4,
-  Other: 5,
-} as const;
-
-const CivilStatusOptions = [
+// GraphQL enum values - used directly for both display and API calls
+const GenderOptions: Gender[] = ['Male', 'Female'];
+const CivilStatusOptions: CivilStatus[] = [
   'Single',
   'Married',
   'SoloParent',
@@ -64,24 +55,8 @@ const CivilStatusOptions = [
   'Separated',
   'Other',
 ];
-
-const AddressTypeEnum = {
-  Home: 0,
-  Business: 1,
-  Other: 2,
-} as const;
-
-const AddressTypeOptions = ['Home', 'Business', 'Other'];
-
-const ContactTypeEnum = {
-  Personal: 0,
-  Work: 1,
-  Emergency: 2,
-  Other: 3,
-} as const;
-
-const ContactTypeOptions = ['Personal', 'Work', 'Emergency', 'Other'];
-import { DocumentsTable, formatFileSize } from '../../components/documents';
+const AddressTypeOptions: AddressType[] = ['Home', 'Business'];
+const ContactTypeOptions: ContactType[] = ['Personal', 'Work'];
 
 interface AddressFormData {
   address1: string;
@@ -93,7 +68,7 @@ interface AddressFormData {
   zipCode: string;
   isCurrent: boolean;
   isPermanent: boolean;
-  addressType: string;
+  addressType: AddressType;
 }
 
 interface ContactFormData {
@@ -101,7 +76,7 @@ interface ContactFormData {
   landLine: string;
   fax: string;
   email: string;
-  contactType: string;
+  contactType: ContactType;
 }
 
 interface PersonFormData {
@@ -109,15 +84,17 @@ interface PersonFormData {
   lastName: string;
   middleName: string;
   dateOfBirth: string;
-  gender: string;
-  civilStatus: string;
+  gender: Gender;
+  civilStatus: CivilStatus;
 }
 
 interface DocumentListItem {
   displayId?: number;
   fileName?: string | null;
   fileSize?: number | null;
+  fileSizeBytes?: number | null;
   mimeType?: string | null;
+  documentType?: string | null;
   description?: string | null;
   uploadedAt?: string | null;
   uploadedBy?: string | null;
@@ -198,7 +175,9 @@ const PersonFormPage = () => {
       displayId: doc.displayId,
       fileName: doc.fileName,
       fileSize: doc.fileSizeBytes,
+      fileSizeBytes: doc.fileSizeBytes,
       mimeType: doc.contentType,
+      documentType: doc.documentType,
       description: doc.description,
       uploadedAt: doc.createdOn,
       uploadedBy: doc.createdBy,
@@ -213,38 +192,13 @@ const PersonFormPage = () => {
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (isEditMode && person) {
-      // Map GraphQL uppercase enum strings to form display values
-      const genderMap: Record<string, string> = {
-        MALE: 'Male',
-        FEMALE: 'Female',
-      };
-      const civilStatusMap: Record<string, string> = {
-        SINGLE: 'Single',
-        MARRIED: 'Married',
-        SOLO_PARENT: 'SoloParent',
-        WIDOW: 'Widow',
-        SEPARATED: 'Separated',
-        OTHER: 'Other',
-      };
-      const addressTypeMap: Record<string, string> = {
-        HOME: 'Home',
-        BUSINESS: 'Business',
-        OTHER: 'Other',
-      };
-      const contactTypeMap: Record<string, string> = {
-        PERSONAL: 'Personal',
-        WORK: 'Work',
-        EMERGENCY: 'Emergency',
-        OTHER: 'Other',
-      };
-
       setFormData({
         firstName: person.firstName || '',
         lastName: person.lastName || '',
         middleName: person.middleName || '',
         dateOfBirth: person.dateOfBirth?.split('T')[0] || '',
-        gender: genderMap[person.gender] || 'Male',
-        civilStatus: civilStatusMap[person.civilStatus] || 'Single',
+        gender: person.gender || 'MALE',
+        civilStatus: person.civilStatus || 'SINGLE',
       });
       setProfileImageUrl(person.profileImageUrl || null);
 
@@ -263,7 +217,7 @@ const PersonFormPage = () => {
               zipCode: addr.zipCode || '',
               isCurrent: addr.isCurrent || false,
               isPermanent: addr.isPermanent || false,
-              addressType: addressTypeMap[addr.addressType] || 'Home',
+              addressType: addr.addressType || 'HOME',
             }))
         );
       }
@@ -278,7 +232,7 @@ const PersonFormPage = () => {
               landLine: contact.landLine || '',
               fax: contact.fax || '',
               email: contact.email || '',
-              contactType: contactTypeMap[contact.contactType] || 'Personal',
+              contactType: contact.contactType || 'PERSONAL',
             }))
         );
       }
@@ -577,8 +531,7 @@ const PersonFormPage = () => {
           zipCode: addr.zipCode || undefined,
           isCurrent: addr.isCurrent,
           isPermanent: addr.isPermanent,
-          addressType:
-            AddressTypeEnum[addr.addressType as keyof typeof AddressTypeEnum],
+          addressType: addr.addressType,
         }));
 
       const contactDtos: CreateContactInput[] = contacts
@@ -588,10 +541,7 @@ const PersonFormPage = () => {
           landLine: contact.landLine || undefined,
           fax: contact.fax || undefined,
           email: contact.email || undefined,
-          contactType:
-            ContactTypeEnum[
-              contact.contactType as keyof typeof ContactTypeEnum
-            ],
+          contactType: contact.contactType,
         }));
 
       if (isEditMode) {
@@ -600,11 +550,8 @@ const PersonFormPage = () => {
           lastName: formData.lastName,
           middleName: formData.middleName || undefined,
           dateOfBirth: formData.dateOfBirth,
-          gender: GenderEnum[formData.gender as keyof typeof GenderEnum],
-          civilStatus:
-            CivilStatusEnum[
-              formData.civilStatus as keyof typeof CivilStatusEnum
-            ],
+          gender: formData.gender,
+          civilStatus: formData.civilStatus,
         };
         await updatePerson(Number(displayId), updateDto);
       } else {
@@ -613,11 +560,8 @@ const PersonFormPage = () => {
           lastName: formData.lastName,
           middleName: formData.middleName || undefined,
           dateOfBirth: formData.dateOfBirth,
-          gender: GenderEnum[formData.gender as keyof typeof GenderEnum],
-          civilStatus:
-            CivilStatusEnum[
-              formData.civilStatus as keyof typeof CivilStatusEnum
-            ],
+          gender: formData.gender,
+          civilStatus: formData.civilStatus,
           addresses: addressDtos.length > 0 ? addressDtos : undefined,
           contacts: contactDtos.length > 0 ? contactDtos : undefined,
         };
@@ -651,7 +595,7 @@ const PersonFormPage = () => {
     const summary =
       parts.length > 0 ? parts.join(', ') : `Address ${index + 1}`;
     const tagText = tags.length > 0 ? ` (${tags.join(', ')})` : '';
-    return `${address.addressType}: ${summary}${tagText}`;
+    return `${formatEnumLabel(address.addressType)}: ${summary}${tagText}`;
   };
 
   // Generate contact summary for accordion header
@@ -663,7 +607,7 @@ const PersonFormPage = () => {
 
     const summary =
       parts.length > 0 ? parts.join(' | ') : `Contact ${index + 1}`;
-    return `${contact.contactType}: ${summary}`;
+    return `${formatEnumLabel(contact.contactType)}: ${summary}`;
   };
 
   if (loading) {
@@ -838,7 +782,7 @@ const PersonFormPage = () => {
                           >
                             {GenderOptions.map(gender => (
                               <option key={gender} value={gender}>
-                                {gender}
+                                {formatEnumLabel(gender)}
                               </option>
                             ))}
                           </NativeSelect.Field>
@@ -857,9 +801,7 @@ const PersonFormPage = () => {
                           >
                             {CivilStatusOptions.map(status => (
                               <option key={status} value={status}>
-                                {status === 'SoloParent'
-                                  ? 'Solo Parent'
-                                  : status}
+                                {formatEnumLabel(status)}
                               </option>
                             ))}
                           </NativeSelect.Field>
@@ -949,7 +891,7 @@ const PersonFormPage = () => {
                                     >
                                       {AddressTypeOptions.map(type => (
                                         <option key={type} value={type}>
-                                          {type}
+                                          {formatEnumLabel(type)}
                                         </option>
                                       ))}
                                     </NativeSelect.Field>
@@ -1184,7 +1126,7 @@ const PersonFormPage = () => {
                                   >
                                     {ContactTypeOptions.map(type => (
                                       <option key={type} value={type}>
-                                        {type}
+                                        {formatEnumLabel(type)}
                                       </option>
                                     ))}
                                   </NativeSelect.Field>

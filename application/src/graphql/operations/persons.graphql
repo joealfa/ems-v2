@@ -56,8 +56,8 @@ query GetPersons(
   $searchTerm: String
   $fullNameFilter: String
   $displayIdFilter: String
-  $gender: Int
-  $civilStatus: Int
+  $gender: String
+  $civilStatus: String
   $sortBy: String
   $sortDescending: Boolean
 ) {

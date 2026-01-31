@@ -2,6 +2,7 @@ using EmployeeManagementSystem.ApiClient.Generated;
 using EmployeeManagementSystem.Gateway.Authentication;
 using EmployeeManagementSystem.Gateway.Caching;
 using EmployeeManagementSystem.Gateway.DataLoaders;
+using HotChocolate.Types.Descriptors;
 using StackExchange.Redis;
 
 namespace EmployeeManagementSystem.Gateway.Extensions;
@@ -28,6 +29,12 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // TEMPORARY: Disable Redis caching for debugging
+        // Use NoOpCacheService which bypasses all caching
+        _ = services.AddScoped<IRedisCacheService, NoOpCacheService>();
+
+        // Original Redis implementation (commented out):
+        /*
         string redisConnectionString = configuration["Redis:ConnectionString"] ?? "localhost:6379";
         string instanceName = configuration["Redis:InstanceName"] ?? "EmsGateway:";
 
@@ -44,6 +51,7 @@ public static class ServiceCollectionExtensions
 
         // Register custom cache service
         _ = services.AddScoped<IRedisCacheService, RedisCacheService>();
+        */
 
         return services;
     }
@@ -77,6 +85,9 @@ public static class ServiceCollectionExtensions
 
     private static IServiceCollection AddGraphQLServices(this IServiceCollection services)
     {
+        // Register custom naming convention for PascalCase enum values
+        _ = services.AddSingleton<INamingConventions, Types.PascalCaseNamingConventions>();
+
         _ = services
             .AddGraphQLServer()
             .AddQueryType<Types.Query>()

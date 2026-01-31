@@ -25,7 +25,10 @@
       "generateUpdateJsonSerializerSettingsMethod": true,
       "serializeTypeInformation": false,
       "enumNameGeneratorType": null,
-      "generateEnumMappingDescription": false
+      "generateEnumMappingDescription": false,
+      "enumStyle": "StringEnum",
+      "inlineNamedArrays": true,
+      "generateDefaultValues": true
     }
   }
 }

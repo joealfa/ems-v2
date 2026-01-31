@@ -26,40 +26,24 @@ import type {
   CreateEmploymentInput,
   UpdateEmploymentInput,
   PersonListFieldsFragment,
+  AppointmentStatus,
+  EmploymentStatus,
+  Eligibility,
 } from '../../graphql/generated/graphql';
 import PersonSearchSelect from '../../components/PersonSearchSelect';
+import { formatEnumLabel } from '../../utils/formatters';
 
-// Enum definitions matching backend values
-const AppointmentStatusEnum = {
-  Original: 1,
-  Promotion: 2,
-  Transfer: 3,
-  Reappointment: 4,
-} as const;
-
-const AppointmentStatusOptions = [
+// GraphQL enum values - used directly for both display and API calls
+const AppointmentStatusOptions: AppointmentStatus[] = [
   'Original',
   'Promotion',
   'Transfer',
   'Reappointment',
 ];
 
-const EmploymentStatusEnum = {
-  Regular: 1,
-  Permanent: 2,
-} as const;
+const EmploymentStatusOptions: EmploymentStatus[] = ['Regular', 'Permanent'];
 
-const EmploymentStatusOptions = ['Regular', 'Permanent'];
-
-const EligibilityEnum = {
-  LET: 1,
-  PBET: 2,
-  CivilServiceProfessional: 3,
-  CivilServiceSubProfessional: 4,
-  Other: 99,
-} as const;
-
-const EligibilityOptions = [
+const EligibilityOptions: Eligibility[] = [
   'LET',
   'PBET',
   'CivilServiceProfessional',
@@ -74,9 +58,9 @@ interface EmploymentFormData {
   gsisId: string;
   philHealthId: string;
   dateOfOriginalAppointment: string;
-  appointmentStatus: string;
-  employmentStatus: string;
-  eligibility: string;
+  appointmentStatus: AppointmentStatus;
+  employmentStatus: EmploymentStatus;
+  eligibility: Eligibility;
   personDisplayId: number | '';
   positionDisplayId: number | '';
   salaryGradeDisplayId: number | '';
@@ -136,25 +120,6 @@ const EmploymentFormPage = () => {
 
   useEffect(() => {
     if (isEditMode && employment) {
-      // Map GraphQL uppercase enum strings to form display values
-      const appointmentStatusMap: Record<string, string> = {
-        ORIGINAL: 'Original',
-        PROMOTION: 'Promotion',
-        TRANSFER: 'Transfer',
-        REAPPOINTMENT: 'Reappointment',
-      };
-      const employmentStatusMap: Record<string, string> = {
-        REGULAR: 'Regular',
-        PERMANENT: 'Permanent',
-      };
-      const eligibilityMap: Record<string, string> = {
-        LET: 'LET',
-        PBET: 'PBET',
-        CIVIL_SERVICE_PROFESSIONAL: 'CivilServiceProfessional',
-        CIVIL_SERVICE_SUB_PROFESSIONAL: 'CivilServiceSubProfessional',
-        OTHER: 'Other',
-      };
-
       // eslint-disable-next-line react-hooks/set-state-in-effect -- Populating form with loaded data is a valid pattern
       setFormData({
         depEdId: employment.depEdId || '',
@@ -164,11 +129,9 @@ const EmploymentFormPage = () => {
         philHealthId: employment.philHealthId || '',
         dateOfOriginalAppointment:
           employment.dateOfOriginalAppointment?.split('T')[0] || '',
-        appointmentStatus:
-          appointmentStatusMap[employment.appointmentStatus] || 'Original',
-        employmentStatus:
-          employmentStatusMap[employment.employmentStatus] || 'Regular',
-        eligibility: eligibilityMap[employment.eligibility] || 'LET',
+        appointmentStatus: employment.appointmentStatus || 'ORIGINAL',
+        employmentStatus: employment.employmentStatus || 'REGULAR',
+        eligibility: employment.eligibility || 'LET',
         personDisplayId: (employment.person?.displayId as number) || '',
         positionDisplayId: (employment.position?.displayId as number) || '',
         salaryGradeDisplayId:
@@ -199,18 +162,9 @@ const EmploymentFormPage = () => {
           gsisId: formData.gsisId || null,
           philHealthId: formData.philHealthId || null,
           dateOfOriginalAppointment: formData.dateOfOriginalAppointment || null,
-          appointmentStatus:
-            AppointmentStatusEnum[
-              formData.appointmentStatus as keyof typeof AppointmentStatusEnum
-            ],
-          employmentStatus:
-            EmploymentStatusEnum[
-              formData.employmentStatus as keyof typeof EmploymentStatusEnum
-            ],
-          eligibility:
-            EligibilityEnum[
-              formData.eligibility as keyof typeof EligibilityEnum
-            ],
+          appointmentStatus: formData.appointmentStatus,
+          employmentStatus: formData.employmentStatus,
+          eligibility: formData.eligibility,
           positionDisplayId: Number(formData.positionDisplayId),
           salaryGradeDisplayId: Number(formData.salaryGradeDisplayId),
           itemDisplayId: Number(formData.itemDisplayId),
@@ -225,18 +179,9 @@ const EmploymentFormPage = () => {
           gsisId: formData.gsisId || null,
           philHealthId: formData.philHealthId || null,
           dateOfOriginalAppointment: formData.dateOfOriginalAppointment || null,
-          appointmentStatus:
-            AppointmentStatusEnum[
-              formData.appointmentStatus as keyof typeof AppointmentStatusEnum
-            ],
-          employmentStatus:
-            EmploymentStatusEnum[
-              formData.employmentStatus as keyof typeof EmploymentStatusEnum
-            ],
-          eligibility:
-            EligibilityEnum[
-              formData.eligibility as keyof typeof EligibilityEnum
-            ],
+          appointmentStatus: formData.appointmentStatus,
+          employmentStatus: formData.employmentStatus,
+          eligibility: formData.eligibility,
           personDisplayId: Number(formData.personDisplayId),
           positionDisplayId: Number(formData.positionDisplayId),
           salaryGradeDisplayId: Number(formData.salaryGradeDisplayId),
@@ -439,7 +384,7 @@ const EmploymentFormPage = () => {
                       >
                         {AppointmentStatusOptions.map(status => (
                           <option key={status} value={status}>
-                            {status}
+                            {formatEnumLabel(status)}
                           </option>
                         ))}
                       </NativeSelect.Field>
@@ -460,7 +405,7 @@ const EmploymentFormPage = () => {
                       >
                         {EmploymentStatusOptions.map(status => (
                           <option key={status} value={status}>
-                            {status}
+                            {formatEnumLabel(status)}
                           </option>
                         ))}
                       </NativeSelect.Field>
@@ -478,11 +423,7 @@ const EmploymentFormPage = () => {
                       >
                         {EligibilityOptions.map(elig => (
                           <option key={elig} value={elig}>
-                            {elig === 'CivilServiceProfessional'
-                              ? 'Civil Service Professional'
-                              : elig === 'CivilServiceSubProfessional'
-                                ? 'Civil Service Sub-Professional'
-                                : elig}
+                            {formatEnumLabel(elig)}
                           </option>
                         ))}
                       </NativeSelect.Field>

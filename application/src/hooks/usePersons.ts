@@ -18,8 +18,8 @@ export function usePersons(variables?: {
   searchTerm?: string;
   fullNameFilter?: string;
   displayIdFilter?: string;
-  gender?: number;
-  civilStatus?: number;
+  gender?: string;
+  civilStatus?: string;
   sortBy?: string;
   sortDescending?: boolean;
 }) {

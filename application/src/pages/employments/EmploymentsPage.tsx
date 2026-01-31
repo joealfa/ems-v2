@@ -25,55 +25,26 @@ import {
 } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
 import { useEmploymentsLazy } from '../../hooks/useEmployments';
-import type { EmploymentListDto } from '../../graphql/generated/graphql';
+import type {
+  EmploymentListDto,
+  EmploymentStatus,
+} from '../../graphql/generated/graphql';
 
-// Employment status enum values matching backend
-const EmploymentStatusEnum = {
-  Regular: 0,
-  Permanent: 1,
-} as const;
+// Display mapping for employment status using GraphQL generated enum
+const EmploymentStatusDisplay: Record<EmploymentStatus, string> = {
+  Regular: 'Regular',
+  Permanent: 'Permanent',
+};
 
-// Reverse mapping for display
-const EmploymentStatusDisplay: Record<number, string> = {
-  0: 'Regular',
-  1: 'Permanent',
+// Color mapping for employment status badges
+const EmploymentStatusColor: Record<EmploymentStatus, string> = {
+  Regular: 'blue',
+  Permanent: 'green',
 };
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
+import { EyeIcon, EditIcon } from '../../components/icons';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
-
-// Icon components for action buttons
-const EyeIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-
-const EditIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-  </svg>
-);
 
 // Custom floating filter component for dropdown selection
 interface SelectFloatingFilterProps extends IFloatingFilterParams {
@@ -154,7 +125,7 @@ interface FilterModel {
 // Helper function to extract filter values from AG Grid filter model
 const extractFilters = (filterModel: FilterModel) => {
   const filters: {
-    employmentStatus?: number;
+    employmentStatus?: EmploymentStatus;
     isActive?: boolean;
     displayIdFilter?: string;
     employeeNameFilter?: string;
@@ -182,19 +153,16 @@ const extractFilters = (filterModel: FilterModel) => {
     filters.positionFilter = String(filterModel.positionTitle.filter);
   }
 
-  // Extract employmentStatus filter (set filter or text filter)
+  // Extract employmentStatus filter - convert display value to GraphQL enum
   if (
     filterModel.employmentStatus?.values &&
     filterModel.employmentStatus.values.length > 0
   ) {
-    const statusValue = filterModel.employmentStatus
-      .values[0] as keyof typeof EmploymentStatusEnum;
-    filters.employmentStatus = EmploymentStatusEnum[statusValue];
+    const displayValue = filterModel.employmentStatus.values[0];
+    filters.employmentStatus = displayValue.toUpperCase() as EmploymentStatus;
   } else if (filterModel.employmentStatus?.filter) {
-    const statusValue = String(
-      filterModel.employmentStatus.filter
-    ) as keyof typeof EmploymentStatusEnum;
-    filters.employmentStatus = EmploymentStatusEnum[statusValue];
+    const displayValue = String(filterModel.employmentStatus.filter);
+    filters.employmentStatus = displayValue.toUpperCase() as EmploymentStatus;
   }
 
   // Extract isActive filter (set filter or text filter)
@@ -400,13 +368,10 @@ const EmploymentsPage = () => {
           maxNumConditions: 1,
         },
         cellRenderer: (params: ICellRendererParams<EmploymentListDto>) => {
-          const value = params.value as number;
-          const displayValue = EmploymentStatusDisplay[value] || 'Unknown';
-          return (
-            <Badge colorPalette={value === 1 ? 'green' : 'blue'}>
-              {displayValue}
-            </Badge>
-          );
+          const status = params.value as EmploymentStatus;
+          const displayValue = EmploymentStatusDisplay[status] || 'Unknown';
+          const colorPalette = EmploymentStatusColor[status] || 'gray';
+          return <Badge colorPalette={colorPalette}>{displayValue}</Badge>;
         },
       },
       {
