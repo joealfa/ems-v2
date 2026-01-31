@@ -14,6 +14,7 @@ import {
   useSalaryGrade,
   useDeleteSalaryGrade,
 } from '../../hooks/useSalaryGrades';
+import { formatCurrency } from '../../utils/formatters';
 
 const SalaryGradeDetailPage = () => {
   const navigate = useNavigate();
@@ -21,14 +22,6 @@ const SalaryGradeDetailPage = () => {
 
   const { salaryGrade, loading, error } = useSalaryGrade(Number(displayId));
   const { deleteSalaryGrade, loading: deleting } = useDeleteSalaryGrade();
-
-  const formatCurrency = (value: number | undefined): string => {
-    if (value === undefined || value === null) return '-';
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
-    }).format(value);
-  };
 
   const handleDelete = async () => {
     if (

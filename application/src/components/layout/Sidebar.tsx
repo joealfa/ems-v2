@@ -1,5 +1,6 @@
 import { Box, VStack, Text, IconButton } from '@chakra-ui/react';
 import { NavLink } from 'react-router-dom';
+import { ChevronLeftIcon, ChevronRightIcon } from '../icons';
 
 interface NavItemProps {
   to: string;
@@ -7,36 +8,6 @@ interface NavItemProps {
   icon: string;
   collapsed?: boolean;
 }
-
-const ChevronLeftIcon = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-);
-
-const ChevronRightIcon = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
-);
 
 const NavItem = ({ to, label, icon, collapsed }: NavItemProps) => {
   return (
@@ -124,7 +95,11 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           color="fg.muted"
           _hover={{ bg: 'bg.muted', color: 'fg' }}
         >
-          {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          {collapsed ? (
+            <ChevronRightIcon width={20} height={20} />
+          ) : (
+            <ChevronLeftIcon width={20} height={20} />
+          )}
         </IconButton>
       </Box>
       <VStack gap={1} align="stretch" colorPalette="blue">

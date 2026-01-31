@@ -11,27 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSchool, useDeleteSchool } from '../../hooks/useSchools';
-
-const formatAddress = (address: {
-  address1?: string | null;
-  address2?: string | null;
-  barangay?: string | null;
-  city?: string | null;
-  province?: string | null;
-  country?: string | null;
-  zipCode?: string | null;
-}): string => {
-  const parts = [
-    address.address1,
-    address.address2,
-    address.barangay,
-    address.city,
-    address.province,
-    address.country,
-    address.zipCode,
-  ].filter(Boolean);
-  return parts.join(', ') || '-';
-};
+import { formatAddress } from '../../utils/formatters';
 
 const SchoolDetailPage = () => {
   const navigate = useNavigate();

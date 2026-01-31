@@ -28,6 +28,7 @@ import { useSalaryGradesLazy } from '../../hooks/useSalaryGrades';
 import type { SalaryGradeResponseDto } from '../../graphql/generated/graphql';
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
 import { EyeIcon, EditIcon } from '../../components/icons';
+import { formatCurrency } from '../../utils/formatters';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -76,14 +77,6 @@ const SalaryGradesPage = () => {
       });
     }
   }, [debouncedSearchTerm, fetchSalaryGrades]);
-
-  const formatCurrency = useCallback((value: number | undefined): string => {
-    if (value === undefined || value === null) return '-';
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
-    }).format(value);
-  }, []);
 
   const columnDefs: ColDef<SalaryGradeResponseDto>[] = useMemo(
     () => [
@@ -209,7 +202,7 @@ const SalaryGradesPage = () => {
         },
       },
     ],
-    [navigate, formatCurrency]
+    [navigate]
   );
 
   const defaultColDef: ColDef = useMemo(

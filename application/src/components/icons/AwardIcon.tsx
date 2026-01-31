@@ -1,7 +1,7 @@
 import React from 'react';
 import type { IconProps } from './IconProps';
 
-export const EyeIcon: React.FC<IconProps> = ({
+export const AwardIcon: React.FC<IconProps> = ({
   width = 16,
   height = 16,
   className,
@@ -17,7 +17,7 @@ export const EyeIcon: React.FC<IconProps> = ({
     strokeLinejoin="round"
     className={className}
   >
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-    <circle cx="12" cy="12" r="3" />
+    <circle cx="12" cy="8" r="7"></circle>
+    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
   </svg>
 );

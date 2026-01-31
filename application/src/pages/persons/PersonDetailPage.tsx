@@ -11,47 +11,11 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePerson, useDeletePerson } from '../../hooks/usePersons';
-
-// Enum display mappings
-const GenderDisplay: Record<number, string> = {
-  0: 'Male',
-  1: 'Female',
-};
-
-const CivilStatusDisplay: Record<number, string> = {
-  0: 'Single',
-  1: 'Married',
-  2: 'Solo Parent',
-  3: 'Widow',
-  4: 'Separated',
-  5: 'Other',
-};
-
-const formatAddress = (address: {
-  address1?: string | null;
-  address2?: string | null;
-  barangay?: string | null;
-  city?: string | null;
-  province?: string | null;
-  country?: string | null;
-  zipCode?: string | null;
-}): string => {
-  const parts = [
-    address.address1,
-    address.address2,
-    address.barangay,
-    address.city,
-    address.province,
-    address.country,
-    address.zipCode,
-  ].filter(Boolean);
-  return parts.join(', ') || '-';
-};
-
 import {
   PersonDocuments,
   ProfileImageUpload,
 } from '../../components/documents';
+import { formatAddress } from '../../utils/formatters';
 
 const PersonDetailPage = () => {
   const navigate = useNavigate();
@@ -205,19 +169,14 @@ const PersonDetailPage = () => {
                             : 'pink'
                         }
                       >
-                        {GenderDisplay[person.gender as unknown as number] ||
-                          person.gender}
+                        {person.gender}
                       </Badge>
                     </Box>
                     <Box flex={1}>
                       <Text color="fg.muted" fontSize="sm">
                         Civil Status
                       </Text>
-                      <Badge colorPalette="gray">
-                        {CivilStatusDisplay[
-                          person.civilStatus as unknown as number
-                        ] || person.civilStatus}
-                      </Badge>
+                      <Badge colorPalette="gray">{person.civilStatus}</Badge>
                     </Box>
                   </Flex>
                 </Stack>

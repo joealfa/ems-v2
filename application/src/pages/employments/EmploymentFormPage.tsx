@@ -32,24 +32,11 @@ import type {
 } from '../../graphql/generated/graphql';
 import PersonSearchSelect from '../../components/PersonSearchSelect';
 import { formatEnumLabel } from '../../utils/formatters';
-
-// GraphQL enum values - used directly for both display and API calls
-const AppointmentStatusOptions: AppointmentStatus[] = [
-  'Original',
-  'Promotion',
-  'Transfer',
-  'Reappointment',
-];
-
-const EmploymentStatusOptions: EmploymentStatus[] = ['Regular', 'Permanent'];
-
-const EligibilityOptions: Eligibility[] = [
-  'LET',
-  'PBET',
-  'CivilServiceProfessional',
-  'CivilServiceSubProfessional',
-  'Other',
-];
+import {
+  AppointmentStatusOptions,
+  EmploymentStatusOptions,
+  EligibilityOptions,
+} from '../../utils/mapper';
 
 interface EmploymentFormData {
   depEdId: string;

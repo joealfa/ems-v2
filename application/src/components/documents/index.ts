@@ -1,4 +1,5 @@
 export { default as DocumentsTable } from './DocumentsTable';
 export { default as PersonDocuments } from './PersonDocuments';
 export { default as ProfileImageUpload } from './ProfileImageUpload';
-export { formatFileSize, getDocumentTypeColor } from './utils';
+export { getDocumentTypeColor } from '../../utils/helper';
+export { formatFileSize } from '../../utils/formatters';

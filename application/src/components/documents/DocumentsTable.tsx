@@ -1,5 +1,6 @@
 import { Box, Button, Flex, Text, Badge, Table } from '@chakra-ui/react';
-import { formatFileSize, getDocumentTypeColor } from './utils';
+import { getDocumentTypeColor } from '../../utils/helper';
+import { formatFileSize } from '../../utils/formatters';
 
 interface DocumentListItem {
   displayId?: number;

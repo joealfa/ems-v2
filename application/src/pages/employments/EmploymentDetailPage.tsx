@@ -11,26 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEmployment, useDeleteEmployment } from '../../hooks/useEmployments';
-
-// Enum display mappings
-const AppointmentStatusDisplay: Record<number, string> = {
-  1: 'Original',
-  2: 'Promotion',
-  3: 'Transfer',
-  4: 'Reappointment',
-};
-
-const EmploymentStatusDisplay: Record<number, string> = {
-  1: 'Regular',
-  2: 'Permanent',
-};
-
-const EligibilityDisplay: Record<number, string> = {
-  1: 'LET',
-  2: 'CivilServiceProfessional',
-  3: 'CivilServiceSubProfessional',
-  4: 'Other',
-};
+import { formatCurrency } from '../../utils/formatters';
 
 const EmploymentDetailPage = () => {
   const navigate = useNavigate();
@@ -38,14 +19,6 @@ const EmploymentDetailPage = () => {
 
   const { employment, loading, error } = useEmployment(Number(displayId));
   const { deleteEmployment, loading: deleting } = useDeleteEmployment();
-
-  const formatCurrency = (value: number | undefined): string => {
-    if (value === undefined || value === null) return '-';
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
-    }).format(value);
-  };
 
   const handleDelete = async () => {
     if (
@@ -220,9 +193,7 @@ const EmploymentDetailPage = () => {
                     Appointment Status
                   </Text>
                   <Badge colorPalette="blue">
-                    {AppointmentStatusDisplay[
-                      employment.appointmentStatus as unknown as number
-                    ] || employment.appointmentStatus}
+                    {employment.appointmentStatus}
                   </Badge>
                 </Box>
               </Flex>
@@ -239,9 +210,7 @@ const EmploymentDetailPage = () => {
                         : 'blue'
                     }
                   >
-                    {EmploymentStatusDisplay[
-                      employment.employmentStatus as unknown as number
-                    ] || employment.employmentStatus}
+                    {employment.employmentStatus}
                   </Badge>
                 </Box>
                 <Box flex={1}>
@@ -253,9 +222,7 @@ const EmploymentDetailPage = () => {
                       ? 'Civil Service Professional'
                       : (employment.eligibility as unknown as number) === 2
                         ? 'Civil Service Sub-Professional'
-                        : EligibilityDisplay[
-                            employment.eligibility as unknown as number
-                          ] || employment.eligibility}
+                        : employment.eligibility}
                   </Badge>
                 </Box>
               </Flex>

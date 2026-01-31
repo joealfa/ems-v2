@@ -1,7 +1,7 @@
 import React from 'react';
 import type { IconProps } from './IconProps';
 
-export const EyeIcon: React.FC<IconProps> = ({
+export const BriefcaseIcon: React.FC<IconProps> = ({
   width = 16,
   height = 16,
   className,
@@ -17,7 +17,7 @@ export const EyeIcon: React.FC<IconProps> = ({
     strokeLinejoin="round"
     className={className}
   >
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-    <circle cx="12" cy="12" r="3" />
+    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
   </svg>
 );

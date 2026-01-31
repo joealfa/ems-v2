@@ -1,10 +1,5 @@
 import React from 'react';
-
-export interface IconProps {
-  width?: number;
-  height?: number;
-  className?: string;
-}
+import type { IconProps } from './IconProps';
 
 export const EditIcon: React.FC<IconProps> = ({
   width = 16,
