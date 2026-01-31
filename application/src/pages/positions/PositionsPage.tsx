@@ -252,7 +252,7 @@ const PositionsPage = () => {
         <Input
           placeholder="Search by title..."
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           maxW="300px"
         />
       </Flex>

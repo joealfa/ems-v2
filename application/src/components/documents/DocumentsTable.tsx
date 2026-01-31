@@ -63,7 +63,7 @@ const DocumentsTable = ({
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {documents.map(doc => (
+          {documents.map((doc) => (
             <Table.Row key={doc.displayId as unknown as React.Key}>
               <Table.Cell px={4} py={2}>
                 <Text fontWeight="medium" fontSize="sm">

@@ -76,7 +76,7 @@ const SalaryGradeFormPage = () => {
     field: keyof SalaryGradeFormData,
     value: string | number | boolean
   ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -145,7 +145,7 @@ const SalaryGradeFormPage = () => {
                 <Field.Label>Salary Grade Name</Field.Label>
                 <Input
                   value={formData.salaryGradeName}
-                  onChange={e =>
+                  onChange={(e) =>
                     handleChange('salaryGradeName', e.target.value)
                   }
                   placeholder="e.g., SG-1, SG-2"
@@ -158,11 +158,11 @@ const SalaryGradeFormPage = () => {
                   <NativeSelect.Root>
                     <NativeSelect.Field
                       value={formData.step}
-                      onChange={e =>
+                      onChange={(e) =>
                         handleChange('step', Number(e.target.value))
                       }
                     >
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map(step => (
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((step) => (
                         <option key={step} value={step}>
                           Step {step}
                         </option>
@@ -177,7 +177,7 @@ const SalaryGradeFormPage = () => {
                   <Input
                     type="number"
                     value={formData.monthlySalary}
-                    onChange={e =>
+                    onChange={(e) =>
                       handleChange('monthlySalary', Number(e.target.value))
                     }
                     placeholder="0.00"
@@ -191,7 +191,7 @@ const SalaryGradeFormPage = () => {
                 <Field.Label>Description</Field.Label>
                 <Textarea
                   value={formData.description}
-                  onChange={e => handleChange('description', e.target.value)}
+                  onChange={(e) => handleChange('description', e.target.value)}
                   placeholder="Enter description (optional)"
                   rows={4}
                 />
@@ -200,7 +200,7 @@ const SalaryGradeFormPage = () => {
               {isEditMode && (
                 <Checkbox.Root
                   checked={formData.isActive}
-                  onCheckedChange={e => handleChange('isActive', !!e.checked)}
+                  onCheckedChange={(e) => handleChange('isActive', !!e.checked)}
                 >
                   <Checkbox.HiddenInput />
                   <Checkbox.Control />

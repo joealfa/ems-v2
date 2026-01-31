@@ -237,7 +237,7 @@ const SelectFloatingFilter = (props: SelectFloatingFilterProps) => {
         }}
       >
         <option value="">All</option>
-        {props.values.map(value => (
+        {props.values.map((value) => (
           <option key={value} value={value}>
             {value}
           </option>
@@ -505,7 +505,7 @@ const PersonsPage = () => {
         width: 150,
         sortable: true,
         filter: false,
-        valueFormatter: params => {
+        valueFormatter: (params) => {
           if (!params.value) return '';
           return new Date(params.value).toLocaleDateString();
         },
@@ -526,7 +526,7 @@ const PersonsPage = () => {
           filterOptions: ['equals'],
           maxNumConditions: 1,
         },
-        valueFormatter: params => {
+        valueFormatter: (params) => {
           if (!params.value) return '';
           return GenderDisplay[params.value as Gender] || params.value;
         },
@@ -554,7 +554,7 @@ const PersonsPage = () => {
           filterOptions: ['equals'],
           maxNumConditions: 1,
         },
-        valueFormatter: params => {
+        valueFormatter: (params) => {
           if (!params.value) return '';
           return (
             CivilStatusDisplay[params.value as CivilStatus] || params.value
@@ -636,7 +636,7 @@ const PersonsPage = () => {
         <Input
           placeholder="Search by name..."
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           maxW="300px"
         />
       </Flex>

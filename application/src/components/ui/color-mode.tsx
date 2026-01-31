@@ -44,7 +44,7 @@ export const ColorModeProvider = ({ children }: ColorModeProviderProps) => {
   };
 
   const toggleColorMode = () => {
-    setColorModeState(prev => (prev === 'light' ? 'dark' : 'light'));
+    setColorModeState((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   return (

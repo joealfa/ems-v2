@@ -102,7 +102,7 @@ const SelectFloatingFilter = (props: SelectFloatingFilterProps) => {
         }}
       >
         <option value="">All</option>
-        {props.values.map(value => (
+        {props.values.map((value) => (
           <option key={value} value={value}>
             {value}
           </option>
@@ -480,7 +480,7 @@ const EmploymentsPage = () => {
         <Input
           placeholder="Search by name or DepEd ID..."
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           maxW="300px"
         />
       </Flex>

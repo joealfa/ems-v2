@@ -12,7 +12,7 @@ const MainLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const toggleSidebar = () => {
-    setSidebarCollapsed(prev => !prev);
+    setSidebarCollapsed((prev) => !prev);
   };
 
   const currentSidebarWidth = sidebarCollapsed

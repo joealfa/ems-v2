@@ -133,7 +133,7 @@ const EmploymentFormPage = () => {
     field: keyof EmploymentFormData,
     value: string | number | boolean
   ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -292,7 +292,7 @@ const EmploymentFormPage = () => {
                     <Field.Label>DepEd ID</Field.Label>
                     <Input
                       value={formData.depEdId}
-                      onChange={e => handleChange('depEdId', e.target.value)}
+                      onChange={(e) => handleChange('depEdId', e.target.value)}
                       placeholder="Enter DepEd ID"
                     />
                   </Field.Root>
@@ -300,7 +300,7 @@ const EmploymentFormPage = () => {
                     <Field.Label>PSIPOP Item Number</Field.Label>
                     <Input
                       value={formData.psipopItemNumber}
-                      onChange={e =>
+                      onChange={(e) =>
                         handleChange('psipopItemNumber', e.target.value)
                       }
                       placeholder="Enter PSIPOP Item Number"
@@ -313,7 +313,7 @@ const EmploymentFormPage = () => {
                     <Field.Label>TIN</Field.Label>
                     <Input
                       value={formData.tinId}
-                      onChange={e => handleChange('tinId', e.target.value)}
+                      onChange={(e) => handleChange('tinId', e.target.value)}
                       placeholder="Enter TIN"
                     />
                   </Field.Root>
@@ -321,7 +321,7 @@ const EmploymentFormPage = () => {
                     <Field.Label>GSIS ID</Field.Label>
                     <Input
                       value={formData.gsisId}
-                      onChange={e => handleChange('gsisId', e.target.value)}
+                      onChange={(e) => handleChange('gsisId', e.target.value)}
                       placeholder="Enter GSIS ID"
                     />
                   </Field.Root>
@@ -329,7 +329,7 @@ const EmploymentFormPage = () => {
                     <Field.Label>PhilHealth ID</Field.Label>
                     <Input
                       value={formData.philHealthId}
-                      onChange={e =>
+                      onChange={(e) =>
                         handleChange('philHealthId', e.target.value)
                       }
                       placeholder="Enter PhilHealth ID"
@@ -352,7 +352,7 @@ const EmploymentFormPage = () => {
                     <Input
                       type="date"
                       value={formData.dateOfOriginalAppointment}
-                      onChange={e =>
+                      onChange={(e) =>
                         handleChange(
                           'dateOfOriginalAppointment',
                           e.target.value
@@ -365,11 +365,11 @@ const EmploymentFormPage = () => {
                     <NativeSelect.Root>
                       <NativeSelect.Field
                         value={formData.appointmentStatus}
-                        onChange={e =>
+                        onChange={(e) =>
                           handleChange('appointmentStatus', e.target.value)
                         }
                       >
-                        {AppointmentStatusOptions.map(status => (
+                        {AppointmentStatusOptions.map((status) => (
                           <option key={status} value={status}>
                             {formatEnumLabel(status)}
                           </option>
@@ -386,11 +386,11 @@ const EmploymentFormPage = () => {
                     <NativeSelect.Root>
                       <NativeSelect.Field
                         value={formData.employmentStatus}
-                        onChange={e =>
+                        onChange={(e) =>
                           handleChange('employmentStatus', e.target.value)
                         }
                       >
-                        {EmploymentStatusOptions.map(status => (
+                        {EmploymentStatusOptions.map((status) => (
                           <option key={status} value={status}>
                             {formatEnumLabel(status)}
                           </option>
@@ -404,11 +404,11 @@ const EmploymentFormPage = () => {
                     <NativeSelect.Root>
                       <NativeSelect.Field
                         value={formData.eligibility}
-                        onChange={e =>
+                        onChange={(e) =>
                           handleChange('eligibility', e.target.value)
                         }
                       >
-                        {EligibilityOptions.map(elig => (
+                        {EligibilityOptions.map((elig) => (
                           <option key={elig} value={elig}>
                             {formatEnumLabel(elig)}
                           </option>
@@ -434,14 +434,14 @@ const EmploymentFormPage = () => {
                     <NativeSelect.Root>
                       <NativeSelect.Field
                         value={formData.positionDisplayId}
-                        onChange={e =>
+                        onChange={(e) =>
                           handleChange('positionDisplayId', e.target.value)
                         }
                       >
                         <option value="">-- Select Position --</option>
                         {positions
-                          .filter(pos => pos !== null)
-                          .map(pos => (
+                          .filter((pos) => pos !== null)
+                          .map((pos) => (
                             <option
                               key={pos.displayId as number}
                               value={pos.displayId as number}
@@ -458,14 +458,14 @@ const EmploymentFormPage = () => {
                     <NativeSelect.Root>
                       <NativeSelect.Field
                         value={formData.salaryGradeDisplayId}
-                        onChange={e =>
+                        onChange={(e) =>
                           handleChange('salaryGradeDisplayId', e.target.value)
                         }
                       >
                         <option value="">-- Select Salary Grade --</option>
                         {salaryGrades
-                          .filter(sg => sg !== null)
-                          .map(sg => (
+                          .filter((sg) => sg !== null)
+                          .map((sg) => (
                             <option
                               key={sg.displayId as number}
                               value={sg.displayId as number}
@@ -484,14 +484,14 @@ const EmploymentFormPage = () => {
                   <NativeSelect.Root>
                     <NativeSelect.Field
                       value={formData.itemDisplayId}
-                      onChange={e =>
+                      onChange={(e) =>
                         handleChange('itemDisplayId', e.target.value)
                       }
                     >
                       <option value="">-- Select Item --</option>
                       {items
-                        .filter(item => item !== null)
-                        .map(item => (
+                        .filter((item) => item !== null)
+                        .map((item) => (
                           <option
                             key={item.displayId as number}
                             value={item.displayId as number}
@@ -507,7 +507,9 @@ const EmploymentFormPage = () => {
                 {isEditMode && (
                   <Checkbox.Root
                     checked={formData.isActive}
-                    onCheckedChange={e => handleChange('isActive', !!e.checked)}
+                    onCheckedChange={(e) =>
+                      handleChange('isActive', !!e.checked)
+                    }
                   >
                     <Checkbox.HiddenInput />
                     <Checkbox.Control />

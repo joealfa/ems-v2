@@ -272,7 +272,7 @@ const SalaryGradesPage = () => {
         <Input
           placeholder="Search by name..."
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           maxW="300px"
         />
       </Flex>

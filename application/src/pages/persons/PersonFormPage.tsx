@@ -171,7 +171,7 @@ const PersonFormPage = () => {
   // Documents state - transform GraphQL documents for DocumentsTable
   const documents: DocumentListItem[] = graphqlDocuments
     .filter((doc): doc is NonNullable<typeof doc> => doc !== null)
-    .map(doc => ({
+    .map((doc) => ({
       displayId: doc.displayId,
       fileName: doc.fileName,
       fileSize: doc.fileSizeBytes,
@@ -206,8 +206,8 @@ const PersonFormPage = () => {
       if (person.addresses && person.addresses.length > 0) {
         setAddresses(
           person.addresses
-            .filter(addr => addr !== null)
-            .map(addr => ({
+            .filter((addr) => addr !== null)
+            .map((addr) => ({
               address1: addr.address1 || '',
               address2: addr.address2 || '',
               barangay: addr.barangay || '',
@@ -226,8 +226,8 @@ const PersonFormPage = () => {
       if (person.contacts && person.contacts.length > 0) {
         setContacts(
           person.contacts
-            .filter(contact => contact !== null)
-            .map(contact => ({
+            .filter((contact) => contact !== null)
+            .map((contact) => ({
               mobile: contact.mobile || '',
               landLine: contact.landLine || '',
               fax: contact.fax || '',
@@ -284,16 +284,16 @@ const PersonFormPage = () => {
   }, [displayId, profileImageUrl, accessToken, profileImageVersion]);
 
   const handleChange = (field: keyof PersonFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   // Address handlers
   const addAddress = () => {
-    setAddresses(prev => [...prev, { ...initialAddressData }]);
+    setAddresses((prev) => [...prev, { ...initialAddressData }]);
   };
 
   const removeAddress = (index: number) => {
-    setAddresses(prev => prev.filter((_, i) => i !== index));
+    setAddresses((prev) => prev.filter((_, i) => i !== index));
   };
 
   const updateAddress = (
@@ -301,18 +301,18 @@ const PersonFormPage = () => {
     field: keyof AddressFormData,
     value: string | boolean
   ) => {
-    setAddresses(prev =>
+    setAddresses((prev) =>
       prev.map((addr, i) => (i === index ? { ...addr, [field]: value } : addr))
     );
   };
 
   // Contact handlers
   const addContact = () => {
-    setContacts(prev => [...prev, { ...initialContactData }]);
+    setContacts((prev) => [...prev, { ...initialContactData }]);
   };
 
   const removeContact = (index: number) => {
-    setContacts(prev => prev.filter((_, i) => i !== index));
+    setContacts((prev) => prev.filter((_, i) => i !== index));
   };
 
   const updateContact = (
@@ -320,7 +320,7 @@ const PersonFormPage = () => {
     field: keyof ContactFormData,
     value: string
   ) => {
-    setContacts(prev =>
+    setContacts((prev) =>
       prev.map((contact, i) =>
         i === index ? { ...contact, [field]: value } : contact
       )
@@ -358,7 +358,7 @@ const PersonFormPage = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      setProfileImageVersion(v => v + 1);
+      setProfileImageVersion((v) => v + 1);
       await refetchPerson();
     } catch (err) {
       console.error('Error uploading profile image:', err);
@@ -520,8 +520,8 @@ const PersonFormPage = () => {
 
     try {
       const addressDtos: CreateAddressInput[] = addresses
-        .filter(addr => addr.address1 && addr.city && addr.province)
-        .map(addr => ({
+        .filter((addr) => addr.address1 && addr.city && addr.province)
+        .map((addr) => ({
           address1: addr.address1,
           address2: addr.address2 || undefined,
           barangay: addr.barangay || undefined,
@@ -535,8 +535,10 @@ const PersonFormPage = () => {
         }));
 
       const contactDtos: CreateContactInput[] = contacts
-        .filter(contact => contact.mobile || contact.email || contact.landLine)
-        .map(contact => ({
+        .filter(
+          (contact) => contact.mobile || contact.email || contact.landLine
+        )
+        .map((contact) => ({
           mobile: contact.mobile || undefined,
           landLine: contact.landLine || undefined,
           fax: contact.fax || undefined,
@@ -729,7 +731,7 @@ const PersonFormPage = () => {
                         <Field.Label>First Name</Field.Label>
                         <Input
                           value={formData.firstName}
-                          onChange={e =>
+                          onChange={(e) =>
                             handleChange('firstName', e.target.value)
                           }
                           placeholder="Enter first name"
@@ -740,7 +742,7 @@ const PersonFormPage = () => {
                         <Field.Label>Last Name</Field.Label>
                         <Input
                           value={formData.lastName}
-                          onChange={e =>
+                          onChange={(e) =>
                             handleChange('lastName', e.target.value)
                           }
                           placeholder="Enter last name"
@@ -752,7 +754,7 @@ const PersonFormPage = () => {
                       <Field.Label>Middle Name</Field.Label>
                       <Input
                         value={formData.middleName}
-                        onChange={e =>
+                        onChange={(e) =>
                           handleChange('middleName', e.target.value)
                         }
                         placeholder="Enter middle name (optional)"
@@ -765,7 +767,7 @@ const PersonFormPage = () => {
                         <Input
                           type="date"
                           value={formData.dateOfBirth}
-                          onChange={e =>
+                          onChange={(e) =>
                             handleChange('dateOfBirth', e.target.value)
                           }
                         />
@@ -776,11 +778,11 @@ const PersonFormPage = () => {
                         <NativeSelect.Root>
                           <NativeSelect.Field
                             value={formData.gender}
-                            onChange={e =>
+                            onChange={(e) =>
                               handleChange('gender', e.target.value)
                             }
                           >
-                            {GenderOptions.map(gender => (
+                            {GenderOptions.map((gender) => (
                               <option key={gender} value={gender}>
                                 {formatEnumLabel(gender)}
                               </option>
@@ -795,11 +797,11 @@ const PersonFormPage = () => {
                         <NativeSelect.Root>
                           <NativeSelect.Field
                             value={formData.civilStatus}
-                            onChange={e =>
+                            onChange={(e) =>
                               handleChange('civilStatus', e.target.value)
                             }
                           >
-                            {CivilStatusOptions.map(status => (
+                            {CivilStatusOptions.map((status) => (
                               <option key={status} value={status}>
                                 {formatEnumLabel(status)}
                               </option>
@@ -881,7 +883,7 @@ const PersonFormPage = () => {
                                   <NativeSelect.Root>
                                     <NativeSelect.Field
                                       value={address.addressType}
-                                      onChange={e =>
+                                      onChange={(e) =>
                                         updateAddress(
                                           index,
                                           'addressType',
@@ -889,7 +891,7 @@ const PersonFormPage = () => {
                                         )
                                       }
                                     >
-                                      {AddressTypeOptions.map(type => (
+                                      {AddressTypeOptions.map((type) => (
                                         <option key={type} value={type}>
                                           {formatEnumLabel(type)}
                                         </option>
@@ -902,7 +904,7 @@ const PersonFormPage = () => {
                                 <Flex gap={4} align="flex-end">
                                   <Checkbox.Root
                                     checked={address.isCurrent}
-                                    onCheckedChange={e =>
+                                    onCheckedChange={(e) =>
                                       updateAddress(
                                         index,
                                         'isCurrent',
@@ -917,7 +919,7 @@ const PersonFormPage = () => {
 
                                   <Checkbox.Root
                                     checked={address.isPermanent}
-                                    onCheckedChange={e =>
+                                    onCheckedChange={(e) =>
                                       updateAddress(
                                         index,
                                         'isPermanent',
@@ -936,7 +938,7 @@ const PersonFormPage = () => {
                                 <Field.Label>Street Address</Field.Label>
                                 <Input
                                   value={address.address1}
-                                  onChange={e =>
+                                  onChange={(e) =>
                                     updateAddress(
                                       index,
                                       'address1',
@@ -951,7 +953,7 @@ const PersonFormPage = () => {
                                 <Field.Label>Address Line 2</Field.Label>
                                 <Input
                                   value={address.address2}
-                                  onChange={e =>
+                                  onChange={(e) =>
                                     updateAddress(
                                       index,
                                       'address2',
@@ -967,7 +969,7 @@ const PersonFormPage = () => {
                                   <Field.Label>Barangay</Field.Label>
                                   <Input
                                     value={address.barangay}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateAddress(
                                         index,
                                         'barangay',
@@ -982,7 +984,7 @@ const PersonFormPage = () => {
                                   <Field.Label>City/Municipality</Field.Label>
                                   <Input
                                     value={address.city}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateAddress(
                                         index,
                                         'city',
@@ -999,7 +1001,7 @@ const PersonFormPage = () => {
                                   <Field.Label>Province</Field.Label>
                                   <Input
                                     value={address.province}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateAddress(
                                         index,
                                         'province',
@@ -1014,7 +1016,7 @@ const PersonFormPage = () => {
                                   <Field.Label>Zip Code</Field.Label>
                                   <Input
                                     value={address.zipCode}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateAddress(
                                         index,
                                         'zipCode',
@@ -1029,7 +1031,7 @@ const PersonFormPage = () => {
                                   <Field.Label>Country</Field.Label>
                                   <Input
                                     value={address.country}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateAddress(
                                         index,
                                         'country',
@@ -1116,7 +1118,7 @@ const PersonFormPage = () => {
                                 <NativeSelect.Root>
                                   <NativeSelect.Field
                                     value={contact.contactType}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateContact(
                                         index,
                                         'contactType',
@@ -1124,7 +1126,7 @@ const PersonFormPage = () => {
                                       )
                                     }
                                   >
-                                    {ContactTypeOptions.map(type => (
+                                    {ContactTypeOptions.map((type) => (
                                       <option key={type} value={type}>
                                         {formatEnumLabel(type)}
                                       </option>
@@ -1139,7 +1141,7 @@ const PersonFormPage = () => {
                                   <Field.Label>Mobile</Field.Label>
                                   <Input
                                     value={contact.mobile}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateContact(
                                         index,
                                         'mobile',
@@ -1155,7 +1157,7 @@ const PersonFormPage = () => {
                                   <Input
                                     type="email"
                                     value={contact.email}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateContact(
                                         index,
                                         'email',
@@ -1172,7 +1174,7 @@ const PersonFormPage = () => {
                                   <Field.Label>Landline</Field.Label>
                                   <Input
                                     value={contact.landLine}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateContact(
                                         index,
                                         'landLine',
@@ -1187,7 +1189,7 @@ const PersonFormPage = () => {
                                   <Field.Label>Fax</Field.Label>
                                   <Input
                                     value={contact.fax}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateContact(
                                         index,
                                         'fax',
@@ -1275,7 +1277,9 @@ const PersonFormPage = () => {
                         </Text>
                         <Input
                           value={documentDescription}
-                          onChange={e => setDocumentDescription(e.target.value)}
+                          onChange={(e) =>
+                            setDocumentDescription(e.target.value)
+                          }
                           placeholder="Enter description"
                           size="sm"
                         />

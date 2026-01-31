@@ -45,7 +45,7 @@ const SidebarPreview = () => {
         </Text>
       </Box>
       <VStack gap={1} align="stretch" colorPalette="blue">
-        {navItems.map(item => (
+        {navItems.map((item) => (
           <NavLink key={item.to} to={item.to} style={{ width: '100%' }}>
             {({ isActive }) => (
               <Box

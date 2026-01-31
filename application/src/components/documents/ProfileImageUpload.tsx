@@ -101,7 +101,7 @@ const ProfileImageUpload = ({
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      setImageVersion(v => v + 1);
+      setImageVersion((v) => v + 1);
       onImageUpdated();
     } catch (err) {
       console.error('Error uploading profile image:', err);

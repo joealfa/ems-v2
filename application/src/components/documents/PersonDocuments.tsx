@@ -152,7 +152,7 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
   // Transform GraphQL documents to the format expected by DocumentsTable
   const transformedDocuments = documents
     .filter((doc): doc is NonNullable<typeof doc> => doc !== null)
-    .map(doc => ({
+    .map((doc) => ({
       displayId: doc.displayId,
       fileName: doc.fileName,
       fileSize: doc.fileSizeBytes,
@@ -257,7 +257,7 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
                 </Text>
                 <Input
                   value={description}
-                  onChange={e => setDescription(e.target.value)}
+                  onChange={(e) => setDescription(e.target.value)}
                   placeholder="Enter description"
                   size="sm"
                 />

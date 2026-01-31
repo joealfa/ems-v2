@@ -103,7 +103,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         </IconButton>
       </Box>
       <VStack gap={1} align="stretch" colorPalette="blue">
-        {navItems.map(item => (
+        {navItems.map((item) => (
           <NavItem key={item.to} {...item} collapsed={collapsed} />
         ))}
       </VStack>

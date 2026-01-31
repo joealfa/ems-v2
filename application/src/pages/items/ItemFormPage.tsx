@@ -61,7 +61,7 @@ const ItemFormPage = () => {
   }, [isEditMode, item]);
 
   const handleChange = (field: keyof ItemFormData, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,7 +124,7 @@ const ItemFormPage = () => {
                 <Field.Label>Item Name</Field.Label>
                 <Input
                   value={formData.itemName}
-                  onChange={e => handleChange('itemName', e.target.value)}
+                  onChange={(e) => handleChange('itemName', e.target.value)}
                   placeholder="Enter item name"
                 />
               </Field.Root>
@@ -133,7 +133,7 @@ const ItemFormPage = () => {
                 <Field.Label>Description</Field.Label>
                 <Textarea
                   value={formData.description}
-                  onChange={e => handleChange('description', e.target.value)}
+                  onChange={(e) => handleChange('description', e.target.value)}
                   placeholder="Enter description (optional)"
                   rows={4}
                 />
@@ -142,7 +142,7 @@ const ItemFormPage = () => {
               {isEditMode && (
                 <Checkbox.Root
                   checked={formData.isActive}
-                  onCheckedChange={e => handleChange('isActive', !!e.checked)}
+                  onCheckedChange={(e) => handleChange('isActive', !!e.checked)}
                 >
                   <Checkbox.HiddenInput />
                   <Checkbox.Control />

@@ -182,7 +182,7 @@ const SchoolsPage = () => {
         headerName: 'Created On',
         width: 180,
         sortable: true,
-        valueFormatter: params => {
+        valueFormatter: (params) => {
           if (!params.value) return '';
           return new Date(params.value).toLocaleDateString();
         },
@@ -255,7 +255,7 @@ const SchoolsPage = () => {
         <Input
           placeholder="Search by school name..."
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           maxW="300px"
         />
       </Flex>

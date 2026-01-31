@@ -122,8 +122,8 @@ const SchoolFormPage = () => {
       if (school.addresses && school.addresses.length > 0) {
         setAddresses(
           school.addresses
-            .filter(addr => addr !== null)
-            .map(addr => ({
+            .filter((addr) => addr !== null)
+            .map((addr) => ({
               displayId: addr.displayId as number,
               address1: addr.address1 || '',
               address2: addr.address2 || '',
@@ -143,8 +143,8 @@ const SchoolFormPage = () => {
       if (school.contacts && school.contacts.length > 0) {
         setContacts(
           school.contacts
-            .filter(contact => contact !== null)
-            .map(contact => ({
+            .filter((contact) => contact !== null)
+            .map((contact) => ({
               displayId: contact.displayId as number,
               mobile: contact.mobile || '',
               landLine: contact.landLine || '',
@@ -161,16 +161,16 @@ const SchoolFormPage = () => {
     field: keyof SchoolFormData,
     value: string | boolean
   ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   // Address handlers
   const addAddress = () => {
-    setAddresses(prev => [...prev, { ...initialAddressData }]);
+    setAddresses((prev) => [...prev, { ...initialAddressData }]);
   };
 
   const removeAddress = (index: number) => {
-    setAddresses(prev => prev.filter((_, i) => i !== index));
+    setAddresses((prev) => prev.filter((_, i) => i !== index));
   };
 
   const updateAddress = (
@@ -178,18 +178,18 @@ const SchoolFormPage = () => {
     field: keyof AddressFormData,
     value: string | boolean
   ) => {
-    setAddresses(prev =>
+    setAddresses((prev) =>
       prev.map((addr, i) => (i === index ? { ...addr, [field]: value } : addr))
     );
   };
 
   // Contact handlers
   const addContact = () => {
-    setContacts(prev => [...prev, { ...initialContactData }]);
+    setContacts((prev) => [...prev, { ...initialContactData }]);
   };
 
   const removeContact = (index: number) => {
-    setContacts(prev => prev.filter((_, i) => i !== index));
+    setContacts((prev) => prev.filter((_, i) => i !== index));
   };
 
   const updateContact = (
@@ -197,7 +197,7 @@ const SchoolFormPage = () => {
     field: keyof ContactFormData,
     value: string
   ) => {
-    setContacts(prev =>
+    setContacts((prev) =>
       prev.map((contact, i) =>
         i === index ? { ...contact, [field]: value } : contact
       )
@@ -240,8 +240,8 @@ const SchoolFormPage = () => {
     try {
       if (isEditMode) {
         const addressDtos: UpsertAddressInput[] = addresses
-          .filter(addr => addr.address1 && addr.city && addr.province)
-          .map(addr => ({
+          .filter((addr) => addr.address1 && addr.city && addr.province)
+          .map((addr) => ({
             displayId: addr.displayId || null,
             address1: addr.address1,
             address2: addr.address2 || null,
@@ -257,9 +257,9 @@ const SchoolFormPage = () => {
 
         const contactDtos: UpsertContactInput[] = contacts
           .filter(
-            contact => contact.mobile || contact.email || contact.landLine
+            (contact) => contact.mobile || contact.email || contact.landLine
           )
-          .map(contact => ({
+          .map((contact) => ({
             displayId: contact.displayId || null,
             mobile: contact.mobile || null,
             landLine: contact.landLine || null,
@@ -277,8 +277,8 @@ const SchoolFormPage = () => {
         await updateSchool(Number(displayId), updateDto);
       } else {
         const addressDtos: CreateAddressInput[] = addresses
-          .filter(addr => addr.address1 && addr.city && addr.province)
-          .map(addr => ({
+          .filter((addr) => addr.address1 && addr.city && addr.province)
+          .map((addr) => ({
             address1: addr.address1,
             address2: addr.address2 || null,
             barangay: addr.barangay || null,
@@ -293,9 +293,9 @@ const SchoolFormPage = () => {
 
         const contactDtos: CreateContactInput[] = contacts
           .filter(
-            contact => contact.mobile || contact.email || contact.landLine
+            (contact) => contact.mobile || contact.email || contact.landLine
           )
-          .map(contact => ({
+          .map((contact) => ({
             mobile: contact.mobile || null,
             landLine: contact.landLine || null,
             fax: contact.fax || null,
@@ -355,7 +355,7 @@ const SchoolFormPage = () => {
                   <Field.Label>School Name</Field.Label>
                   <Input
                     value={formData.schoolName}
-                    onChange={e => handleChange('schoolName', e.target.value)}
+                    onChange={(e) => handleChange('schoolName', e.target.value)}
                     placeholder="Enter school name"
                   />
                 </Field.Root>
@@ -503,7 +503,7 @@ const SchoolFormPage = () => {
                                 <Field.Label>Street Address</Field.Label>
                                 <Input
                                   value={address.address1}
-                                  onChange={e =>
+                                  onChange={(e) =>
                                     updateAddress(
                                       index,
                                       'address1',
@@ -518,7 +518,7 @@ const SchoolFormPage = () => {
                                 <Field.Label>Address Line 2</Field.Label>
                                 <Input
                                   value={address.address2}
-                                  onChange={e =>
+                                  onChange={(e) =>
                                     updateAddress(
                                       index,
                                       'address2',
@@ -534,7 +534,7 @@ const SchoolFormPage = () => {
                                   <Field.Label>Barangay</Field.Label>
                                   <Input
                                     value={address.barangay}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateAddress(
                                         index,
                                         'barangay',
@@ -549,7 +549,7 @@ const SchoolFormPage = () => {
                                   <Field.Label>City/Municipality</Field.Label>
                                   <Input
                                     value={address.city}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateAddress(
                                         index,
                                         'city',
@@ -566,7 +566,7 @@ const SchoolFormPage = () => {
                                   <Field.Label>Province</Field.Label>
                                   <Input
                                     value={address.province}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateAddress(
                                         index,
                                         'province',
@@ -581,7 +581,7 @@ const SchoolFormPage = () => {
                                   <Field.Label>Zip Code</Field.Label>
                                   <Input
                                     value={address.zipCode}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateAddress(
                                         index,
                                         'zipCode',
@@ -596,7 +596,7 @@ const SchoolFormPage = () => {
                                   <Field.Label>Country</Field.Label>
                                   <Input
                                     value={address.country}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateAddress(
                                         index,
                                         'country',
@@ -693,7 +693,7 @@ const SchoolFormPage = () => {
                                       )
                                     }
                                   >
-                                    {ContactTypeOptions.map(type => (
+                                    {ContactTypeOptions.map((type) => (
                                       <option key={type} value={type}>
                                         {formatEnumLabel(type)}
                                       </option>
@@ -708,7 +708,7 @@ const SchoolFormPage = () => {
                                   <Field.Label>Mobile</Field.Label>
                                   <Input
                                     value={contact.mobile}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateContact(
                                         index,
                                         'mobile',
@@ -724,7 +724,7 @@ const SchoolFormPage = () => {
                                   <Input
                                     type="email"
                                     value={contact.email}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateContact(
                                         index,
                                         'email',
@@ -741,7 +741,7 @@ const SchoolFormPage = () => {
                                   <Field.Label>Landline</Field.Label>
                                   <Input
                                     value={contact.landLine}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateContact(
                                         index,
                                         'landLine',
@@ -756,7 +756,7 @@ const SchoolFormPage = () => {
                                   <Field.Label>Fax</Field.Label>
                                   <Input
                                     value={contact.fax}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                       updateContact(
                                         index,
                                         'fax',

@@ -186,7 +186,7 @@ const PersonSearchSelect = ({
               <Spinner size="sm" />
             </Flex>
           ) : results.length > 0 ? (
-            results.map(person => (
+            results.map((person) => (
               <Box
                 key={person.displayId as React.Key}
                 p={3}
