@@ -369,6 +369,7 @@ const EmploymentsPage = () => {
         },
         cellRenderer: (params: ICellRendererParams<EmploymentListDto>) => {
           const status = params.value as EmploymentStatus;
+          if (!status) return null;
           const displayValue = EmploymentStatusDisplay[status] || 'Unknown';
           const colorPalette = EmploymentStatusColor[status] || 'gray';
           return <Badge colorPalette={colorPalette}>{displayValue}</Badge>;
@@ -391,6 +392,7 @@ const EmploymentsPage = () => {
           maxNumConditions: 1,
         },
         cellRenderer: (params: ICellRendererParams<EmploymentListDto>) => {
+          if (params.value === undefined || params.value === null) return null;
           return (
             <Badge colorPalette={params.value ? 'green' : 'red'}>
               {params.value ? 'Yes' : 'No'}
@@ -516,6 +518,9 @@ const EmploymentsPage = () => {
             animateRows={false}
             suppressCellFocus={true}
             alwaysShowVerticalScroll={true}
+            suppressRowHoverHighlight={true}
+            rowBuffer={0}
+            blockLoadDebounceMillis={150} // Delay request while scrolling
           />
         </Box>
       </Box>

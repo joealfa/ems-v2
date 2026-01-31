@@ -175,6 +175,7 @@ const ItemsPage = () => {
         width: 120,
         sortable: true,
         cellRenderer: (params: ICellRendererParams<ItemResponseDto>) => {
+          if (params.value === undefined || params.value === null) return null;
           return (
             <Badge colorPalette={params.value ? 'green' : 'red'}>
               {params.value ? 'Active' : 'Inactive'}
