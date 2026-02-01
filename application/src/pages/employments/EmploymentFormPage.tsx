@@ -12,16 +12,18 @@ import {
   Text,
   NativeSelect,
   Checkbox,
+  Accordion,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   useEmployment,
   useCreateEmployment,
   useUpdateEmployment,
+  useAddSchoolToEmployment,
+  useRemoveSchoolFromEmployment,
 } from '../../hooks/useEmployments';
 import { usePositions } from '../../hooks/usePositions';
 import { useSalaryGrades } from '../../hooks/useSalaryGrades';
-import { useItems } from '../../hooks/useItems';
 import type {
   CreateEmploymentInput,
   UpdateEmploymentInput,
@@ -29,8 +31,11 @@ import type {
   AppointmentStatus,
   EmploymentStatus,
   Eligibility,
+  CreateEmploymentSchoolInput,
 } from '../../graphql/generated/graphql';
 import PersonSearchSelect from '../../components/PersonSearchSelect';
+import ItemSearchSelect from '../../components/ItemSearchSelect';
+import SchoolSearchSelect from '../../components/SchoolSearchSelect';
 import { formatEnumLabel } from '../../utils/formatters';
 import {
   AppointmentStatusOptions,
@@ -78,11 +83,16 @@ const EmploymentFormPage = () => {
   const isEditMode = displayId && displayId !== 'new';
 
   // GraphQL hooks
-  const { employment, loading: loadingEmployment } = useEmployment(
-    isEditMode ? Number(displayId) : 0
-  );
+  const {
+    employment,
+    loading: loadingEmployment,
+    refetch: refetchEmployment,
+  } = useEmployment(isEditMode ? Number(displayId) : 0);
   const { createEmployment, loading: creating } = useCreateEmployment();
   const { updateEmployment, loading: updating } = useUpdateEmployment();
+  const { addSchoolToEmployment, loading: addingSchool } =
+    useAddSchoolToEmployment();
+  const { removeSchoolFromEmployment } = useRemoveSchoolFromEmployment();
 
   // Lookup data hooks
   const { positions, loading: loadingPositions } = usePositions({
@@ -91,23 +101,33 @@ const EmploymentFormPage = () => {
   const { salaryGrades, loading: loadingSalaryGrades } = useSalaryGrades({
     pageSize: 1000,
   });
-  const { items, loading: loadingItems } = useItems({ pageSize: 1000 });
 
   const [formData, setFormData] = useState<EmploymentFormData>(initialFormData);
   const [error, setError] = useState<string | null>(null);
   const [selectedPerson, setSelectedPerson] =
     useState<PersonListFieldsFragment | null>(null);
 
-  const loading =
-    loadingEmployment ||
-    loadingPositions ||
-    loadingSalaryGrades ||
-    loadingItems;
+  // School assignment form state
+  interface SchoolFormData {
+    schoolDisplayId: number | '';
+    startDate: string;
+    endDate: string | null;
+    isCurrent: boolean;
+  }
+  const [schoolFormData, setSchoolFormData] = useState<SchoolFormData>({
+    schoolDisplayId: '',
+    startDate: '',
+    endDate: null,
+    isCurrent: true,
+  });
+  const [showAddSchoolForm, setShowAddSchoolForm] = useState(false);
+  const [removingSchoolId, setRemovingSchoolId] = useState<number | null>(null);
+
+  const loading = loadingEmployment || loadingPositions || loadingSalaryGrades;
   const saving = creating || updating;
 
   useEffect(() => {
     if (isEditMode && employment) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Populating form with loaded data is a valid pattern
       setFormData({
         depEdId: employment.depEdId || '',
         psipopItemNumber: employment.psipopItemNumber || '',
@@ -180,6 +200,57 @@ const EmploymentFormPage = () => {
     } catch (err) {
       console.error('Error saving employment:', err);
       setError('Failed to save employment');
+    }
+  };
+
+  const handleAddSchool = async () => {
+    if (
+      !isEditMode ||
+      !schoolFormData.schoolDisplayId ||
+      !schoolFormData.startDate
+    ) {
+      return;
+    }
+
+    try {
+      const input: CreateEmploymentSchoolInput = {
+        schoolDisplayId: Number(schoolFormData.schoolDisplayId),
+        startDate: schoolFormData.startDate,
+        endDate: schoolFormData.endDate || null,
+        isCurrent: schoolFormData.isCurrent,
+      };
+      await addSchoolToEmployment(Number(displayId), input);
+      // Reset form and hide it
+      setSchoolFormData({
+        schoolDisplayId: '',
+        startDate: '',
+        endDate: null,
+        isCurrent: true,
+      });
+      setShowAddSchoolForm(false);
+      // Refetch employment to get updated schools
+      await refetchEmployment();
+    } catch (err) {
+      console.error('Error adding school:', err);
+      setError('Failed to add school assignment');
+    }
+  };
+
+  const handleRemoveSchool = async (schoolAssignmentDisplayId: number) => {
+    if (!isEditMode) return;
+
+    setRemovingSchoolId(schoolAssignmentDisplayId);
+    try {
+      await removeSchoolFromEmployment(
+        Number(displayId),
+        schoolAssignmentDisplayId
+      );
+      await refetchEmployment();
+    } catch (err) {
+      console.error('Error removing school:', err);
+      setError('Failed to remove school assignment');
+    } finally {
+      setRemovingSchoolId(null);
     }
   };
 
@@ -481,27 +552,21 @@ const EmploymentFormPage = () => {
 
                 <Field.Root required>
                   <Field.Label>Plantilla Item</Field.Label>
-                  <NativeSelect.Root>
-                    <NativeSelect.Field
-                      value={formData.itemDisplayId}
-                      onChange={(e) =>
-                        handleChange('itemDisplayId', e.target.value)
-                      }
-                    >
-                      <option value="">-- Select Item --</option>
-                      {items
-                        .filter((item) => item !== null)
-                        .map((item) => (
-                          <option
-                            key={item.displayId as number}
-                            value={item.displayId as number}
-                          >
-                            {item.itemName}
-                          </option>
-                        ))}
-                    </NativeSelect.Field>
-                    <NativeSelect.Indicator />
-                  </NativeSelect.Root>
+                  <ItemSearchSelect
+                    value={formData.itemDisplayId}
+                    onChange={(displayId) =>
+                      handleChange('itemDisplayId', displayId)
+                    }
+                    initialItem={
+                      isEditMode && employment?.item
+                        ? {
+                            displayId: employment.item.displayId as number,
+                            itemName: employment.item.itemName ?? null,
+                          }
+                        : null
+                    }
+                    placeholder="Search items by name..."
+                  />
                 </Field.Root>
 
                 {isEditMode && (
@@ -519,6 +584,270 @@ const EmploymentFormPage = () => {
               </Stack>
             </Card.Body>
           </Card.Root>
+
+          {/* School Assignments Section - Only show in edit mode */}
+          {isEditMode && (
+            <Card.Root>
+              <Card.Header>
+                <Flex justify="space-between" align="center">
+                  <Heading size="md">School Assignments</Heading>
+                  {!showAddSchoolForm && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      colorPalette="blue"
+                      onClick={() => setShowAddSchoolForm(true)}
+                    >
+                      Add School
+                    </Button>
+                  )}
+                </Flex>
+              </Card.Header>
+              <Card.Body>
+                {employment?.schools &&
+                employment.schools.filter(Boolean).length > 0 ? (
+                  <Accordion.Root
+                    multiple
+                    defaultValue={employment.schools
+                      .filter(Boolean)
+                      .map((s) => `school-${s!.displayId}`)}
+                  >
+                    <Stack gap={3}>
+                      {employment.schools.filter(Boolean).map((school) => (
+                        <Accordion.Item
+                          key={school!.displayId}
+                          value={`school-${school!.displayId}`}
+                          borderWidth="1px"
+                          borderRadius="md"
+                          borderColor="border.muted"
+                          overflow="hidden"
+                        >
+                          <Accordion.ItemTrigger
+                            px={4}
+                            py={3}
+                            cursor="pointer"
+                            _hover={{ bg: 'bg.muted' }}
+                          >
+                            <Text
+                              fontWeight="medium"
+                              fontSize="sm"
+                              flex={1}
+                              textAlign="left"
+                            >
+                              {school!.schoolName}
+                              {school!.isCurrent && ' (Current)'}
+                            </Text>
+                            <Accordion.ItemIndicator />
+                          </Accordion.ItemTrigger>
+                          <Accordion.ItemContent>
+                            <Box px={4} pb={4} pt={2}>
+                              <Flex justify="flex-end" mb={3}>
+                                <Button
+                                  size="xs"
+                                  variant="outline"
+                                  colorPalette="red"
+                                  onClick={() =>
+                                    handleRemoveSchool(
+                                      school!.displayId as number
+                                    )
+                                  }
+                                  loading={
+                                    removingSchoolId === school!.displayId
+                                  }
+                                >
+                                  Remove
+                                </Button>
+                              </Flex>
+                              <Stack gap={3}>
+                                <Flex gap={6}>
+                                  <Box>
+                                    <Text fontSize="sm" color="fg.muted">
+                                      Start Date
+                                    </Text>
+                                    <Text>
+                                      {school!.startDate
+                                        ? new Date(
+                                            school!.startDate
+                                          ).toLocaleDateString()
+                                        : 'N/A'}
+                                    </Text>
+                                  </Box>
+                                  <Box>
+                                    <Text fontSize="sm" color="fg.muted">
+                                      End Date
+                                    </Text>
+                                    <Text>
+                                      {school!.endDate
+                                        ? new Date(
+                                            school!.endDate
+                                          ).toLocaleDateString()
+                                        : 'N/A'}
+                                    </Text>
+                                  </Box>
+                                  <Box>
+                                    <Text fontSize="sm" color="fg.muted">
+                                      Current
+                                    </Text>
+                                    <Text>
+                                      {school!.isCurrent ? 'Yes' : 'No'}
+                                    </Text>
+                                  </Box>
+                                  <Box>
+                                    <Text fontSize="sm" color="fg.muted">
+                                      Active
+                                    </Text>
+                                    <Text>
+                                      {school!.isActive ? 'Yes' : 'No'}
+                                    </Text>
+                                  </Box>
+                                </Flex>
+                              </Stack>
+                            </Box>
+                          </Accordion.ItemContent>
+                        </Accordion.Item>
+                      ))}
+                    </Stack>
+                  </Accordion.Root>
+                ) : (
+                  <Text color="fg.muted" fontSize="sm">
+                    No school assignments. Click &quot;Add School&quot; to add
+                    one.
+                  </Text>
+                )}
+
+                {/* Add New School Assignment Form */}
+                {showAddSchoolForm && (
+                  <Accordion.Root
+                    multiple
+                    defaultValue={['new-school']}
+                    mt={
+                      employment?.schools &&
+                      employment.schools.filter(Boolean).length > 0
+                        ? 0
+                        : undefined
+                    }
+                  >
+                    <Accordion.Item
+                      value="new-school"
+                      borderWidth="1px"
+                      borderRadius="md"
+                      borderColor="border.muted"
+                      overflow="hidden"
+                    >
+                      <Accordion.ItemTrigger
+                        px={4}
+                        py={3}
+                        cursor="pointer"
+                        _hover={{ bg: 'bg.muted' }}
+                      >
+                        <Text
+                          fontWeight="medium"
+                          fontSize="sm"
+                          flex={1}
+                          textAlign="left"
+                        >
+                          New School Assignment
+                        </Text>
+                        <Accordion.ItemIndicator />
+                      </Accordion.ItemTrigger>
+                      <Accordion.ItemContent>
+                        <Box px={4} pb={4} pt={2}>
+                          <Flex justify="flex-end" mb={3}>
+                            <Button
+                              size="xs"
+                              variant="outline"
+                              colorPalette="red"
+                              onClick={() => {
+                                setShowAddSchoolForm(false);
+                                setSchoolFormData({
+                                  schoolDisplayId: '',
+                                  startDate: '',
+                                  endDate: null,
+                                  isCurrent: true,
+                                });
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </Flex>
+                          <Stack gap={4}>
+                            <Field.Root required>
+                              <Field.Label>School</Field.Label>
+                              <SchoolSearchSelect
+                                value={schoolFormData.schoolDisplayId}
+                                onChange={(displayId) =>
+                                  setSchoolFormData((prev) => ({
+                                    ...prev,
+                                    schoolDisplayId: displayId,
+                                  }))
+                                }
+                                placeholder="Search schools by name..."
+                              />
+                            </Field.Root>
+                            <Flex gap={4}>
+                              <Field.Root flex={1} required>
+                                <Field.Label>Start Date</Field.Label>
+                                <Input
+                                  type="date"
+                                  value={schoolFormData.startDate}
+                                  onChange={(e) =>
+                                    setSchoolFormData((prev) => ({
+                                      ...prev,
+                                      startDate: e.target.value,
+                                    }))
+                                  }
+                                />
+                              </Field.Root>
+                              <Field.Root flex={1}>
+                                <Field.Label>End Date</Field.Label>
+                                <Input
+                                  type="date"
+                                  value={schoolFormData.endDate || ''}
+                                  onChange={(e) =>
+                                    setSchoolFormData((prev) => ({
+                                      ...prev,
+                                      endDate: e.target.value || null,
+                                    }))
+                                  }
+                                />
+                              </Field.Root>
+                            </Flex>
+                            <Checkbox.Root
+                              checked={schoolFormData.isCurrent}
+                              onCheckedChange={(e) =>
+                                setSchoolFormData((prev) => ({
+                                  ...prev,
+                                  isCurrent: !!e.checked,
+                                }))
+                              }
+                            >
+                              <Checkbox.HiddenInput />
+                              <Checkbox.Control />
+                              <Checkbox.Label>
+                                Current Assignment
+                              </Checkbox.Label>
+                            </Checkbox.Root>
+                            <Button
+                              colorPalette="blue"
+                              onClick={handleAddSchool}
+                              loading={addingSchool}
+                              disabled={
+                                !schoolFormData.schoolDisplayId ||
+                                !schoolFormData.startDate
+                              }
+                              alignSelf="flex-start"
+                            >
+                              Save School
+                            </Button>
+                          </Stack>
+                        </Box>
+                      </Accordion.ItemContent>
+                    </Accordion.Item>
+                  </Accordion.Root>
+                )}
+              </Card.Body>
+            </Card.Root>
+          )}
         </Stack>
 
         <Flex justify="flex-end" mt={6} gap={4}>

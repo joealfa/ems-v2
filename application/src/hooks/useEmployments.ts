@@ -5,8 +5,11 @@ import {
   CreateEmploymentDocument,
   UpdateEmploymentDocument,
   DeleteEmploymentDocument,
+  AddSchoolToEmploymentDocument,
+  RemoveSchoolFromEmploymentDocument,
   type CreateEmploymentInput,
   type UpdateEmploymentInput,
+  type CreateEmploymentSchoolInput,
 } from '../graphql/generated/graphql';
 
 /**
@@ -145,6 +148,68 @@ export function useDeleteEmployment() {
 
   return {
     deleteEmployment: handleDelete,
+    loading,
+    error,
+  };
+}
+
+/**
+ * Hook for adding a school assignment to an employment
+ */
+export function useAddSchoolToEmployment() {
+  const [addSchoolToEmployment, { loading, error }] = useMutation(
+    AddSchoolToEmploymentDocument
+  );
+
+  const handleAdd = async (
+    employmentDisplayId: number,
+    input: CreateEmploymentSchoolInput
+  ) => {
+    const result = await addSchoolToEmployment({
+      variables: { employmentDisplayId, input },
+      refetchQueries: [
+        {
+          query: GetEmploymentDocument,
+          variables: { displayId: employmentDisplayId },
+        },
+      ],
+    });
+    return result.data?.addSchoolToEmployment;
+  };
+
+  return {
+    addSchoolToEmployment: handleAdd,
+    loading,
+    error,
+  };
+}
+
+/**
+ * Hook for removing a school assignment from an employment
+ */
+export function useRemoveSchoolFromEmployment() {
+  const [removeSchoolFromEmployment, { loading, error }] = useMutation(
+    RemoveSchoolFromEmploymentDocument
+  );
+
+  const handleRemove = async (
+    employmentDisplayId: number,
+    schoolAssignmentDisplayId: number
+  ) => {
+    const result = await removeSchoolFromEmployment({
+      variables: { employmentDisplayId, schoolAssignmentDisplayId },
+      refetchQueries: [
+        {
+          query: GetEmploymentDocument,
+          variables: { displayId: employmentDisplayId },
+        },
+      ],
+    });
+    return result.data?.removeSchoolFromEmployment ?? false;
+  };
+
+  return {
+    removeSchoolFromEmployment: handleRemove,
     loading,
     error,
   };

@@ -102,7 +102,7 @@ public static class InputMappingExtensions
             FirstName = input.FirstName ?? string.Empty,
             MiddleName = input.MiddleName,
             LastName = input.LastName ?? string.Empty,
-            DateOfBirth = input.DateOfBirth.HasValue ? new DateTimeOffset(input.DateOfBirth.Value) : DateTimeOffset.MinValue,
+            DateOfBirth = input.DateOfBirth.HasValue ? new DateTimeOffset(input.DateOfBirth.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)) : DateTimeOffset.MinValue,
             Gender = input.Gender ?? Gender.Male,
             CivilStatus = input.CivilStatus ?? CivilStatus.Single,
             Addresses = input.Addresses?.ToDtos(),
@@ -117,7 +117,7 @@ public static class InputMappingExtensions
             FirstName = input.FirstName ?? string.Empty,
             MiddleName = input.MiddleName,
             LastName = input.LastName ?? string.Empty,
-            DateOfBirth = input.DateOfBirth.HasValue ? new DateTimeOffset(input.DateOfBirth.Value) : DateTimeOffset.MinValue,
+            DateOfBirth = input.DateOfBirth.HasValue ? new DateTimeOffset(input.DateOfBirth.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)) : DateTimeOffset.MinValue,
             Gender = input.Gender ?? Gender.Male,
             CivilStatus = input.CivilStatus ?? CivilStatus.Single
         };
@@ -132,8 +132,8 @@ public static class InputMappingExtensions
         return new CreateEmploymentSchoolDto
         {
             SchoolDisplayId = input.SchoolDisplayId ?? 0,
-            StartDate = input.StartDate.HasValue ? new DateTimeOffset(input.StartDate.Value) : null,
-            EndDate = input.EndDate.HasValue ? new DateTimeOffset(input.EndDate.Value) : null,
+            StartDate = input.StartDate.HasValue ? new DateTimeOffset(input.StartDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)) : null,
+            EndDate = input.EndDate.HasValue ? new DateTimeOffset(input.EndDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)) : null,
             IsCurrent = input.IsCurrent ?? false
         };
     }
@@ -154,7 +154,7 @@ public static class InputMappingExtensions
             EmploymentStatus = input.EmploymentStatus ?? EmploymentStatus.Regular,
             AppointmentStatus = input.AppointmentStatus ?? AppointmentStatus.Original,
             Eligibility = input.Eligibility ?? Eligibility.LET,
-            DateOfOriginalAppointment = input.DateOfOriginalAppointment.HasValue ? new DateTimeOffset(input.DateOfOriginalAppointment.Value) : null,
+            DateOfOriginalAppointment = input.DateOfOriginalAppointment.HasValue ? new DateTimeOffset(input.DateOfOriginalAppointment.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)) : null,
             PsipopItemNumber = input.PsipopItemNumber,
             DepEdId = input.DepEdId,
             GsisId = input.GsisId,
@@ -174,7 +174,7 @@ public static class InputMappingExtensions
             EmploymentStatus = input.EmploymentStatus ?? EmploymentStatus.Regular,
             AppointmentStatus = input.AppointmentStatus ?? AppointmentStatus.Original,
             Eligibility = input.Eligibility ?? Eligibility.LET,
-            DateOfOriginalAppointment = input.DateOfOriginalAppointment.HasValue ? new DateTimeOffset(input.DateOfOriginalAppointment.Value) : null,
+            DateOfOriginalAppointment = input.DateOfOriginalAppointment.HasValue ? new DateTimeOffset(input.DateOfOriginalAppointment.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)) : null,
             PsipopItemNumber = input.PsipopItemNumber,
             DepEdId = input.DepEdId,
             GsisId = input.GsisId,

@@ -12,7 +12,7 @@ public class CreateEmploymentInput
     public EmploymentStatus? EmploymentStatus { get; set; }
     public AppointmentStatus? AppointmentStatus { get; set; }
     public Eligibility? Eligibility { get; set; }
-    public DateTime? DateOfOriginalAppointment { get; set; }
+    public DateOnly? DateOfOriginalAppointment { get; set; }
     public string? PsipopItemNumber { get; set; }
     public string? DepEdId { get; set; }
     public string? GsisId { get; set; }
@@ -30,7 +30,7 @@ public class UpdateEmploymentInput
     public EmploymentStatus? EmploymentStatus { get; set; }
     public AppointmentStatus? AppointmentStatus { get; set; }
     public Eligibility? Eligibility { get; set; }
-    public DateTime? DateOfOriginalAppointment { get; set; }
+    public DateOnly? DateOfOriginalAppointment { get; set; }
     public string? PsipopItemNumber { get; set; }
     public string? DepEdId { get; set; }
     public string? GsisId { get; set; }
@@ -43,7 +43,7 @@ public class UpdateEmploymentInput
 public class CreateEmploymentSchoolInput
 {
     public long? SchoolDisplayId { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
     public bool? IsCurrent { get; set; }
 }

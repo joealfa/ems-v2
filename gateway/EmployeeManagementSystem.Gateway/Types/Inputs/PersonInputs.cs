@@ -8,7 +8,7 @@ public class CreatePersonInput
     public string? FirstName { get; set; }
     public string? MiddleName { get; set; }
     public string? LastName { get; set; }
-    public DateTime? DateOfBirth { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
     public Gender? Gender { get; set; }
     public CivilStatus? CivilStatus { get; set; }
     public List<CreateAddressInput>? Addresses { get; set; }
@@ -21,7 +21,7 @@ public class UpdatePersonInput
     public string? FirstName { get; set; }
     public string? MiddleName { get; set; }
     public string? LastName { get; set; }
-    public DateTime? DateOfBirth { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
     public Gender? Gender { get; set; }
     public CivilStatus? CivilStatus { get; set; }
 }

@@ -122,3 +122,28 @@ mutation UpdateEmployment($displayId: Long!, $input: UpdateEmploymentInput!) {
 mutation DeleteEmployment($displayId: Long!) {
   deleteEmployment(displayId: $displayId)
 }
+
+# Employment School Mutations
+fragment EmploymentSchoolFields on EmploymentSchoolResponseDto {
+  displayId
+  startDate
+  endDate
+  isCurrent
+  isActive
+  schoolDisplayId
+  schoolName
+  createdBy
+  createdOn
+  modifiedBy
+  modifiedOn
+}
+
+mutation AddSchoolToEmployment($employmentDisplayId: Long!, $input: CreateEmploymentSchoolInput!) {
+  addSchoolToEmployment(employmentDisplayId: $employmentDisplayId, input: $input) {
+    ...EmploymentSchoolFields
+  }
+}
+
+mutation RemoveSchoolFromEmployment($employmentDisplayId: Long!, $schoolAssignmentDisplayId: Long!) {
+  removeSchoolFromEmployment(employmentDisplayId: $employmentDisplayId, schoolAssignmentDisplayId: $schoolAssignmentDisplayId)
+}

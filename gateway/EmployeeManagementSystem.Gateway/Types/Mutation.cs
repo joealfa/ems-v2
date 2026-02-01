@@ -95,6 +95,34 @@ public class Mutation
         return true;
     }
 
+    [GraphQLDescription("Add a school assignment to an employment")]
+    public async Task<EmploymentSchoolResponseDto?> AddSchoolToEmploymentAsync(
+        long employmentDisplayId,
+        CreateEmploymentSchoolInput input,
+        [Service] EmsApiClient client,
+        [Service] IRedisCacheService cache,
+        CancellationToken ct)
+    {
+        EmploymentSchoolResponseDto result = await client.SchoolsPOSTAsync(employmentDisplayId, input.ToDto(), ct);
+        await cache.RemoveAsync(CacheKeys.Employment(employmentDisplayId), ct);
+        await cache.RemoveByPrefixAsync(CacheKeys.EmploymentsListPrefix, ct);
+        return result;
+    }
+
+    [GraphQLDescription("Remove a school assignment from an employment")]
+    public async Task<bool> RemoveSchoolFromEmploymentAsync(
+        long employmentDisplayId,
+        long schoolAssignmentDisplayId,
+        [Service] EmsApiClient client,
+        [Service] IRedisCacheService cache,
+        CancellationToken ct)
+    {
+        await client.SchoolsDELETEAsync(employmentDisplayId, schoolAssignmentDisplayId, ct);
+        await cache.RemoveAsync(CacheKeys.Employment(employmentDisplayId), ct);
+        await cache.RemoveByPrefixAsync(CacheKeys.EmploymentsListPrefix, ct);
+        return true;
+    }
+
     #endregion
 
     #region School Mutations
