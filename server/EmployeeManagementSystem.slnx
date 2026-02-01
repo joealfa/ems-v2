@@ -1,6 +1,15 @@
 <Solution>
+  <Folder Name="/ApiClient/">
+    <Project Path="EmployeeManagementSystem.ApiClient/EmployeeManagementSystem.ApiClient.csproj">
+      <BuildDependency Project="EmployeeManagementSystem.Api/EmployeeManagementSystem.Api.csproj" />
+    </Project>
+  </Folder>
+  <Folder Name="/Gateway/">
+    <Project Path="../gateway/EmployeeManagementSystem.Gateway/EmployeeManagementSystem.Gateway.csproj">
+      <BuildDependency Project="EmployeeManagementSystem.ApiClient/EmployeeManagementSystem.ApiClient.csproj" />
+    </Project>
+  </Folder>
   <Project Path="EmployeeManagementSystem.Api/EmployeeManagementSystem.Api.csproj" />
-  <Project Path="EmployeeManagementSystem.ApiClient/EmployeeManagementSystem.ApiClient.csproj" />
   <Project Path="EmployeeManagementSystem.Application/EmployeeManagementSystem.Application.csproj" />
   <Project Path="EmployeeManagementSystem.Domain/EmployeeManagementSystem.Domain.csproj" />
   <Project Path="EmployeeManagementSystem.Infrastructure/EmployeeManagementSystem.Infrastructure.csproj" />

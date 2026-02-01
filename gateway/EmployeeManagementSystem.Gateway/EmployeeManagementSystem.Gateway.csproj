@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <!-- HotChocolate GraphQL -->
-    <PackageReference Include="EmployeeManagementSystem.ApiClient" Version="1.0.0" />
+    <PackageReference Include="EmployeeManagementSystem.ApiClient" Version="*" />
     <PackageReference Include="HotChocolate.AspNetCore" Version="15.*" />
     <PackageReference Include="HotChocolate.Data" Version="15.*" />
 
