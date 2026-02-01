@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.DTOs.Employment;
 using EmployeeManagementSystem.Application.DTOs.Position;
 using EmployeeManagementSystem.Domain.Entities;
 
@@ -9,22 +10,41 @@ namespace EmployeeManagementSystem.Application.Mappings;
 public static class PositionMappingExtensions
 {
     /// <summary>
-    /// Maps a Position entity to a PositionResponseDto.
+    /// Extension method for position.
     /// </summary>
     /// <param name="position">The position entity to map.</param>
-    /// <returns>The mapped PositionResponseDto.</returns>
-    public static PositionResponseDto ToResponseDto(this Position position)
+    extension(Position position)
     {
-        return new PositionResponseDto
+        /// <summary>
+        /// Maps a Position entity to a PositionResponseDto.
+        /// </summary>
+        /// <returns>The mapped PositionResponseDto.</returns>
+        public PositionResponseDto ToResponseDto()
         {
-            DisplayId = position.DisplayId,
-            TitleName = position.TitleName,
-            Description = position.Description,
-            IsActive = position.IsActive,
-            CreatedOn = position.CreatedOn,
-            CreatedBy = position.CreatedBy,
-            ModifiedOn = position.ModifiedOn,
-            ModifiedBy = position.ModifiedBy
-        };
+            return new PositionResponseDto
+            {
+                DisplayId = position.DisplayId,
+                TitleName = position.TitleName,
+                Description = position.Description,
+                IsActive = position.IsActive,
+                CreatedOn = position.CreatedOn,
+                CreatedBy = position.CreatedBy,
+                ModifiedOn = position.ModifiedOn,
+                ModifiedBy = position.ModifiedBy
+            };
+        }
+
+        /// <summary>
+        /// Maps a Position entity to an EmploymentPositionDto (simplified view for employment context).
+        /// </summary>
+        /// <returns>The mapped EmploymentPositionDto.</returns>
+        public EmploymentPositionDto ToEmploymentPositionDto()
+        {
+            return new EmploymentPositionDto
+            {
+                DisplayId = position.DisplayId,
+                TitleName = position.TitleName
+            };
+        }
     }
 }

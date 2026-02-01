@@ -9,42 +9,47 @@ namespace EmployeeManagementSystem.Application.Mappings;
 public static class SchoolMappingExtensions
 {
     /// <summary>
-    /// Maps a School entity to a SchoolResponseDto.
+    /// Extension method for school.
     /// </summary>
     /// <param name="school">The school entity to map.</param>
-    /// <returns>The mapped SchoolResponseDto.</returns>
-    public static SchoolResponseDto ToResponseDto(this School school)
+    extension(School school)
     {
-        return new SchoolResponseDto
+        /// <summary>
+        /// Maps a School entity to a SchoolResponseDto.
+        /// </summary>
+        /// <returns>The mapped SchoolResponseDto.</returns>
+        public SchoolResponseDto ToResponseDto()
         {
-            DisplayId = school.DisplayId,
-            SchoolName = school.SchoolName,
-            IsActive = school.IsActive,
-            CreatedOn = school.CreatedOn,
-            CreatedBy = school.CreatedBy,
-            ModifiedOn = school.ModifiedOn,
-            ModifiedBy = school.ModifiedBy,
-            Addresses = school.Addresses.ToResponseDtoList(),
-            Contacts = school.Contacts.ToResponseDtoList()
-        };
-    }
+            return new SchoolResponseDto
+            {
+                DisplayId = school.DisplayId,
+                SchoolName = school.SchoolName,
+                IsActive = school.IsActive,
+                CreatedOn = school.CreatedOn,
+                CreatedBy = school.CreatedBy,
+                ModifiedOn = school.ModifiedOn,
+                ModifiedBy = school.ModifiedBy,
+                Addresses = school.Addresses.ToResponseDtoList(),
+                Contacts = school.Contacts.ToResponseDtoList()
+            };
+        }
 
-    /// <summary>
-    /// Maps a School entity to a SchoolListDto.
-    /// </summary>
-    /// <param name="school">The school entity to map.</param>
-    /// <returns>The mapped SchoolListDto.</returns>
-    public static SchoolListDto ToListDto(this School school)
-    {
-        return new SchoolListDto
+        /// <summary>
+        /// Maps a School entity to a SchoolListDto.
+        /// </summary>
+        /// <returns>The mapped SchoolListDto.</returns>
+        public SchoolListDto ToListDto()
         {
-            DisplayId = school.DisplayId,
-            SchoolName = school.SchoolName,
-            IsActive = school.IsActive,
-            CreatedOn = school.CreatedOn,
-            CreatedBy = school.CreatedBy,
-            ModifiedOn = school.ModifiedOn,
-            ModifiedBy = school.ModifiedBy
-        };
+            return new SchoolListDto
+            {
+                DisplayId = school.DisplayId,
+                SchoolName = school.SchoolName,
+                IsActive = school.IsActive,
+                CreatedOn = school.CreatedOn,
+                CreatedBy = school.CreatedBy,
+                ModifiedOn = school.ModifiedOn,
+                ModifiedBy = school.ModifiedBy
+            };
+        }
     }
 }

@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Application.DTOs.Employment;
 using EmployeeManagementSystem.Application.DTOs.Item;
 using EmployeeManagementSystem.Domain.Entities;
 
@@ -9,22 +10,41 @@ namespace EmployeeManagementSystem.Application.Mappings;
 public static class ItemMappingExtensions
 {
     /// <summary>
-    /// Maps an Item entity to an ItemResponseDto.
+    /// Extension method for item.
     /// </summary>
     /// <param name="item">The item entity to map.</param>
-    /// <returns>The mapped ItemResponseDto.</returns>
-    public static ItemResponseDto ToResponseDto(this Item item)
+    extension(Item item)
     {
-        return new ItemResponseDto
+        /// <summary>
+        /// Maps an Item entity to an ItemResponseDto.
+        /// </summary>
+        /// <returns>The mapped ItemResponseDto.</returns>
+        public ItemResponseDto ToResponseDto()
         {
-            DisplayId = item.DisplayId,
-            ItemName = item.ItemName,
-            Description = item.Description,
-            IsActive = item.IsActive,
-            CreatedOn = item.CreatedOn,
-            CreatedBy = item.CreatedBy,
-            ModifiedOn = item.ModifiedOn,
-            ModifiedBy = item.ModifiedBy
-        };
+            return new ItemResponseDto
+            {
+                DisplayId = item.DisplayId,
+                ItemName = item.ItemName,
+                Description = item.Description,
+                IsActive = item.IsActive,
+                CreatedOn = item.CreatedOn,
+                CreatedBy = item.CreatedBy,
+                ModifiedOn = item.ModifiedOn,
+                ModifiedBy = item.ModifiedBy
+            };
+        }
+
+        /// <summary>
+        /// Maps an Item entity to an EmploymentItemDto (simplified view for employment context).
+        /// </summary>
+        /// <returns>The mapped EmploymentItemDto.</returns>
+        public EmploymentItemDto ToEmploymentItemDto()
+        {
+            return new EmploymentItemDto
+            {
+                DisplayId = item.DisplayId,
+                ItemName = item.ItemName
+            };
+        }
     }
 }

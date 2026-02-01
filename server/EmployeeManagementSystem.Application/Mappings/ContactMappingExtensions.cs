@@ -9,35 +9,47 @@ namespace EmployeeManagementSystem.Application.Mappings;
 public static class ContactMappingExtensions
 {
     /// <summary>
-    /// Maps a Contact entity to a ContactResponseDto.
+    /// Extension method for contact.
     /// </summary>
-    /// <param name="contact">The contact entity to map.</param>
-    /// <returns>The mapped ContactResponseDto.</returns>
-    public static ContactResponseDto ToResponseDto(this Contact contact)
+    /// <param name="contact"></param>
+    extension(Contact contact)
     {
-        return new ContactResponseDto
+        /// <summary>
+        /// Maps a Contact entity to a ContactResponseDto.
+        /// </summary>
+        /// <returns>The mapped ContactResponseDto.</returns>
+        public ContactResponseDto ToResponseDto()
         {
-            DisplayId = contact.DisplayId,
-            Mobile = contact.Mobile,
-            LandLine = contact.LandLine,
-            Fax = contact.Fax,
-            Email = contact.Email,
-            IsActive = contact.IsActive,
-            ContactType = contact.ContactType,
-            CreatedOn = contact.CreatedOn,
-            CreatedBy = contact.CreatedBy,
-            ModifiedOn = contact.ModifiedOn,
-            ModifiedBy = contact.ModifiedBy
-        };
+            return new ContactResponseDto
+            {
+                DisplayId = contact.DisplayId,
+                Mobile = contact.Mobile,
+                LandLine = contact.LandLine,
+                Fax = contact.Fax,
+                Email = contact.Email,
+                IsActive = contact.IsActive,
+                ContactType = contact.ContactType,
+                CreatedOn = contact.CreatedOn,
+                CreatedBy = contact.CreatedBy,
+                ModifiedOn = contact.ModifiedOn,
+                ModifiedBy = contact.ModifiedBy
+            };
+        }
     }
 
     /// <summary>
-    /// Maps a collection of Contact entities to ContactResponseDto list.
+    /// Extension method for contacts.
     /// </summary>
-    /// <param name="contacts">The contact entities to map.</param>
-    /// <returns>The mapped list of ContactResponseDto.</returns>
-    public static IReadOnlyList<ContactResponseDto> ToResponseDtoList(this IEnumerable<Contact> contacts)
+    /// <param name="contacts"></param>
+    extension(IEnumerable<Contact> contacts)
     {
-        return contacts.Select(c => c.ToResponseDto()).ToList();
+        /// <summary>
+        /// Maps a collection of Contact entities to a list of ContactResponseDto.
+        /// </summary>
+        /// <returns>The list of mapped ContactResponseDto.</returns>
+        public IReadOnlyList<ContactResponseDto> ToResponseDtoList()
+        {
+            return [.. contacts.Select(c => c.ToResponseDto())];
+        }
     }
 }

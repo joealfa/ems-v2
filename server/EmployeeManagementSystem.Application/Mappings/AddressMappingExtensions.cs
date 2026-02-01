@@ -9,41 +9,53 @@ namespace EmployeeManagementSystem.Application.Mappings;
 public static class AddressMappingExtensions
 {
     /// <summary>
-    /// Maps an Address entity to an AddressResponseDto.
+    /// Extension method for address.
     /// </summary>
-    /// <param name="address">The address entity to map.</param>
-    /// <returns>The mapped AddressResponseDto.</returns>
-    public static AddressResponseDto ToResponseDto(this Address address)
+    /// <param name="address"></param>
+    extension(Address address)
     {
-        return new AddressResponseDto
+        /// <summary>
+        /// Maps an Address entity to an AddressResponseDto.
+        /// </summary>
+        /// <returns></returns>
+        public AddressResponseDto ToResponseDto()
         {
-            DisplayId = address.DisplayId,
-            Address1 = address.Address1,
-            Address2 = address.Address2,
-            Barangay = address.Barangay,
-            City = address.City,
-            Province = address.Province,
-            Country = address.Country,
-            ZipCode = address.ZipCode,
-            IsCurrent = address.IsCurrent,
-            IsPermanent = address.IsPermanent,
-            IsActive = address.IsActive,
-            AddressType = address.AddressType,
-            FullAddress = address.FullAddress,
-            CreatedOn = address.CreatedOn,
-            CreatedBy = address.CreatedBy,
-            ModifiedOn = address.ModifiedOn,
-            ModifiedBy = address.ModifiedBy
-        };
+            return new()
+            {
+                DisplayId = address.DisplayId,
+                Address1 = address.Address1,
+                Address2 = address.Address2,
+                Barangay = address.Barangay,
+                City = address.City,
+                Province = address.Province,
+                Country = address.Country,
+                ZipCode = address.ZipCode,
+                IsCurrent = address.IsCurrent,
+                IsPermanent = address.IsPermanent,
+                IsActive = address.IsActive,
+                AddressType = address.AddressType,
+                FullAddress = address.FullAddress,
+                CreatedOn = address.CreatedOn,
+                CreatedBy = address.CreatedBy,
+                ModifiedOn = address.ModifiedOn,
+                ModifiedBy = address.ModifiedBy
+            };
+        }
     }
 
     /// <summary>
-    /// Maps a collection of Address entities to AddressResponseDto list.
+    /// Extension method for addresses.
     /// </summary>
-    /// <param name="addresses">The address entities to map.</param>
-    /// <returns>The mapped list of AddressResponseDto.</returns>
-    public static IReadOnlyList<AddressResponseDto> ToResponseDtoList(this IEnumerable<Address> addresses)
+    /// <param name="addresses"></param>
+    extension(IEnumerable<Address> addresses)
     {
-        return addresses.Select(a => a.ToResponseDto()).ToList();
+        /// <summary>
+        /// Maps a collection of Address entities to a list of AddressResponseDto.
+        /// </summary>
+        /// <returns>The list of mapped AddressResponseDto.</returns>
+        public IReadOnlyList<AddressResponseDto> ToResponseDtoList()
+        {
+            return [.. addresses.Select(a => a.ToResponseDto())];
+        }
     }
 }

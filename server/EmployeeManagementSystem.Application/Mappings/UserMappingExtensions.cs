@@ -9,20 +9,26 @@ namespace EmployeeManagementSystem.Application.Mappings;
 public static class UserMappingExtensions
 {
     /// <summary>
-    /// Maps a User entity to a UserDto.
+    /// Extension method for user.
     /// </summary>
     /// <param name="user">The user entity to map.</param>
-    /// <returns>The mapped UserDto.</returns>
-    public static UserDto ToDto(this User user)
+    extension(User user)
     {
-        return new UserDto
+        /// <summary>
+        /// Maps a User entity to a UserDto.
+        /// </summary>
+        /// <returns>The mapped UserDto.</returns>
+        public UserDto ToDto()
         {
-            Id = user.Id,
-            Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            ProfilePictureUrl = user.ProfilePictureUrl,
-            Role = user.Role
-        };
+            return new UserDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                ProfilePictureUrl = user.ProfilePictureUrl,
+                Role = user.Role
+            };
+        }
     }
 }
