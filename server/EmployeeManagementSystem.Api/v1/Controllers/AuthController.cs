@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Api.Controllers;
 using EmployeeManagementSystem.Application.DTOs.Auth;
 using EmployeeManagementSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +16,7 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
-public class AuthController(IAuthService authService) : ControllerBase
+public class AuthController(IAuthService authService) : ApiControllerBase
 {
     private readonly IAuthService _authService = authService;
 
@@ -157,8 +158,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<UserDto>> GetCurrentUser()
     {
-        string? userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
+        string? userIdClaim = CurrentUser;
 
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
         {

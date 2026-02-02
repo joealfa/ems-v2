@@ -33,7 +33,7 @@ public static class InputMappingExtensions
         {
             return new UpsertAddressDto
             {
-                DisplayId = input.DisplayId ?? 0,
+                DisplayId = input.DisplayId,
                 Address1 = input.Address1 ?? string.Empty,
                 Address2 = input.Address2,
                 AddressType = input.AddressType ?? AddressType.Business,
@@ -89,7 +89,7 @@ public static class InputMappingExtensions
         {
             return new UpsertContactDto
             {
-                DisplayId = input.DisplayId ?? 0,
+                DisplayId = input.DisplayId,
                 ContactType = input.ContactType ?? ContactType.Work,
                 Email = input.Email,
                 Fax = input.Fax,

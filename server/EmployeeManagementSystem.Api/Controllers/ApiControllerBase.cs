@@ -39,7 +39,9 @@ public abstract class ApiControllerBase : ControllerBase
     /// Gets the current user identifier for audit fields.
     /// Returns the user's email or "System" if not authenticated.
     /// </summary>
-    protected string CurrentUser => CurrentUserEmail;
+    protected string? CurrentUser =>
+        User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        ?? User.FindFirst("sub")?.Value;
 
     /// <summary>
     /// Converts a Result&lt;T&gt; to an ActionResult&lt;T&gt;.

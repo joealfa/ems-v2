@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Api.Controllers;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +16,7 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
 [Authorize]
-public class ReportsController(IReportsService reportsService) : ControllerBase
+public class ReportsController(IReportsService reportsService) : ApiControllerBase
 {
     private readonly IReportsService _reportsService = reportsService;
 

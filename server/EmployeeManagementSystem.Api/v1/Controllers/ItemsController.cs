@@ -68,7 +68,7 @@ public class ItemsController(IItemService itemService) : ApiControllerBase
         [FromBody] CreateItemDto dto,
         CancellationToken cancellationToken)
     {
-        Result<ItemResponseDto> result = await _itemService.CreateAsync(dto, CurrentUser, cancellationToken);
+        Result<ItemResponseDto> result = await _itemService.CreateAsync(dto, CurrentUserEmail, cancellationToken);
         return ToCreatedResult(result, nameof(GetByDisplayId), new { displayId = result.Value?.DisplayId });
     }
 
@@ -88,7 +88,7 @@ public class ItemsController(IItemService itemService) : ApiControllerBase
         [FromBody] UpdateItemDto dto,
         CancellationToken cancellationToken)
     {
-        Result<ItemResponseDto> result = await _itemService.UpdateAsync(displayId, dto, CurrentUser, cancellationToken);
+        Result<ItemResponseDto> result = await _itemService.UpdateAsync(displayId, dto, CurrentUserEmail, cancellationToken);
         return ToActionResult(result);
     }
 
@@ -105,7 +105,7 @@ public class ItemsController(IItemService itemService) : ApiControllerBase
         long displayId,
         CancellationToken cancellationToken)
     {
-        Result result = await _itemService.DeleteAsync(displayId, CurrentUser, cancellationToken);
+        Result result = await _itemService.DeleteAsync(displayId, CurrentUserEmail, cancellationToken);
         return ToNoContentResult(result);
     }
 }
