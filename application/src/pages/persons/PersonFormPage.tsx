@@ -37,6 +37,8 @@ import type {
   UpdatePersonInput,
   CreateAddressInput,
   CreateContactInput,
+  UpsertAddressInput,
+  UpsertContactInput,
   Gender,
   CivilStatus,
   AddressType,
@@ -59,6 +61,7 @@ const AddressTypeOptions: AddressType[] = ['Home', 'Business'];
 const ContactTypeOptions: ContactType[] = ['Personal', 'Work'];
 
 interface AddressFormData {
+  displayId?: number;
   address1: string;
   address2: string;
   barangay: string;
@@ -72,6 +75,7 @@ interface AddressFormData {
 }
 
 interface ContactFormData {
+  displayId?: number;
   mobile: string;
   landLine: string;
   fax: string;
@@ -208,6 +212,7 @@ const PersonFormPage = () => {
           person.addresses
             .filter((addr) => addr !== null)
             .map((addr) => ({
+              displayId: addr.displayId,
               address1: addr.address1 || '',
               address2: addr.address2 || '',
               barangay: addr.barangay || '',
@@ -228,6 +233,7 @@ const PersonFormPage = () => {
           person.contacts
             .filter((contact) => contact !== null)
             .map((contact) => ({
+              displayId: contact.displayId,
               mobile: contact.mobile || '',
               landLine: contact.landLine || '',
               fax: contact.fax || '',
@@ -519,34 +525,37 @@ const PersonFormPage = () => {
     setError(null);
 
     try {
-      const addressDtos: CreateAddressInput[] = addresses
-        .filter((addr) => addr.address1 && addr.city && addr.province)
-        .map((addr) => ({
-          address1: addr.address1,
-          address2: addr.address2 || undefined,
-          barangay: addr.barangay || undefined,
-          city: addr.city,
-          province: addr.province,
-          country: addr.country || undefined,
-          zipCode: addr.zipCode || undefined,
-          isCurrent: addr.isCurrent,
-          isPermanent: addr.isPermanent,
-          addressType: addr.addressType,
-        }));
-
-      const contactDtos: CreateContactInput[] = contacts
-        .filter(
-          (contact) => contact.mobile || contact.email || contact.landLine
-        )
-        .map((contact) => ({
-          mobile: contact.mobile || undefined,
-          landLine: contact.landLine || undefined,
-          fax: contact.fax || undefined,
-          email: contact.email || undefined,
-          contactType: contact.contactType,
-        }));
-
       if (isEditMode) {
+        // For edit mode, use UpsertAddressInput/UpsertContactInput with displayId
+        const upsertAddressDtos: UpsertAddressInput[] = addresses
+          .filter((addr) => addr.address1 && addr.city && addr.province)
+          .map((addr) => ({
+            displayId: addr.displayId,
+            address1: addr.address1,
+            address2: addr.address2 || undefined,
+            barangay: addr.barangay || undefined,
+            city: addr.city,
+            province: addr.province,
+            country: addr.country || undefined,
+            zipCode: addr.zipCode || undefined,
+            isCurrent: addr.isCurrent,
+            isPermanent: addr.isPermanent,
+            addressType: addr.addressType,
+          }));
+
+        const upsertContactDtos: UpsertContactInput[] = contacts
+          .filter(
+            (contact) => contact.mobile || contact.email || contact.landLine
+          )
+          .map((contact) => ({
+            displayId: contact.displayId,
+            mobile: contact.mobile || undefined,
+            landLine: contact.landLine || undefined,
+            fax: contact.fax || undefined,
+            email: contact.email || undefined,
+            contactType: contact.contactType,
+          }));
+
         const updateDto: UpdatePersonInput = {
           firstName: formData.firstName,
           lastName: formData.lastName,
@@ -554,9 +563,39 @@ const PersonFormPage = () => {
           dateOfBirth: formData.dateOfBirth,
           gender: formData.gender,
           civilStatus: formData.civilStatus,
+          addresses: upsertAddressDtos,
+          contacts: upsertContactDtos,
         };
         await updatePerson(Number(displayId), updateDto);
       } else {
+        // For create mode, use CreateAddressInput/CreateContactInput
+        const addressDtos: CreateAddressInput[] = addresses
+          .filter((addr) => addr.address1 && addr.city && addr.province)
+          .map((addr) => ({
+            address1: addr.address1,
+            address2: addr.address2 || undefined,
+            barangay: addr.barangay || undefined,
+            city: addr.city,
+            province: addr.province,
+            country: addr.country || undefined,
+            zipCode: addr.zipCode || undefined,
+            isCurrent: addr.isCurrent,
+            isPermanent: addr.isPermanent,
+            addressType: addr.addressType,
+          }));
+
+        const contactDtos: CreateContactInput[] = contacts
+          .filter(
+            (contact) => contact.mobile || contact.email || contact.landLine
+          )
+          .map((contact) => ({
+            mobile: contact.mobile || undefined,
+            landLine: contact.landLine || undefined,
+            fax: contact.fax || undefined,
+            email: contact.email || undefined,
+            contactType: contact.contactType,
+          }));
+
         const createDto: CreatePersonInput = {
           firstName: formData.firstName,
           lastName: formData.lastName,
@@ -934,7 +973,7 @@ const PersonFormPage = () => {
                                 </Flex>
                               </Flex>
 
-                              <Field.Root required>
+                              <Field.Root>
                                 <Field.Label>Street Address</Field.Label>
                                 <Input
                                   value={address.address1}
@@ -980,7 +1019,7 @@ const PersonFormPage = () => {
                                   />
                                 </Field.Root>
 
-                                <Field.Root flex={1} required>
+                                <Field.Root flex={1}>
                                   <Field.Label>City/Municipality</Field.Label>
                                   <Input
                                     value={address.city}
@@ -997,7 +1036,7 @@ const PersonFormPage = () => {
                               </Flex>
 
                               <Flex gap={4}>
-                                <Field.Root flex={1} required>
+                                <Field.Root flex={1}>
                                   <Field.Label>Province</Field.Label>
                                   <Input
                                     value={address.province}

@@ -196,7 +196,8 @@ public class SchoolService(
                 }
                 else
                 {
-                    // Create new
+                    // Create new - EF Core relationship fixup will add to school.Addresses
+                    // when we set SchoolId, so don't call school.Addresses.Add()
                     Address newAddress = new()
                     {
                         Address1 = addrDto.Address1,
@@ -213,7 +214,6 @@ public class SchoolService(
                         CreatedBy = modifiedBy
                     };
                     _ = await _addressRepository.AddAsync(newAddress, cancellationToken);
-                    school.Addresses.Add(newAddress);
                 }
             }
         }
@@ -254,7 +254,8 @@ public class SchoolService(
                 }
                 else
                 {
-                    // Create new
+                    // Create new - EF Core relationship fixup will add to school.Contacts
+                    // when we set SchoolId, so don't call school.Contacts.Add()
                     Contact newContact = new()
                     {
                         Mobile = contactDto.Mobile,
@@ -266,7 +267,6 @@ public class SchoolService(
                         CreatedBy = modifiedBy
                     };
                     _ = await _contactRepository.AddAsync(newContact, cancellationToken);
-                    school.Contacts.Add(newContact);
                 }
             }
         }

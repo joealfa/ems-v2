@@ -99,6 +99,18 @@ public class UpdatePersonDto
     /// </summary>
     [Required]
     public CivilStatus CivilStatus { get; set; }
+
+    /// <summary>
+    /// Gets or sets the addresses to upsert for the person.
+    /// Addresses not in the list will be soft-deleted.
+    /// </summary>
+    public List<UpsertAddressDto>? Addresses { get; set; }
+
+    /// <summary>
+    /// Gets or sets the contacts to upsert for the person.
+    /// Contacts not in the list will be soft-deleted.
+    /// </summary>
+    public List<UpsertContactDto>? Contacts { get; set; }
 }
 
 /// <summary>

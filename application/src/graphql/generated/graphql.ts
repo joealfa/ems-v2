@@ -892,6 +892,7 @@ export type UpdateEmploymentInput = {
   positionDisplayId?: InputMaybe<Scalars['Long']['input']>;
   psipopItemNumber?: InputMaybe<Scalars['String']['input']>;
   salaryGradeDisplayId?: InputMaybe<Scalars['Long']['input']>;
+  schools?: InputMaybe<Array<UpsertEmploymentSchoolInput>>;
   tinId?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -904,7 +905,9 @@ export type UpdateItemInput = {
 
 /** Input for updating an existing person */
 export type UpdatePersonInput = {
+  addresses?: InputMaybe<Array<UpsertAddressInput>>;
   civilStatus?: InputMaybe<CivilStatus>;
+  contacts?: InputMaybe<Array<UpsertContactInput>>;
   dateOfBirth?: InputMaybe<Scalars['LocalDate']['input']>;
   firstName?: InputMaybe<Scalars['String']['input']>;
   gender?: InputMaybe<Gender>;
@@ -959,6 +962,15 @@ export type UpsertContactInput = {
   fax?: InputMaybe<Scalars['String']['input']>;
   landLine?: InputMaybe<Scalars['String']['input']>;
   mobile?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Input for upserting an employment-school assignment (create or update) */
+export type UpsertEmploymentSchoolInput = {
+  displayId?: InputMaybe<Scalars['Long']['input']>;
+  endDate?: InputMaybe<Scalars['LocalDate']['input']>;
+  isCurrent?: InputMaybe<Scalars['Boolean']['input']>;
+  schoolDisplayId?: InputMaybe<Scalars['Long']['input']>;
+  startDate?: InputMaybe<Scalars['LocalDate']['input']>;
 };
 
 export type UserDto = {

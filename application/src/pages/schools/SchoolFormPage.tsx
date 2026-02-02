@@ -499,7 +499,7 @@ const SchoolFormPage = () => {
                                 </Flex>
                               </Flex>
 
-                              <Field.Root required>
+                              <Field.Root>
                                 <Field.Label>Street Address</Field.Label>
                                 <Input
                                   value={address.address1}
@@ -545,7 +545,7 @@ const SchoolFormPage = () => {
                                   />
                                 </Field.Root>
 
-                                <Field.Root flex={1} required>
+                                <Field.Root flex={1}>
                                   <Field.Label>City/Municipality</Field.Label>
                                   <Input
                                     value={address.city}
@@ -562,7 +562,7 @@ const SchoolFormPage = () => {
                               </Flex>
 
                               <Flex gap={4}>
-                                <Field.Root flex={1} required>
+                                <Field.Root flex={1}>
                                   <Field.Label>Province</Field.Label>
                                   <Input
                                     value={address.province}

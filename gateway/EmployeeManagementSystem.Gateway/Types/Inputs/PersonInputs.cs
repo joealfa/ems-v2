@@ -24,4 +24,6 @@ public class UpdatePersonInput
     public DateOnly? DateOfBirth { get; set; }
     public Gender? Gender { get; set; }
     public CivilStatus? CivilStatus { get; set; }
+    public List<UpsertAddressInput>? Addresses { get; set; }
+    public List<UpsertContactInput>? Contacts { get; set; }
 }

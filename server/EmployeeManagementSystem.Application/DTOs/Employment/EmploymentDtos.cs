@@ -171,6 +171,12 @@ public class UpdateEmploymentDto
     /// Gets or sets a value indicating whether this employment is active.
     /// </summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the school assignments to upsert.
+    /// Schools not in the list will be soft-deleted.
+    /// </summary>
+    public List<UpsertEmploymentSchoolDto>? Schools { get; set; }
 }
 
 /// <summary>
@@ -364,6 +370,39 @@ public record EmploymentItemDto
 /// </summary>
 public class CreateEmploymentSchoolDto
 {
+    /// <summary>
+    /// Gets or sets the display ID of the school.
+    /// </summary>
+    [Required]
+    public long SchoolDisplayId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the start date of the assignment.
+    /// </summary>
+    public DateOnly? StartDate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the end date of the assignment.
+    /// </summary>
+    public DateOnly? EndDate { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this is the current assignment.
+    /// </summary>
+    public bool IsCurrent { get; set; } = true;
+}
+
+/// <summary>
+/// DTO for upserting an employment-school assignment (create new or update existing).
+/// When DisplayId is null, a new assignment is created. When DisplayId has a value, the existing assignment is updated.
+/// </summary>
+public class UpsertEmploymentSchoolDto
+{
+    /// <summary>
+    /// Gets or sets the display ID of the employment-school assignment. Null for new assignments.
+    /// </summary>
+    public long? DisplayId { get; set; }
+
     /// <summary>
     /// Gets or sets the display ID of the school.
     /// </summary>

@@ -280,6 +280,62 @@ public class EmploymentService(
         employment.IsActive = dto.IsActive;
         employment.ModifiedBy = modifiedBy;
 
+        // Sync school assignments if provided
+        if (dto.Schools != null)
+        {
+            HashSet<long> schoolAssignmentDisplayIds = dto.Schools
+                .Where(s => s.DisplayId.HasValue && s.DisplayId.Value > 0)
+                .Select(s => s.DisplayId!.Value)
+                .ToHashSet();
+
+            // Soft-delete school assignments not in the list
+            foreach (EmploymentSchool existing in employment.EmploymentSchools.Where(es => !schoolAssignmentDisplayIds.Contains(es.DisplayId)).ToList())
+            {
+                existing.ModifiedBy = modifiedBy;
+                await _employmentSchoolRepository.DeleteAsync(existing, cancellationToken);
+            }
+
+            // Update existing / create new
+            foreach (UpsertEmploymentSchoolDto schoolDto in dto.Schools)
+            {
+                // Resolve school by display ID
+                School? school = await _schoolRepository.GetByDisplayIdAsync(schoolDto.SchoolDisplayId, cancellationToken);
+                if (school == null)
+                {
+                    return Result<EmploymentResponseDto>.BadRequest($"School with DisplayId {schoolDto.SchoolDisplayId} not found.");
+                }
+
+                if (schoolDto.DisplayId.HasValue && schoolDto.DisplayId.Value > 0)
+                {
+                    // Update existing
+                    EmploymentSchool? existing = employment.EmploymentSchools.FirstOrDefault(es => es.DisplayId == schoolDto.DisplayId);
+                    if (existing != null)
+                    {
+                        existing.SchoolId = school.Id;
+                        existing.StartDate = schoolDto.StartDate;
+                        existing.EndDate = schoolDto.EndDate;
+                        existing.IsCurrent = schoolDto.IsCurrent;
+                        existing.ModifiedBy = modifiedBy;
+                        await _employmentSchoolRepository.UpdateAsync(existing, cancellationToken);
+                    }
+                }
+                else
+                {
+                    // Create new - EF relationship fixup will add to employment.EmploymentSchools automatically
+                    EmploymentSchool newSchool = new()
+                    {
+                        EmploymentId = employment.Id,
+                        SchoolId = school.Id,
+                        StartDate = schoolDto.StartDate,
+                        EndDate = schoolDto.EndDate,
+                        IsCurrent = schoolDto.IsCurrent,
+                        CreatedBy = modifiedBy
+                    };
+                    _ = await _employmentSchoolRepository.AddAsync(newSchool, cancellationToken);
+                }
+            }
+        }
+
         await _employmentRepository.UpdateAsync(employment, cancellationToken);
 
         // Update navigation properties for response

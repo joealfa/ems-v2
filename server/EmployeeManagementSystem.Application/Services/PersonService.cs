@@ -204,6 +204,120 @@ public class PersonService(
         person.CivilStatus = dto.CivilStatus;
         person.ModifiedBy = modifiedBy;
 
+        // Sync addresses if provided
+        if (dto.Addresses != null)
+        {
+            HashSet<long> addressDisplayIds = dto.Addresses
+                .Where(a => a.DisplayId.HasValue && a.DisplayId.Value > 0)
+                .Select(a => a.DisplayId!.Value)
+                .ToHashSet();
+
+            // Soft-delete addresses not in the list
+            foreach (Address existing in person.Addresses.Where(a => !addressDisplayIds.Contains(a.DisplayId)).ToList())
+            {
+                existing.ModifiedBy = modifiedBy;
+                await _addressRepository.DeleteAsync(existing, cancellationToken);
+                _ = person.Addresses.Remove(existing);
+            }
+
+            // Update existing / create new
+            foreach (UpsertAddressDto addrDto in dto.Addresses)
+            {
+                if (addrDto.DisplayId.HasValue && addrDto.DisplayId.Value > 0)
+                {
+                    // Update existing
+                    Address? existing = person.Addresses.FirstOrDefault(a => a.DisplayId == addrDto.DisplayId);
+                    if (existing != null)
+                    {
+                        existing.Address1 = addrDto.Address1;
+                        existing.Address2 = addrDto.Address2;
+                        existing.Barangay = addrDto.Barangay;
+                        existing.City = addrDto.City;
+                        existing.Province = addrDto.Province;
+                        existing.Country = addrDto.Country;
+                        existing.ZipCode = addrDto.ZipCode;
+                        existing.IsCurrent = addrDto.IsCurrent;
+                        existing.IsPermanent = addrDto.IsPermanent;
+                        existing.AddressType = addrDto.AddressType;
+                        existing.ModifiedBy = modifiedBy;
+                        await _addressRepository.UpdateAsync(existing, cancellationToken);
+                    }
+                }
+                else
+                {
+                    // Create new - EF relationship fixup will add to person.Addresses automatically
+                    Address newAddress = new()
+                    {
+                        Address1 = addrDto.Address1,
+                        Address2 = addrDto.Address2,
+                        Barangay = addrDto.Barangay,
+                        City = addrDto.City,
+                        Province = addrDto.Province,
+                        Country = addrDto.Country,
+                        ZipCode = addrDto.ZipCode,
+                        IsCurrent = addrDto.IsCurrent,
+                        IsPermanent = addrDto.IsPermanent,
+                        AddressType = addrDto.AddressType,
+                        PersonId = person.Id,
+                        CreatedBy = modifiedBy
+                    };
+                    _ = await _addressRepository.AddAsync(newAddress, cancellationToken);
+                }
+            }
+        }
+
+        // Sync contacts if provided
+        if (dto.Contacts != null)
+        {
+            HashSet<long> contactDisplayIds = dto.Contacts
+                .Where(c => c.DisplayId.HasValue && c.DisplayId.Value > 0)
+                .Select(c => c.DisplayId!.Value)
+                .ToHashSet();
+
+            // Soft-delete contacts not in the list
+            foreach (Contact existing in person.Contacts.Where(c => !contactDisplayIds.Contains(c.DisplayId)).ToList())
+            {
+                existing.ModifiedBy = modifiedBy;
+                await _contactRepository.DeleteAsync(existing, cancellationToken);
+                _ = person.Contacts.Remove(existing);
+            }
+
+            // Update existing / create new
+            foreach (UpsertContactDto contactDto in dto.Contacts)
+            {
+                if (contactDto.DisplayId.HasValue && contactDto.DisplayId.Value > 0)
+                {
+                    // Update existing
+                    Contact? existing = person.Contacts.FirstOrDefault(c => c.DisplayId == contactDto.DisplayId);
+                    if (existing != null)
+                    {
+                        existing.Mobile = contactDto.Mobile;
+                        existing.LandLine = contactDto.LandLine;
+                        existing.Fax = contactDto.Fax;
+                        existing.Email = contactDto.Email;
+                        existing.ContactType = contactDto.ContactType;
+                        existing.ModifiedBy = modifiedBy;
+                        await _contactRepository.UpdateAsync(existing, cancellationToken);
+                    }
+                }
+                else
+                {
+                    // Create new - EF relationship fixup will add to person.Contacts automatically
+                    Contact newContact = new()
+                    {
+                        Mobile = contactDto.Mobile,
+                        LandLine = contactDto.LandLine,
+                        Fax = contactDto.Fax,
+                        Email = contactDto.Email,
+                        ContactType = contactDto.ContactType,
+                        PersonId = person.Id,
+                        CreatedBy = modifiedBy
+                    };
+                    _ = await _contactRepository.AddAsync(newContact, cancellationToken);
+                }
+            }
+        }
+
         await _personRepository.UpdateAsync(person, cancellationToken);
 
         return Result<PersonResponseDto>.Success(person.ToResponseDto());

@@ -148,7 +148,9 @@ public static class InputMappingExtensions
                 LastName = input.LastName ?? string.Empty,
                 DateOfBirth = input.DateOfBirth.HasValue ? new DateTimeOffset(input.DateOfBirth.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)) : DateTimeOffset.MinValue,
                 Gender = input.Gender ?? Gender.Male,
-                CivilStatus = input.CivilStatus ?? CivilStatus.Single
+                CivilStatus = input.CivilStatus ?? CivilStatus.Single,
+                Addresses = input.Addresses?.ToDtos(),
+                Contacts = input.Contacts?.ToDtos()
             };
         }
     }
@@ -221,8 +223,32 @@ public static class InputMappingExtensions
                 GsisId = input.GsisId,
                 PhilHealthId = input.PhilHealthId,
                 TinId = input.TinId,
-                IsActive = input.IsActive ?? true
+                IsActive = input.IsActive ?? true,
+                Schools = input.Schools?.ToDtos()
             };
+        }
+    }
+
+    extension(UpsertEmploymentSchoolInput input)
+    {
+        public UpsertEmploymentSchoolDto ToDto()
+        {
+            return new UpsertEmploymentSchoolDto
+            {
+                DisplayId = input.DisplayId,
+                SchoolDisplayId = input.SchoolDisplayId ?? 0,
+                StartDate = input.StartDate.HasValue ? new DateTimeOffset(input.StartDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)) : null,
+                EndDate = input.EndDate.HasValue ? new DateTimeOffset(input.EndDate.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)) : null,
+                IsCurrent = input.IsCurrent ?? true
+            };
+        }
+    }
+
+    extension(List<UpsertEmploymentSchoolInput>? inputs)
+    {
+        public List<UpsertEmploymentSchoolDto>? ToDtos()
+        {
+            return inputs?.Select(i => i.ToDto()).ToList();
         }
     }
 
