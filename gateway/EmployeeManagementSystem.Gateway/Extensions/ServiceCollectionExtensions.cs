@@ -87,6 +87,7 @@ public static class ServiceCollectionExtensions
 
             _ = services
                 .AddGraphQLServer()
+                .AddErrorFilter<Errors.ApiExceptionErrorFilter>()
                 .AddQueryType<Types.Query>()
                 .AddMutationType<Types.Mutation>()
                 .AddType<UploadType>()

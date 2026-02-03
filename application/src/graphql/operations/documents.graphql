@@ -62,7 +62,29 @@ query GetDocument($personDisplayId: Long!, $documentDisplayId: Long!) {
   }
 }
 
+query GetProfileImageUrl($personDisplayId: Long!) {
+  profileImageUrl(personDisplayId: $personDisplayId)
+}
+
 # Document Mutations
+mutation UploadDocument(
+  $personDisplayId: Long!
+  $file: Upload!
+  $description: String
+) {
+  uploadDocument(
+    personDisplayId: $personDisplayId
+    file: $file
+    description: $description
+  ) {
+    ...DocumentDetailFields
+  }
+}
+
+mutation UploadProfileImage($personDisplayId: Long!, $file: Upload!) {
+  uploadProfileImage(personDisplayId: $personDisplayId, file: $file)
+}
+
 mutation UpdateDocument(
   $personDisplayId: Long!
   $documentDisplayId: Long!
@@ -71,7 +93,7 @@ mutation UpdateDocument(
   updateDocument(
     personDisplayId: $personDisplayId
     documentDisplayId: $documentDisplayId
-    description: $description
+    input: { description: $description }
   ) {
     ...DocumentDetailFields
   }

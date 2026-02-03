@@ -1,4 +1,4 @@
-import { useState, useRef, useContext } from 'react';
+import { useState, useRef } from 'react';
 import {
   Box,
   Heading,
@@ -11,12 +11,11 @@ import {
 } from '@chakra-ui/react';
 import DocumentsTable from './DocumentsTable';
 import { formatFileSize } from '../../utils/formatters';
-import { AuthContext } from '../../contexts/AuthContext';
 import {
   usePersonDocuments,
-  uploadDocument,
+  useUploadDocument,
+  useDeleteDocument,
   getDocumentDownloadUrl,
-  deleteDocumentRest,
 } from '../../hooks/useDocuments';
 
 interface PersonDocumentsProps {
@@ -24,10 +23,9 @@ interface PersonDocumentsProps {
 }
 
 const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
-  const authContext = useContext(AuthContext);
-  const accessToken = authContext?.accessToken ?? null;
   const { documents, loading, refetch } = usePersonDocuments(personDisplayId);
-  const [uploading, setUploading] = useState(false);
+  const { uploadDocument, uploading } = useUploadDocument();
+  const { deleteDocument } = useDeleteDocument();
   const [error, setError] = useState<string | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [description, setDescription] = useState('');
@@ -42,9 +40,8 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
   };
 
   const handleUpload = async () => {
-    if (selectedFiles.length === 0 || !accessToken) return;
+    if (selectedFiles.length === 0) return;
 
-    setUploading(true);
     setError(null);
 
     const errors: string[] = [];
@@ -52,16 +49,7 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
 
     for (const file of selectedFiles) {
       try {
-        const response = await uploadDocument(
-          personDisplayId,
-          file,
-          description || undefined,
-          accessToken
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        await uploadDocument(personDisplayId, file, description || undefined);
         successCount++;
       } catch (err: unknown) {
         console.error('Error uploading document:', err);
@@ -89,23 +77,15 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
     if (errors.length === 0) {
       setShowUploadForm(false);
     }
-
-    setUploading(false);
   };
 
   const handleDownload = async (
     documentDisplayId: number,
     fileName: string | null | undefined
   ) => {
-    if (!accessToken) return;
-
     try {
       const url = getDocumentDownloadUrl(personDisplayId, documentDisplayId);
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -129,19 +109,9 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
   const handleDelete = async (documentDisplayId: number) => {
     if (!window.confirm('Are you sure you want to delete this document?'))
       return;
-    if (!accessToken) return;
 
     try {
-      const response = await deleteDocumentRest(
-        personDisplayId,
-        documentDisplayId,
-        accessToken
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      await deleteDocument(personDisplayId, documentDisplayId);
       await refetch();
     } catch (err) {
       console.error('Error deleting document:', err);

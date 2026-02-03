@@ -2,14 +2,17 @@ using EmployeeManagementSystem.Gateway.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Add HTTP context accessor for token forwarding
+// Add HTTP context accessor for token forwarding in GraphQL mutations
 builder.Services.AddHttpContextAccessor();
+
+// Add HttpClient for REST proxy controllers
+builder.Services.AddHttpClient();
+
+// Add controllers for REST endpoints (profile images, file downloads)
+builder.Services.AddControllers();
 
 // Add gateway services (Redis, ApiClient, GraphQL)
 builder.Services.AddGatewayServices(builder.Configuration);
-
-// Add controllers for document proxy endpoints
-builder.Services.AddControllers();
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -28,7 +31,7 @@ WebApplication app = builder.Build();
 
 app.UseCors();
 
-// Map controllers for document proxy endpoints
+// Map REST controllers for file operations
 app.MapControllers();
 
 // Map GraphQL endpoint

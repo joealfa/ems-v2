@@ -2,6 +2,9 @@ import { useQuery, useMutation } from '@apollo/client';
 import {
   GetPersonDocumentsDocument,
   GetDocumentDocument,
+  GetProfileImageUrlDocument,
+  UploadDocumentDocument,
+  UploadProfileImageDocument,
   UpdateDocumentDocument,
   DeleteDocumentDocument,
   DeleteProfileImageDocument,
@@ -9,6 +12,12 @@ import {
   type GetPersonDocumentsQueryVariables,
   type GetDocumentQuery,
   type GetDocumentQueryVariables,
+  type GetProfileImageUrlQuery,
+  type GetProfileImageUrlQueryVariables,
+  type UploadDocumentMutation,
+  type UploadDocumentMutationVariables,
+  type UploadProfileImageMutation,
+  type UploadProfileImageMutationVariables,
   type UpdateDocumentMutation,
   type UpdateDocumentMutationVariables,
   type DeleteDocumentMutation,
@@ -17,10 +26,10 @@ import {
   type DeleteProfileImageMutationVariables,
 } from '../graphql/generated/graphql';
 
-// Gateway base URL for document proxy endpoints
+// Gateway base URL for REST file download endpoints (GraphQL doesn't handle file streaming)
 const GATEWAY_BASE_URL =
   import.meta.env.VITE_GRAPHQL_URL?.replace('/graphql', '') ||
-  'http://localhost:5100';
+  'https://localhost:5003';
 
 export const usePersonDocuments = (
   personDisplayId: number,
@@ -143,95 +152,81 @@ export const useDeleteProfileImage = () => {
   };
 };
 
-// Helper function to get the document download URL through the Gateway
+// Hook to get profile image URL
+export const useProfileImageUrl = (personDisplayId: number) => {
+  const { data, loading, error } = useQuery<
+    GetProfileImageUrlQuery,
+    GetProfileImageUrlQueryVariables
+  >(GetProfileImageUrlDocument, {
+    variables: { personDisplayId },
+    skip: !personDisplayId,
+  });
+
+  return {
+    profileImageUrl: data?.profileImageUrl,
+    loading,
+    error,
+  };
+};
+
+// Hook to upload a document
+export const useUploadDocument = () => {
+  const [uploadDocument, { loading, error }] = useMutation<
+    UploadDocumentMutation,
+    UploadDocumentMutationVariables
+  >(UploadDocumentDocument);
+
+  return {
+    uploadDocument: async (
+      personDisplayId: number,
+      file: File,
+      description?: string
+    ) => {
+      const result = await uploadDocument({
+        variables: { personDisplayId, file, description },
+        refetchQueries: [
+          {
+            query: GetPersonDocumentsDocument,
+            variables: { personDisplayId, pageNumber: 1, pageSize: 100 },
+          },
+        ],
+      });
+      return result.data?.uploadDocument;
+    },
+    uploading: loading,
+    error,
+  };
+};
+
+// Hook to upload a profile image
+export const useUploadProfileImage = () => {
+  const [uploadProfileImage, { loading, error }] = useMutation<
+    UploadProfileImageMutation,
+    UploadProfileImageMutationVariables
+  >(UploadProfileImageDocument);
+
+  return {
+    uploadProfileImage: async (personDisplayId: number, file: File) => {
+      const result = await uploadProfileImage({
+        variables: { personDisplayId, file },
+        refetchQueries: [
+          {
+            query: GetProfileImageUrlDocument,
+            variables: { personDisplayId },
+          },
+        ],
+      });
+      return result.data?.uploadProfileImage;
+    },
+    uploading: loading,
+    error,
+  };
+};
+
+// Helper function to get the document download URL (still uses REST endpoint for file streaming)
 export const getDocumentDownloadUrl = (
   personDisplayId: number,
   documentDisplayId: number
 ) => {
   return `${GATEWAY_BASE_URL}/api/persons/${personDisplayId}/documents/${documentDisplayId}/download`;
-};
-
-// Helper function to get the profile image URL through the Gateway
-export const getProfileImageUrl = (
-  personDisplayId: number,
-  version?: number
-) => {
-  const baseUrl = `${GATEWAY_BASE_URL}/api/persons/${personDisplayId}/documents/profile-image`;
-  return version ? `${baseUrl}?v=${version}` : baseUrl;
-};
-
-// Helper function to upload a document through the Gateway
-export const uploadDocument = async (
-  personDisplayId: number,
-  file: File,
-  description: string | undefined,
-  accessToken: string
-): Promise<Response> => {
-  const formData = new FormData();
-  formData.append('file', file);
-  if (description) {
-    formData.append('description', description);
-  }
-
-  return fetch(`${GATEWAY_BASE_URL}/api/persons/${personDisplayId}/documents`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: formData,
-  });
-};
-
-// Helper function to upload a profile image through the Gateway
-export const uploadProfileImage = async (
-  personDisplayId: number,
-  file: File,
-  accessToken: string
-): Promise<Response> => {
-  const formData = new FormData();
-  formData.append('file', file);
-
-  return fetch(
-    `${GATEWAY_BASE_URL}/api/persons/${personDisplayId}/documents/profile-image`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: formData,
-    }
-  );
-};
-
-// Helper function to delete a profile image through the Gateway (REST endpoint)
-export const deleteProfileImageRest = async (
-  personDisplayId: number,
-  accessToken: string
-): Promise<Response> => {
-  return fetch(
-    `${GATEWAY_BASE_URL}/api/persons/${personDisplayId}/documents/profile-image`,
-    {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
-};
-
-// Helper function to delete a document through the Gateway (REST endpoint)
-export const deleteDocumentRest = async (
-  personDisplayId: number,
-  documentDisplayId: number,
-  accessToken: string
-): Promise<Response> => {
-  return fetch(
-    `${GATEWAY_BASE_URL}/api/persons/${personDisplayId}/documents/${documentDisplayId}`,
-    {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
 };

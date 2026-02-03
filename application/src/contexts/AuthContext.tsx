@@ -1,4 +1,16 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useMutation } from '@apollo/client';
+import {
+  GoogleLoginDocument,
+  RefreshTokenDocument,
+  LogoutDocument,
+  type GoogleLoginMutation,
+  type GoogleLoginMutationVariables,
+  type RefreshTokenMutation,
+  type RefreshTokenMutationVariables,
+  type LogoutMutation,
+  type LogoutMutationVariables,
+} from '../graphql/generated/graphql';
 import {
   AuthContext,
   type AuthContextType,
@@ -11,115 +23,119 @@ export {
   type UserDto,
 } from './AuthContextType';
 
-// Gateway base URL for proxied API requests
-const GATEWAY_BASE_URL =
-  import.meta.env.VITE_GRAPHQL_URL?.replace('/graphql', '') ||
-  'http://localhost:5100';
-
 const ACCESS_TOKEN_KEY = 'accessToken';
+const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
 const TOKEN_EXPIRY_KEY = 'tokenExpiry';
-
-interface AuthResponseDto {
-  accessToken?: string | null;
-  expiresOn?: string | null;
-  user?: UserDto | null;
-}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserDto | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // GraphQL mutations
+  const [googleLoginMutation] = useMutation<
+    GoogleLoginMutation,
+    GoogleLoginMutationVariables
+  >(GoogleLoginDocument);
+
+  const [refreshTokenMutation] = useMutation<
+    RefreshTokenMutation,
+    RefreshTokenMutationVariables
+  >(RefreshTokenDocument);
+
+  const [logoutMutation] = useMutation<LogoutMutation, LogoutMutationVariables>(
+    LogoutDocument
+  );
+
   const clearAuthData = useCallback(() => {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(TOKEN_EXPIRY_KEY);
     setAccessToken(null);
     setUser(null);
-    // Refresh token is in HttpOnly cookie, will be cleared by server on logout
   }, []);
 
-  const saveAuthData = useCallback((response: AuthResponseDto) => {
-    if (response.accessToken) {
-      localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
-      setAccessToken(response.accessToken);
-    }
-    // refreshToken is set as HttpOnly cookie by the server
-    if (response.expiresOn) {
-      localStorage.setItem(TOKEN_EXPIRY_KEY, response.expiresOn);
-    }
-    if (response.user) {
-      localStorage.setItem(USER_KEY, JSON.stringify(response.user));
-      setUser(response.user);
-    }
-  }, []);
+  const saveAuthData = useCallback(
+    (response: {
+      accessToken?: string | null;
+      refreshToken?: string | null;
+      expiresOn?: string | null;
+      user?: UserDto | null;
+    }) => {
+      if (response.accessToken) {
+        localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
+        setAccessToken(response.accessToken);
+      }
+      if (response.refreshToken) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
+      }
+      if (response.expiresOn) {
+        localStorage.setItem(TOKEN_EXPIRY_KEY, response.expiresOn);
+      }
+      if (response.user) {
+        localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+        setUser(response.user);
+      }
+    },
+    []
+  );
 
   const refreshToken = useCallback(async (): Promise<string | null> => {
     try {
-      // Refresh token is sent automatically via HttpOnly cookie
-      const response = await fetch(`${GATEWAY_BASE_URL}/api/v1/Auth/refresh`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({}),
-      });
+      const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // In this app the refresh token is stored in localStorage (the backend cookie is not forwarded to the browser
+      // when using the Gateway). If it's missing, avoid calling the server and just reset auth state.
+      if (!storedRefreshToken) {
+        clearAuthData();
+        return null;
       }
 
-      const data: AuthResponseDto = await response.json();
-      saveAuthData(data);
-      return data.accessToken || null;
+      const { data } = await refreshTokenMutation({
+        variables: { refreshToken: storedRefreshToken },
+      });
+
+      if (data?.refreshToken) {
+        saveAuthData(data.refreshToken);
+        return data.refreshToken.accessToken || null;
+      }
+
+      // Refresh failed (e.g. invalid/expired refresh token). Clear stale local auth data.
+      clearAuthData();
+      return null;
     } catch {
       clearAuthData();
       return null;
     }
-  }, [clearAuthData, saveAuthData]);
+  }, [clearAuthData, saveAuthData, refreshTokenMutation]);
 
   const login = useCallback(
     async (googleIdToken: string) => {
       setIsLoading(true);
       try {
-        const response = await fetch(`${GATEWAY_BASE_URL}/api/v1/Auth/google`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ idToken: googleIdToken }),
+        const { data } = await googleLoginMutation({
+          variables: { idToken: googleIdToken },
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (data?.googleLogin) {
+          saveAuthData(data.googleLogin);
         }
-
-        const data: AuthResponseDto = await response.json();
-        saveAuthData(data);
       } finally {
         setIsLoading(false);
       }
     },
-    [saveAuthData]
+    [saveAuthData, googleLoginMutation]
   );
 
   const logout = useCallback(async () => {
-    const storedAccessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+    const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 
-    if (storedAccessToken) {
+    if (storedRefreshToken) {
       try {
-        // Refresh token is sent automatically via HttpOnly cookie
-        await fetch(`${GATEWAY_BASE_URL}/api/v1/Auth/revoke`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${storedAccessToken}`,
-          },
-          credentials: 'include',
-          body: JSON.stringify({}),
+        await logoutMutation({
+          variables: { refreshToken: storedRefreshToken },
         });
       } catch {
         // Ignore errors during logout
@@ -127,7 +143,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     clearAuthData();
-  }, [clearAuthData]);
+  }, [clearAuthData, logoutMutation]);
 
   // Initialize auth state from localStorage
   useEffect(() => {
@@ -159,6 +175,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     initializeAuth();
   }, [clearAuthData, refreshToken]);
+
+  // If storage is cleared while the app is running (e.g. DevTools), keep in-memory auth state in sync.
+  useEffect(() => {
+    const syncAuthStateFromStorage = () => {
+      const storedToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+      const storedUser = localStorage.getItem(USER_KEY);
+
+      // Only clear when we think we're authenticated but storage says otherwise.
+      if ((accessToken && !storedToken) || (user && !storedUser)) {
+        clearAuthData();
+      }
+    };
+
+    window.addEventListener('storage', syncAuthStateFromStorage);
+    window.addEventListener('focus', syncAuthStateFromStorage);
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        syncAuthStateFromStorage();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    const intervalId = window.setInterval(syncAuthStateFromStorage, 2000);
+
+    return () => {
+      window.removeEventListener('storage', syncAuthStateFromStorage);
+      window.removeEventListener('focus', syncAuthStateFromStorage);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.clearInterval(intervalId);
+    };
+  }, [accessToken, user, clearAuthData]);
 
   const value: AuthContextType = {
     user,

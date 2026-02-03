@@ -2,11 +2,17 @@ using EmployeeManagementSystem.ApiClient.Generated;
 using EmployeeManagementSystem.Gateway.Caching;
 using EmployeeManagementSystem.Gateway.Mappings;
 using EmployeeManagementSystem.Gateway.Types.Inputs;
+using System.Net.Http.Headers;
 
 namespace EmployeeManagementSystem.Gateway.Types;
 
 public class Mutation
 {
+    private static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     #region Person Mutations
 
     [GraphQLDescription("Create a new person")]
@@ -301,27 +307,85 @@ public class Mutation
 
     #region Document Mutations
 
-    [GraphQLDescription("Update document metadata")]
-    public async Task<DocumentResponseDto?> UpdateDocumentAsync(
+    [GraphQLDescription("Upload a document for a person")]
+    public async Task<DocumentResponseDto?> UploadDocumentAsync(
         long personDisplayId,
-        long documentDisplayId,
+        IFile file,
         string? description,
-        [Service] EmsApiClient client,
+        [Service] IHttpClientFactory httpClientFactory,
+        [Service] IConfiguration configuration,
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] IRedisCacheService cache,
         CancellationToken ct)
     {
-        UpdateDocumentDto dto = new() { Description = description };
-        return await client.DocumentsPUTAsync(personDisplayId, documentDisplayId, dto, ct);
-    }
+        using HttpClient client = CreateApiClient(httpClientFactory, configuration, httpContextAccessor);
+        using MultipartFormDataContent content = [];
 
-    [GraphQLDescription("Delete a document")]
-    public async Task<bool> DeleteDocumentAsync(
-        long personDisplayId,
-        long documentDisplayId,
-        [Service] EmsApiClient client,
-        CancellationToken ct)
-    {
-        await client.DocumentsDELETEAsync(personDisplayId, documentDisplayId, ct);
-        return true;
+        using Stream fileStream = file.OpenReadStream();
+        using StreamContent streamContent = new(fileStream);
+        streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(
+            string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType);
+        content.Add(streamContent, "file", file.Name);
+
+        if (!string.IsNullOrEmpty(description))
+        {
+            content.Add(new StringContent(description), "description");
+        }
+
+        string apiBaseUrl = configuration["ApiClient:BaseUrl"] ?? "https://localhost:7166";
+        HttpResponseMessage response = await client.PostAsync(
+            $"{apiBaseUrl}/api/v1/Persons/{personDisplayId}/Documents",
+            content,
+            ct);
+
+        string responseBody = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new GraphQLException(
+                $"Backend upload failed ({(int)response.StatusCode} {response.ReasonPhrase}). {responseBody}");
+        }
+
+        // Some backends return 201 with an empty body or a non-JSON body even on success.
+        // Avoid throwing (which Apollo logs as a GraphQL error) when the upload actually succeeded.
+        DocumentResponseDto? result = null;
+        if (!string.IsNullOrWhiteSpace(responseBody))
+        {
+            try
+            {
+                result = System.Text.Json.JsonSerializer.Deserialize<DocumentResponseDto>(responseBody, JsonOptions);
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                result = null;
+            }
+        }
+
+        if (result is null && response.Headers.Location is Uri location)
+        {
+            string locationUrl = location.IsAbsoluteUri
+                ? location.ToString()
+                : $"{apiBaseUrl.TrimEnd('/')}{location}";
+
+            using HttpResponseMessage followUp = await client.GetAsync(locationUrl, ct);
+            if (followUp.IsSuccessStatusCode)
+            {
+                string followUpBody = await followUp.Content.ReadAsStringAsync(ct);
+                if (!string.IsNullOrWhiteSpace(followUpBody))
+                {
+                    try
+                    {
+                        result = System.Text.Json.JsonSerializer.Deserialize<DocumentResponseDto>(followUpBody, JsonOptions);
+                    }
+                    catch (System.Text.Json.JsonException)
+                    {
+                        result = null;
+                    }
+                }
+            }
+        }
+
+        await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
+        return result;
     }
 
     [GraphQLDescription("Delete a person's profile image")]
@@ -333,11 +397,95 @@ public class Mutation
     {
         await client.ProfileImageDELETEAsync(personDisplayId, ct);
 
-        // Invalidate person cache since profile image URL may have changed
         await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
         await cache.RemoveByPrefixAsync(CacheKeys.PersonsListPrefix, ct);
 
         return true;
+    }
+
+    [GraphQLDescription("Update document metadata")]
+    public async Task<DocumentResponseDto?> UpdateDocumentAsync(
+        long personDisplayId,
+        long documentDisplayId,
+        UpdateDocumentInput input,
+        [Service] EmsApiClient client,
+        [Service] IRedisCacheService cache,
+        CancellationToken ct)
+    {
+        DocumentResponseDto result = await client.DocumentsPUTAsync(
+            personDisplayId,
+            documentDisplayId,
+            new UpdateDocumentDto { Description = input.Description },
+            ct);
+        
+        await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
+        return result;
+    }
+
+    [GraphQLDescription("Delete a document")]
+    public async Task<bool> DeleteDocumentAsync(
+        long personDisplayId,
+        long documentDisplayId,
+        [Service] EmsApiClient client,
+        [Service] IRedisCacheService cache,
+        CancellationToken ct)
+    {
+        await client.DocumentsDELETEAsync(personDisplayId, documentDisplayId, ct);
+        await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
+        return true;
+    }
+
+    [GraphQLDescription("Upload a profile image for a person")]
+    public async Task<string?> UploadProfileImageAsync(
+        long personDisplayId,
+        IFile file,
+        [Service] IHttpClientFactory httpClientFactory,
+        [Service] IConfiguration configuration,
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] IRedisCacheService cache,
+        CancellationToken ct)
+    {
+        using HttpClient client = CreateApiClient(httpClientFactory, configuration, httpContextAccessor);
+        using MultipartFormDataContent content = [];
+
+        using Stream fileStream = file.OpenReadStream();
+        using StreamContent streamContent = new(fileStream);
+        streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(
+            string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType);
+        content.Add(streamContent, "file", file.Name);
+
+        string apiBaseUrl = configuration["ApiClient:BaseUrl"] ?? "https://localhost:7166";
+        HttpResponseMessage response = await client.PostAsync(
+            $"{apiBaseUrl}/api/v1/Persons/{personDisplayId}/Documents/profile-image",
+            content,
+            ct);
+
+        string result = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new GraphQLException(
+                $"Backend profile image upload failed ({(int)response.StatusCode} {response.ReasonPhrase}). {result}");
+        }
+
+        await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
+        return result.Trim('"');
+    }
+
+    private static HttpClient CreateApiClient(
+        IHttpClientFactory httpClientFactory,
+        IConfiguration configuration,
+        IHttpContextAccessor httpContextAccessor)
+    {
+        HttpClient client = httpClientFactory.CreateClient("EmsApiClient");
+
+        // Forward the Authorization header from the incoming request
+        string? authHeader = httpContextAccessor.HttpContext?.Request.Headers.Authorization.ToString();
+        if (!string.IsNullOrEmpty(authHeader))
+        {
+            _ = client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authHeader);
+        }
+
+        return client;
     }
 
     #endregion
@@ -372,9 +520,18 @@ public class Mutation
         [Service] EmsApiClient client,
         CancellationToken ct)
     {
-        return await client.RefreshAsync(
-            new RefreshTokenRequestDto { RefreshToken = refreshToken },
-            ct);
+        try
+        {
+            return await client.RefreshAsync(
+                new RefreshTokenRequestDto { RefreshToken = refreshToken },
+                ct);
+        }
+        catch (ApiException ex) when (ex.StatusCode == 401)
+        {
+            // Treat invalid/expired/missing refresh token as a non-error for GraphQL.
+            // The frontend will interpret null and clear local auth state.
+            return null;
+        }
     }
 
     [GraphQLDescription("Logout and revoke tokens")]
@@ -383,10 +540,18 @@ public class Mutation
         [Service] EmsApiClient client,
         CancellationToken ct)
     {
-        await client.RevokeAsync(
-            new RevokeTokenRequestDto { RefreshToken = refreshToken },
-            ct);
-        return true;
+        try
+        {
+            await client.RevokeAsync(
+                new RevokeTokenRequestDto { RefreshToken = refreshToken },
+                ct);
+            return true;
+        }
+        catch (ApiException ex) when (ex.StatusCode == 400 || ex.StatusCode == 401)
+        {
+            // If the token is already invalid/expired, consider logout successful.
+            return true;
+        }
     }
 
     #endregion

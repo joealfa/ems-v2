@@ -1,22 +1,24 @@
 import {
   ApolloClient,
   InMemoryCache,
-  createHttpLink,
   from,
   type NormalizedCacheObject,
+  type ApolloLink,
 } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
+// @ts-expect-error - apollo-upload-client v18 doesn't have proper type exports for this path
+import createUploadLink from 'apollo-upload-client/createUploadLink.mjs';
 
 // GraphQL Gateway URL
 const GRAPHQL_URL =
   import.meta.env.VITE_GRAPHQL_URL || 'https://localhost:5003/graphql';
 
-// Create HTTP link
-const httpLink = createHttpLink({
+// Create Upload link (supports both regular requests and file uploads)
+const uploadLink = createUploadLink({
   uri: GRAPHQL_URL,
   credentials: 'include', // Include cookies for refresh token
-});
+}) as unknown as ApolloLink;
 
 // Auth link to add authorization header
 const authLink = setContext((_, { headers }) => {
@@ -26,7 +28,9 @@ const authLink = setContext((_, { headers }) => {
   return {
     headers: {
       ...headers,
-      authorization: token ? `Bearer ${token}` : '',
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+      // HotChocolate CSRF protection: required for multipart (file upload) requests.
+      'GraphQL-Preflight': '1',
     },
   };
 });
@@ -39,14 +43,35 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         `[GraphQL error]: Message: ${err.message}, Location: ${err.locations}, Path: ${err.path}`
       );
 
-      // Handle authentication errors
-      if (
+      const missingToken = !localStorage.getItem('accessToken');
+      const isAuthError =
         err.extensions?.code === 'UNAUTHENTICATED' ||
-        err.message.includes('Unauthorized')
-      ) {
+        err.extensions?.code === 'FORBIDDEN' ||
+        err.message.includes('Unauthorized') ||
+        err.message.includes('Forbidden');
+
+      // Fallback: if local auth was cleared mid-session (devtools) but React state is still "logged in",
+      // protected queries may fail. Redirect to login when we see a protected operation failing without a token.
+      const pathRoot = Array.isArray(err.path) ? String(err.path[0]) : '';
+      const looksProtected =
+        missingToken &&
+        (pathRoot === 'employments' ||
+          pathRoot === 'persons' ||
+          pathRoot === 'schools' ||
+          pathRoot === 'positions' ||
+          pathRoot === 'salaryGrades' ||
+          pathRoot === 'items' ||
+          pathRoot === 'person' ||
+          pathRoot === 'employment' ||
+          pathRoot === 'school');
+
+      // Handle authentication errors
+      if (isAuthError || looksProtected) {
         // Clear tokens and redirect to login
         localStorage.removeItem('accessToken');
         localStorage.removeItem('tokenExpiry');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
 
         // Only redirect if not already on login page
         if (!window.location.pathname.includes('/login')) {
@@ -64,7 +89,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 // Create Apollo Client instance
 export const apolloClient: ApolloClient<NormalizedCacheObject> =
   new ApolloClient({
-    link: from([errorLink, authLink, httpLink]),
+    link: from([errorLink, authLink, uploadLink]),
     cache: new InMemoryCache({
       typePolicies: {
         Query: {

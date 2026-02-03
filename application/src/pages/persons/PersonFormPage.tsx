@@ -24,12 +24,12 @@ import {
 } from '../../hooks/usePersons';
 import {
   usePersonDocuments,
-  uploadDocument,
-  uploadProfileImage,
-  deleteProfileImageRest,
+  useUploadDocument,
+  useUploadProfileImage,
+  useDeleteProfileImage,
   getDocumentDownloadUrl,
-  getProfileImageUrl,
-  deleteDocumentRest,
+  useDeleteDocument,
+  useProfileImageUrl,
 } from '../../hooks/useDocuments';
 import { AuthContext } from '../../contexts/AuthContext';
 import type {
@@ -156,6 +156,19 @@ const PersonFormPage = () => {
     refetch: refetchDocuments,
   } = usePersonDocuments(isEditMode ? Number(displayId) : 0);
 
+  // GraphQL mutations for document operations
+  const { uploadDocument: uploadDocumentMutation } = useUploadDocument();
+  const { deleteDocument: deleteDocumentMutation } = useDeleteDocument();
+  const { uploadProfileImage: uploadProfileImageMutation } =
+    useUploadProfileImage();
+  const { deleteProfileImage: deleteProfileImageMutation } =
+    useDeleteProfileImage();
+
+  // Use GraphQL query to get the profile image URL
+  const { profileImageUrl: graphqlImageUrl } = useProfileImageUrl(
+    isEditMode ? Number(displayId) : 0
+  );
+
   const [formData, setFormData] = useState<PersonFormData>(initialFormData);
   const [addresses, setAddresses] = useState<AddressFormData[]>([]);
   const [contacts, setContacts] = useState<ContactFormData[]>([]);
@@ -251,14 +264,15 @@ const PersonFormPage = () => {
     let currentBlobUrl: string | null = null;
 
     const fetchProfileImage = async () => {
-      if (!profileImageUrl || !accessToken || !displayId) {
+      if (!profileImageUrl || !accessToken || !displayId || !graphqlImageUrl) {
         setProfileBlobUrl(null);
         return;
       }
 
       setLoadingProfileImage(true);
       try {
-        const url = getProfileImageUrl(Number(displayId), profileImageVersion);
+        // Use the URL from GraphQL query with cache busting
+        const url = `${graphqlImageUrl}?v=${profileImageVersion}`;
         const response = await fetch(url, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -287,7 +301,13 @@ const PersonFormPage = () => {
         URL.revokeObjectURL(currentBlobUrl);
       }
     };
-  }, [displayId, profileImageUrl, accessToken, profileImageVersion]);
+  }, [
+    displayId,
+    profileImageUrl,
+    accessToken,
+    profileImageVersion,
+    graphqlImageUrl,
+  ]);
 
   const handleChange = (field: keyof PersonFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -354,15 +374,7 @@ const PersonFormPage = () => {
     setError(null);
 
     try {
-      const response = await uploadProfileImage(
-        Number(displayId),
-        file,
-        accessToken
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await uploadProfileImageMutation(Number(displayId), file);
 
       setProfileImageVersion((v) => v + 1);
       await refetchPerson();
@@ -387,14 +399,7 @@ const PersonFormPage = () => {
 
     setUploadingImage(true);
     try {
-      const response = await deleteProfileImageRest(
-        Number(displayId),
-        accessToken
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await deleteProfileImageMutation(Number(displayId));
 
       setProfileImageUrl(null);
       setProfileBlobUrl(null);
@@ -426,16 +431,11 @@ const PersonFormPage = () => {
 
     for (const file of selectedDocumentFiles) {
       try {
-        const response = await uploadDocument(
+        await uploadDocumentMutation(
           Number(displayId),
           file,
-          documentDescription || undefined,
-          accessToken
+          documentDescription || undefined
         );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
         successCount++;
       } catch (err) {
         console.error('Error uploading document:', err);
@@ -503,15 +503,7 @@ const PersonFormPage = () => {
       return;
 
     try {
-      const response = await deleteDocumentRest(
-        Number(displayId),
-        documentDisplayId,
-        accessToken
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await deleteDocumentMutation(Number(displayId), documentDisplayId);
 
       await refetchDocuments();
     } catch (err) {

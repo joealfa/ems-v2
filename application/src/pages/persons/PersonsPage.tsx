@@ -1,11 +1,4 @@
-import {
-  useState,
-  useCallback,
-  useRef,
-  useEffect,
-  useMemo,
-  useContext,
-} from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   Box,
   Heading,
@@ -32,17 +25,12 @@ import {
 } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
 import { usePersonsLazy } from '../../hooks/usePersons';
-import { AuthContext } from '../../contexts/AuthContext';
+import { useProfileImageUrl } from '../../hooks/useDocuments';
 import type {
   PersonListDto,
   Gender,
   CivilStatus,
 } from '../../graphql/generated/graphql';
-
-// Gateway base URL for proxied API requests
-const GATEWAY_BASE_URL =
-  import.meta.env.VITE_GRAPHQL_URL?.replace('/graphql', '') ||
-  'http://localhost:5100';
 
 // Display mapping for Gender using GraphQL generated enum
 const GenderDisplay: Record<Gender, string> = {
@@ -69,64 +57,22 @@ interface ProfileImageCellProps {
   displayId: number;
   fullName: string;
   hasImage: boolean;
-  accessToken: string | null;
 }
 
 const ProfileImageCell = ({
   displayId,
   fullName,
   hasImage,
-  accessToken,
 }: ProfileImageCellProps) => {
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { profileImageUrl, loading, error } = useProfileImageUrl(
+    hasImage ? displayId : 0
+  );
 
   const nameParts = fullName.split(' ');
   const initials =
     nameParts.length >= 2
       ? `${nameParts[0]?.[0] || ''}${nameParts[nameParts.length - 1]?.[0] || ''}`.toUpperCase()
       : (fullName[0] || '?').toUpperCase();
-
-  useEffect(() => {
-    if (!hasImage || !accessToken || !displayId) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchImage = async () => {
-      try {
-        const url = `${GATEWAY_BASE_URL}/api/persons/${displayId}/documents/profile-image`;
-        const response = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        setBlobUrl(objectUrl);
-      } catch (err) {
-        console.error('Error loading profile image:', err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchImage();
-
-    return () => {
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayId, hasImage, accessToken]);
 
   if (loading) {
     return (
@@ -145,11 +91,11 @@ const ProfileImageCell = ({
     );
   }
 
-  if (blobUrl && !error) {
+  if (profileImageUrl && !error) {
     return (
       <Flex align="center" justify="center" h="100%">
         <Image
-          src={blobUrl}
+          src={profileImageUrl}
           alt="Profile"
           w="32px"
           h="32px"
@@ -326,8 +272,6 @@ const extractFilters = (filterModel: FilterModel) => {
 
 const PersonsPage = () => {
   const navigate = useNavigate();
-  const authContext = useContext(AuthContext);
-  const accessToken = authContext?.accessToken ?? null;
   const gridRef = useRef<AgGridReact<PersonListDto>>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -482,7 +426,6 @@ const PersonsPage = () => {
               displayId={displayId}
               fullName={fullName}
               hasImage={!!params.value}
-              accessToken={accessToken}
             />
           );
         },
@@ -562,7 +505,7 @@ const PersonsPage = () => {
         },
       },
     ],
-    [navigate, accessToken]
+    [navigate]
   );
 
   const defaultColDef: ColDef = useMemo(

@@ -2,9 +2,9 @@ import { useState, useRef, useContext, useEffect } from 'react';
 import { Box, Button, Flex, Text, Image, Spinner } from '@chakra-ui/react';
 import { AuthContext } from '../../contexts/AuthContext';
 import {
-  getProfileImageUrl,
-  uploadProfileImage,
-  deleteProfileImageRest,
+  useProfileImageUrl,
+  useUploadProfileImage,
+  useDeleteProfileImage,
 } from '../../hooks/useDocuments';
 
 interface ProfileImageUploadProps {
@@ -20,25 +20,33 @@ const ProfileImageUpload = ({
 }: ProfileImageUploadProps) => {
   const authContext = useContext(AuthContext);
   const accessToken = authContext?.accessToken ?? null;
-  const [uploading, setUploading] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageVersion, setImageVersion] = useState(0);
   const [imageBlobUrl, setImageBlobUrl] = useState<string | null>(null);
   const [loadingImage, setLoadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch profile image with authentication through Gateway
+  const { uploadProfileImage: uploadProfileImageMutation, uploading } =
+    useUploadProfileImage();
+  const { deleteProfileImage: deleteProfileImageMutation, deleting } =
+    useDeleteProfileImage();
+
+  // Use GraphQL query to get the profile image URL
+  const { profileImageUrl: graphqlImageUrl, loading: loadingUrl } =
+    useProfileImageUrl(personDisplayId);
+
+  // Fetch profile image with authentication
   useEffect(() => {
     const fetchImage = async () => {
-      if (!currentImageUrl || !accessToken) {
+      if (!currentImageUrl || !accessToken || !graphqlImageUrl) {
         setImageBlobUrl(null);
         return;
       }
 
       setLoadingImage(true);
       try {
-        const url = getProfileImageUrl(personDisplayId, imageVersion);
+        // Use the URL from GraphQL query with cache busting
+        const url = `${graphqlImageUrl}?v=${imageVersion}`;
         const response = await fetch(url, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -69,11 +77,17 @@ const ProfileImageUpload = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [personDisplayId, currentImageUrl, accessToken, imageVersion]);
+  }, [
+    personDisplayId,
+    currentImageUrl,
+    accessToken,
+    imageVersion,
+    graphqlImageUrl,
+  ]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !accessToken) return;
+    if (!file) return;
 
     // Validate file type
     if (!['image/jpeg', 'image/png'].includes(file.type)) {
@@ -87,19 +101,10 @@ const ProfileImageUpload = ({
       return;
     }
 
-    setUploading(true);
     setError(null);
 
     try {
-      const response = await uploadProfileImage(
-        personDisplayId,
-        file,
-        accessToken
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await uploadProfileImageMutation(personDisplayId, file);
 
       setImageVersion((v) => v + 1);
       onImageUpdated();
@@ -107,7 +112,6 @@ const ProfileImageUpload = ({
       console.error('Error uploading profile image:', err);
       setError('Failed to upload profile image');
     } finally {
-      setUploading(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -117,28 +121,17 @@ const ProfileImageUpload = ({
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete the profile image?'))
       return;
-    if (!accessToken) return;
 
-    setDeleting(true);
     setError(null);
 
     try {
-      const response = await deleteProfileImageRest(
-        personDisplayId,
-        accessToken
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await deleteProfileImageMutation(personDisplayId);
 
       setImageBlobUrl(null);
       onImageUpdated();
     } catch (err) {
       console.error('Error deleting profile image:', err);
       setError('Failed to delete profile image');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -157,7 +150,7 @@ const ProfileImageUpload = ({
           borderWidth={2}
           borderColor="border.muted"
         >
-          {uploading || loadingImage ? (
+          {uploading || loadingImage || loadingUrl ? (
             <Spinner size="lg" />
           ) : imageBlobUrl ? (
             <Image
