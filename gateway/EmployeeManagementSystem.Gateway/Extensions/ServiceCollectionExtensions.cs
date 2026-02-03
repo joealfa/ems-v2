@@ -1,5 +1,4 @@
-using EmployeeManagementSystem.ApiClient.Generated;
-using EmployeeManagementSystem.Gateway.Authentication;
+using EmployeeManagementSystem.ApiClient.Extensions;
 using EmployeeManagementSystem.Gateway.Caching;
 using EmployeeManagementSystem.Gateway.DataLoaders;
 using HotChocolate.Types.Descriptors;
@@ -25,8 +24,17 @@ public static class ServiceCollectionExtensions
             // Configure Redis
             _ = services.AddRedisServices(configuration);
 
-            // Configure EMS API Client
-            _ = services.AddEmsApiClient(configuration);
+            // Register HttpContextAccessor for token forwarding
+            _ = services.AddHttpContextAccessor();
+
+            // Use the ApiClient's AddEmsApiClient with a token provider that extracts the token from HTTP context
+            _ = services.AddEmsApiClient(configuration["ApiClient:BaseUrl"] ?? "https://localhost:5001", sp =>
+            {
+                IHttpContextAccessor httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+                return _ => Task.FromResult(
+                    httpContextAccessor.HttpContext?.Request.Headers.Authorization
+                        .FirstOrDefault()?.Replace("Bearer ", ""));
+            });
 
             // Configure HotChocolate GraphQL
             _ = services.AddGraphQLServices();
@@ -64,36 +72,6 @@ public static class ServiceCollectionExtensions
             // Register custom cache service
             _ = services.AddScoped<IRedisCacheService, RedisCacheService>();
             */
-
-            return services;
-        }
-
-        /// <summary>
-        /// Adds the EMS API client to the service collection.
-        /// </summary>
-        /// <param name="configuration">The application configuration.</param>
-        /// <returns>The service collection for chaining.</returns>
-        private IServiceCollection AddEmsApiClient(IConfiguration configuration)
-        {
-            string baseUrl = configuration["ApiClient:BaseUrl"] ?? "https://localhost:5001";
-
-            // Get the HTTP context accessor to forward auth token
-            _ = services.AddHttpContextAccessor();
-
-            // Register the JWT forwarding handler
-            _ = services.AddTransient<JwtForwardingHandler>();
-
-            _ = services.AddHttpClient("EmsApiClient")
-                .AddHttpMessageHandler<JwtForwardingHandler>();
-
-            // Register the EMS API client with token forwarding from GraphQL context
-            _ = services.AddScoped(sp =>
-            {
-                IHttpClientFactory httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-                HttpClient httpClient = httpClientFactory.CreateClient("EmsApiClient");
-
-                return new EmsApiClient(httpClient) { BaseUrl = baseUrl };
-            });
 
             return services;
         }

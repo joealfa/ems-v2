@@ -32,8 +32,11 @@ public static class ServiceCollectionExtensions
             ArgumentException.ThrowIfNullOrWhiteSpace(baseUrl);
             ArgumentNullException.ThrowIfNull(tokenProvider);
 
+            // Register the handler factory in DI
+            _ = services.AddTransient(sp => new JwtAuthenticationHandler(tokenProvider(sp)));
+
             _ = services.AddHttpClient("EmsApiClient")
-                .ConfigurePrimaryHttpMessageHandler(sp => new JwtAuthenticationHandler(tokenProvider(sp)));
+                .AddHttpMessageHandler<JwtAuthenticationHandler>();
 
             _ = services.AddScoped(sp =>
             {
@@ -60,8 +63,11 @@ public static class ServiceCollectionExtensions
             ArgumentException.ThrowIfNullOrWhiteSpace(baseUrl);
             ArgumentException.ThrowIfNullOrWhiteSpace(token);
 
+            // Register the handler with static token in DI
+            _ = services.AddTransient(_ => new JwtAuthenticationHandler(token));
+
             _ = services.AddHttpClient("EmsApiClient")
-                .ConfigurePrimaryHttpMessageHandler(() => new JwtAuthenticationHandler(token));
+                .AddHttpMessageHandler<JwtAuthenticationHandler>();
 
             _ = services.AddScoped(sp =>
             {
