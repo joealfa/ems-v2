@@ -46,6 +46,8 @@ import type {
 } from '../../graphql/generated/graphql';
 import { DocumentsTable, formatFileSize } from '../../components/documents';
 import { formatEnumLabel } from '../../utils/formatters';
+import { useConfirm } from '../../hooks';
+import { ConfirmDialog } from '../../components/ui';
 
 // GraphQL enum values - used directly for both display and API calls
 const GenderOptions: Gender[] = ['Male', 'Female'];
@@ -140,6 +142,7 @@ const PersonFormPage = () => {
   const authContext = useContext(AuthContext);
   const accessToken = authContext?.accessToken ?? null;
   const isEditMode = displayId && displayId !== 'new';
+  const { confirm, confirmDialog } = useConfirm();
 
   const {
     person,
@@ -390,12 +393,17 @@ const PersonFormPage = () => {
   };
 
   const handleDeleteProfileImage = async () => {
-    if (
-      !displayId ||
-      !accessToken ||
-      !window.confirm('Are you sure you want to delete the profile image?')
-    )
-      return;
+    if (!displayId || !accessToken) return;
+
+    const confirmed = await confirm({
+      title: 'Delete Profile Image',
+      message:
+        'Are you sure you want to delete the profile image? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmColorScheme: 'red',
+    });
+
+    if (!confirmed) return;
 
     setUploadingImage(true);
     try {
@@ -495,12 +503,17 @@ const PersonFormPage = () => {
   };
 
   const handleDocumentDelete = async (documentDisplayId: number) => {
-    if (
-      !displayId ||
-      !accessToken ||
-      !window.confirm('Are you sure you want to delete this document?')
-    )
-      return;
+    if (!displayId || !accessToken) return;
+
+    const confirmed = await confirm({
+      title: 'Delete Document',
+      message:
+        'Are you sure you want to delete this document? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmColorScheme: 'red',
+    });
+
+    if (!confirmed) return;
 
     try {
       await deleteDocumentMutation(Number(displayId), documentDisplayId);
@@ -1360,6 +1373,7 @@ const PersonFormPage = () => {
           </Flex>
         </Stack>
       </form>
+      <ConfirmDialog {...confirmDialog} />
     </Box>
   );
 };

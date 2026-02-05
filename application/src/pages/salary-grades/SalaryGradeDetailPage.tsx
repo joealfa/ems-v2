@@ -15,20 +15,29 @@ import {
   useDeleteSalaryGrade,
 } from '../../hooks/useSalaryGrades';
 import { formatCurrency } from '../../utils/formatters';
+import { useConfirm } from '../../hooks';
+import { ConfirmDialog } from '../../components/ui';
 
 const SalaryGradeDetailPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
+  const { confirm, confirmDialog } = useConfirm();
 
   const { salaryGrade, loading, error } = useSalaryGrade(Number(displayId));
   const { deleteSalaryGrade, loading: deleting } = useDeleteSalaryGrade();
 
   const handleDelete = async () => {
-    if (
-      !displayId ||
-      !window.confirm('Are you sure you want to delete this salary grade?')
-    )
-      return;
+    if (!displayId) return;
+
+    const confirmed = await confirm({
+      title: 'Delete Salary Grade',
+      message:
+        'Are you sure you want to delete this salary grade? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmColorScheme: 'red',
+    });
+
+    if (!confirmed) return;
 
     try {
       await deleteSalaryGrade(Number(displayId));
@@ -196,6 +205,7 @@ const SalaryGradeDetailPage = () => {
           </Card.Body>
         </Card.Root>
       </Stack>
+      <ConfirmDialog {...confirmDialog} />
     </Box>
   );
 };

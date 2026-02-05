@@ -17,6 +17,8 @@ import {
   useDeleteDocument,
   getDocumentDownloadUrl,
 } from '../../hooks/useDocuments';
+import { useConfirm } from '../../hooks';
+import { ConfirmDialog } from '../ui';
 
 interface PersonDocumentsProps {
   personDisplayId: number;
@@ -26,6 +28,7 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
   const { documents, loading, refetch } = usePersonDocuments(personDisplayId);
   const { uploadDocument, uploading } = useUploadDocument();
   const { deleteDocument } = useDeleteDocument();
+  const { confirm, confirmDialog } = useConfirm();
   const [error, setError] = useState<string | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [description, setDescription] = useState('');
@@ -107,8 +110,15 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
   };
 
   const handleDelete = async (documentDisplayId: number) => {
-    if (!window.confirm('Are you sure you want to delete this document?'))
-      return;
+    const confirmed = await confirm({
+      title: 'Delete Document',
+      message:
+        'Are you sure you want to delete this document? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmColorScheme: 'red',
+    });
+
+    if (!confirmed) return;
 
     try {
       await deleteDocument(personDisplayId, documentDisplayId);
@@ -259,6 +269,7 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
           showActions={true}
         />
       </Card.Body>
+      <ConfirmDialog {...confirmDialog} />
     </Card.Root>
   );
 };

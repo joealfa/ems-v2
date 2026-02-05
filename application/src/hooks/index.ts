@@ -1,5 +1,6 @@
 export * from './useDebounce';
 export * from './useAuth';
+export * from './useConfirm';
 
 // GraphQL hooks
 export * from './useAuthMutations';

@@ -49,12 +49,6 @@ public static class ServiceCollectionExtensions
         /// <returns>The service collection for chaining.</returns>
         private IServiceCollection AddRedisServices(IConfiguration configuration)
         {
-            // TEMPORARY: Disable Redis caching for debugging
-            // Use NoOpCacheService which bypasses all caching
-            _ = services.AddScoped<IRedisCacheService, NoOpCacheService>();
-
-            // Original Redis implementation (commented out):
-            /*
             string redisConnectionString = configuration["Redis:ConnectionString"] ?? "localhost:6379";
             string instanceName = configuration["Redis:InstanceName"] ?? "EmsGateway:";
 
@@ -69,9 +63,8 @@ public static class ServiceCollectionExtensions
                 options.InstanceName = instanceName;
             });
 
-            // Register custom cache service
+            // Register custom cache service with hash-based key generation
             _ = services.AddScoped<IRedisCacheService, RedisCacheService>();
-            */
 
             return services;
         }

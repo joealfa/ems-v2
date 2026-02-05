@@ -12,20 +12,29 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSchool, useDeleteSchool } from '../../hooks/useSchools';
 import { formatAddress } from '../../utils/formatters';
+import { useConfirm } from '../../hooks';
+import { ConfirmDialog } from '../../components/ui';
 
 const SchoolDetailPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
+  const { confirm, confirmDialog } = useConfirm();
 
   const { school, loading, error } = useSchool(Number(displayId));
   const { deleteSchool, loading: deleting } = useDeleteSchool();
 
   const handleDelete = async () => {
-    if (
-      !displayId ||
-      !window.confirm('Are you sure you want to delete this school?')
-    )
-      return;
+    if (!displayId) return;
+
+    const confirmed = await confirm({
+      title: 'Delete School',
+      message:
+        'Are you sure you want to delete this school? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmColorScheme: 'red',
+    });
+
+    if (!confirmed) return;
 
     try {
       await deleteSchool(Number(displayId));
@@ -230,6 +239,7 @@ const SchoolDetailPage = () => {
           </Card.Body>
         </Card.Root>
       </Stack>
+      <ConfirmDialog {...confirmDialog} />
     </Box>
   );
 };

@@ -58,13 +58,32 @@ application/
 
 ## Getting Started
 
-### Install Dependencies
+### 1. Environment Setup
+
+Copy the example environment file and configure it:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and add your Google OAuth Client ID:
+
+```env
+DEV=true
+VITE_API_BASE_URL=https://localhost:7166
+VITE_GRAPHQL_URL=https://localhost:5003/graphql
+VITE_GOOGLE_CLIENT_ID=your-actual-google-client-id
+```
+
+**Important:** Never commit the `.env` file to git. It's already in `.gitignore`.
+
+### 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### Development
+### 3. Development
 
 ```bash
 # Start development server

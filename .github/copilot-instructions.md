@@ -226,18 +226,49 @@ The GraphQL Gateway serves as the BFF (Backend-for-Frontend) layer:
 - `TypeExtensions.cs` - GraphQL type extensions for nested resolvers
 
 **REST Controllers** (`gateway/.../Controllers/`):
-- `DocumentsController.cs` - Proxy for file upload/download operations
-- `AuthController.cs` - Proxy for authentication (if needed)
-
-These REST controllers exist because GraphQL doesn't natively support multipart file uploads. The frontend calls these endpoints directly for file operations.
+- `ProfileImageController.cs` - Proxy for profile image operations
+- These REST controllers exist because GraphQL doesn't natively support binary file operations
+- Frontend calls these endpoints directly for file operations
 
 **DataLoaders** (`gateway/.../DataLoaders/`):
 - Batch and cache individual entity fetches to prevent N+1 queries
-- Example: `PersonDataLoader`, `EmploymentDataLoader`
+- Example: `PersonDataLoader`, `EmploymentDataLoader`, `SchoolDataLoader`
+- Each DataLoader checks Redis cache first, then batches API calls
 
 **Caching** (`gateway/.../Caching/`):
-- `IRedisCacheService` - Redis cache interface
-- `CacheKeys` - Centralized cache key generation
+- `IRedisCacheService` - Redis cache interface with GetAsync, SetAsync, RemoveAsync methods
+- `RedisCacheService` - Implementation using StackExchange.Redis and IDistributedCache
+- `CacheKeys` - Centralized cache key generation with hash-based approach
+  - Individual entities: `person:123`, `school:456`
+  - List queries: `persons:list:a3f2e1b4c5d6e7f8` (SHA256 hash of all filter parameters)
+  - Hash includes ALL filter parameters (pageNumber, pageSize, searchTerm, sorting, filtering)
+  - First 16 characters of hash used for brevity while maintaining uniqueness
+
+**Cache Key Generation Pattern:**
+```csharp
+// Include ALL filter parameters in cache key
+string cacheKey = CacheKeys.PersonsList(
+    pageNumber,
+    pageSize,
+    searchTerm,
+    fullNameFilter,     // Don't omit any filters!
+    displayIdFilter,
+    gender,
+    civilStatus,
+    sortBy,
+    sortDescending
+);
+
+// CacheKeys.PersonsList internally:
+// 1. Serializes all parameters to JSON
+// 2. Generates SHA256 hash
+// 3. Returns prefix + first 16 chars of hash
+```
+
+**Cache Invalidation:**
+- After mutations (create/update/delete), invalidate related cache entries
+- Use `RemoveByPrefixAsync()` for list caches
+- Use `RemoveAsync()` for individual entity caches
 
 
 ### UI guidelines
@@ -246,6 +277,46 @@ These REST controllers exist because GraphQL doesn't natively support multipart 
 - Use Chakra-UI components for consistent styling.
 - Ensure the application is responsive and works well on different screen sizes.
 - Use AG Grid for displaying tabular data with features like sorting, filtering, and pagination. See reference: https://www.ag-grid.com/example-inventory/
+
+
+### Security Guidelines
+
+This project follows security best practices:
+
+**Authentication & Authorization:**
+- JWT Bearer tokens with 15-minute expiration
+- Refresh tokens stored in HttpOnly cookies (7-day expiration)
+- All token validation flags enabled (issuer, audience, lifetime, signing key)
+- Clock skew set to zero for strict expiration enforcement
+- Google OAuth2 for user authentication
+
+**API Security:**
+- `[Authorize]` attribute on all protected endpoints
+- CORS configured with specific allowed origins (no wildcards in production)
+- Input validation with Data Annotations
+- Entity Framework Core (automatic parameterization prevents SQL injection)
+
+**Data Protection:**
+- Soft deletes (IsDeleted flag) prevent accidental data loss
+- Audit trail (CreatedBy, ModifiedBy, timestamps) on all entities
+- Azure Blob Storage for file uploads
+- Redis caching with TTL
+
+**Frontend Security:**
+- React auto-escaping prevents XSS
+- No use of `dangerouslySetInnerHTML` without sanitization
+- TypeScript for type safety
+- Token auto-refresh mechanism
+
+**Secrets Management:**
+- Development: User secrets (`dotnet user-secrets`)
+- Production: Environment variables or Azure Key Vault
+- Never commit secrets to repository
+- `.env` files in `.gitignore`
+
+**Security Documentation:**
+- See `docs/SECURITY.md` for comprehensive security guidelines
+- See `docs/DEPLOYMENT.md` for production deployment checklist
 
 
 ### References
@@ -263,3 +334,4 @@ These REST controllers exist because GraphQL doesn't natively support multipart 
 - [xUnit Documentation](https://xunit.net/docs/getting-started/netcore/cmdline)
 - [AG Grid Documentation](https://www.ag-grid.com/react-data-grid/getting-started/)
 - [NSwag Documentation](https://github.com/RicoSuter/NSwag)
+- [StackExchange.Redis Documentation](https://stackexchange.github.io/StackExchange.Redis/)

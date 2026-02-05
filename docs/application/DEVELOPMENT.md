@@ -9,7 +9,9 @@ This document provides guidelines for developing and contributing to the EMS fro
 - **Node.js** 18.x or higher
 - **npm** 9.x or higher
 - **VS Code** (recommended IDE)
-- **Backend API** running on `http://localhost:5031`
+- **Gateway** running on `https://localhost:5003` (GraphQL)
+- **Backend API** running on `https://localhost:7166`
+- **Redis** running on `localhost:6379`
 - **Google Cloud Console** project with OAuth2 credentials
 
 ---
@@ -36,7 +38,9 @@ cp .env.example .env
 Create a `.env` file in the `application` directory:
 
 ```env
-VITE_API_BASE_URL=http://localhost:5031
+DEV=true
+VITE_API_BASE_URL=https://localhost:7166
+VITE_GRAPHQL_URL=https://localhost:5003/graphql
 VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 ```
 
@@ -70,14 +74,26 @@ npm run dev
 
 The app will be available at `http://localhost:5173` with hot module replacement.
 
-### 2. Ensure Backend is Running
+### 2. Ensure Services are Running
 
-The backend API must be running at `http://localhost:5031`. If not:
+The following services must be running:
 
-```bash
-cd ../server
-dotnet run --project EmployeeManagementSystem.Api
-```
+1. **Backend API** at `https://localhost:7166`:
+   ```bash
+   cd ../server
+   dotnet run --project EmployeeManagementSystem.Api
+   ```
+
+2. **Gateway** at `https://localhost:5003`:
+   ```bash
+   cd ../gateway
+   dotnet run --project EmployeeManagementSystem.Gateway
+   ```
+
+3. **Redis** at `localhost:6379`:
+   ```bash
+   docker run -d -p 6379:6379 redis
+   ```
 
 ### 3. Code Changes
 
@@ -417,7 +433,10 @@ localStorage.clear();
 Error: Network Error
 ```
 
-**Solution:** Ensure backend is running at `http://localhost:5062`
+**Solution:** Ensure all services are running:
+- Backend API: `https://localhost:7166`
+- Gateway: `https://localhost:5003/graphql`
+- Redis: `localhost:6379`
 
 #### CORS Error
 
@@ -517,22 +536,26 @@ dist/
 
 | Setting     | Development              | Production              |
 |-------------|--------------------------|-------------------------|
-| API URL     | `http://localhost:5062`  | Configure in deployment |
+| Backend API | `https://localhost:7166` | Configure in deployment |
+| GraphQL     | `https://localhost:5003/graphql` | Configure in deployment |
 | Source Maps | Enabled                  | Disabled                |
 | HMR         | Enabled                  | N/A                     |
 
-### Configuring API URL
+### Configuring API and GraphQL URLs
 
-For different environments, update `src/api/config.ts`:
+For different environments, update your `.env` file:
 
-```typescript
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5062';
+```env
+VITE_API_BASE_URL=https://localhost:7166
+VITE_GRAPHQL_URL=https://localhost:5003/graphql
 ```
 
-Then set environment variable:
+For production builds:
 
 ```bash
-VITE_API_URL=https://api.production.com npm run build
+VITE_API_BASE_URL=https://api.production.com \
+VITE_GRAPHQL_URL=https://gateway.production.com/graphql \
+npm run build
 ```
 
 ---

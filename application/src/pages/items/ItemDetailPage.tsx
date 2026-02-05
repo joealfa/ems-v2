@@ -11,20 +11,29 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useItem, useDeleteItem } from '../../hooks/useItems';
+import { useConfirm } from '../../hooks';
+import { ConfirmDialog } from '../../components/ui';
 
 const ItemDetailPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
+  const { confirm, confirmDialog } = useConfirm();
 
   const { item, loading, error } = useItem(Number(displayId));
   const { deleteItem, loading: deleting } = useDeleteItem();
 
   const handleDelete = async () => {
-    if (
-      !displayId ||
-      !window.confirm('Are you sure you want to delete this item?')
-    )
-      return;
+    if (!displayId) return;
+
+    const confirmed = await confirm({
+      title: 'Delete Item',
+      message:
+        'Are you sure you want to delete this item? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmColorScheme: 'red',
+    });
+
+    if (!confirmed) return;
 
     try {
       await deleteItem(Number(displayId));
@@ -168,6 +177,7 @@ const ItemDetailPage = () => {
           </Card.Body>
         </Card.Root>
       </Stack>
+      <ConfirmDialog {...confirmDialog} />
     </Box>
   );
 };

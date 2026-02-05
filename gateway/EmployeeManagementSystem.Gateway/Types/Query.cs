@@ -32,7 +32,17 @@ public class Query
         [Service] IRedisCacheService cache,
         CancellationToken ct)
     {
-        string cacheKey = CacheKeys.PersonsList(pageNumber, pageSize, searchTerm);
+        string cacheKey = CacheKeys.PersonsList(
+            pageNumber,
+            pageSize,
+            searchTerm,
+            fullNameFilter,
+            displayIdFilter,
+            gender,
+            civilStatus,
+            sortBy,
+            sortDescending);
+
         return await cache.GetOrSetAsync(
             cacheKey,
             async token => await client.PersonsGETAsync(
@@ -80,7 +90,19 @@ public class Query
         [Service] IRedisCacheService cache,
         CancellationToken ct)
     {
-        string cacheKey = CacheKeys.EmploymentsList(pageNumber, pageSize, searchTerm, isActive);
+        string cacheKey = CacheKeys.EmploymentsList(
+            pageNumber,
+            pageSize,
+            searchTerm,
+            displayIdFilter,
+            employeeNameFilter,
+            positionFilter,
+            depEdIdFilter,
+            employmentStatus,
+            isActive,
+            sortBy,
+            sortDescending);
+
         return await cache.GetOrSetAsync(
             cacheKey,
             async token => await client.EmploymentsGETAsync(
@@ -124,7 +146,13 @@ public class Query
         [Service] IRedisCacheService cache,
         CancellationToken ct)
     {
-        string cacheKey = CacheKeys.SchoolsList(pageNumber, pageSize, searchTerm);
+        string cacheKey = CacheKeys.SchoolsList(
+            pageNumber,
+            pageSize,
+            searchTerm,
+            sortBy,
+            sortDescending);
+
         return await cache.GetOrSetAsync(
             cacheKey,
             async token => await client.SchoolsGETAsync(
@@ -162,7 +190,13 @@ public class Query
         [Service] IRedisCacheService cache,
         CancellationToken ct)
     {
-        string cacheKey = CacheKeys.PositionsList(pageNumber, pageSize, searchTerm);
+        string cacheKey = CacheKeys.PositionsList(
+            pageNumber,
+            pageSize,
+            searchTerm,
+            sortBy,
+            sortDescending);
+
         return await cache.GetOrSetAsync(
             cacheKey,
             async token => await client.PositionsGETAsync(
@@ -200,7 +234,13 @@ public class Query
         [Service] IRedisCacheService cache,
         CancellationToken ct)
     {
-        string cacheKey = CacheKeys.SalaryGradesList(pageNumber, pageSize, searchTerm);
+        string cacheKey = CacheKeys.SalaryGradesList(
+            pageNumber,
+            pageSize,
+            searchTerm,
+            sortBy,
+            sortDescending);
+
         return await cache.GetOrSetAsync(
             cacheKey,
             async token => await client.SalaryGradesGETAsync(
@@ -238,7 +278,13 @@ public class Query
         [Service] IRedisCacheService cache,
         CancellationToken ct)
     {
-        string cacheKey = CacheKeys.ItemsList(pageNumber, pageSize, searchTerm);
+        string cacheKey = CacheKeys.ItemsList(
+            pageNumber,
+            pageSize,
+            searchTerm,
+            sortBy,
+            sortDescending);
+
         return await cache.GetOrSetAsync(
             cacheKey,
             async token => await client.ItemsGETAsync(

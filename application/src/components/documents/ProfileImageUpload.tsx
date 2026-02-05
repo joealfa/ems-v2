@@ -6,6 +6,8 @@ import {
   useUploadProfileImage,
   useDeleteProfileImage,
 } from '../../hooks/useDocuments';
+import { useConfirm } from '../../hooks';
+import { ConfirmDialog } from '../ui';
 
 interface ProfileImageUploadProps {
   personDisplayId: number;
@@ -20,6 +22,7 @@ const ProfileImageUpload = ({
 }: ProfileImageUploadProps) => {
   const authContext = useContext(AuthContext);
   const accessToken = authContext?.accessToken ?? null;
+  const { confirm, confirmDialog } = useConfirm();
   const [error, setError] = useState<string | null>(null);
   const [imageVersion, setImageVersion] = useState(0);
   const [imageBlobUrl, setImageBlobUrl] = useState<string | null>(null);
@@ -119,8 +122,15 @@ const ProfileImageUpload = ({
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete the profile image?'))
-      return;
+    const confirmed = await confirm({
+      title: 'Delete Profile Image',
+      message:
+        'Are you sure you want to delete the profile image? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmColorScheme: 'red',
+    });
+
+    if (!confirmed) return;
 
     setError(null);
 
@@ -207,6 +217,7 @@ const ProfileImageUpload = ({
           JPEG or PNG, max 5 MB
         </Text>
       </Flex>
+      <ConfirmDialog {...confirmDialog} />
     </Box>
   );
 };

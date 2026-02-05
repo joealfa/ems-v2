@@ -11,20 +11,29 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePosition, useDeletePosition } from '../../hooks/usePositions';
+import { useConfirm } from '../../hooks';
+import { ConfirmDialog } from '../../components/ui';
 
 const PositionDetailPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
+  const { confirm, confirmDialog } = useConfirm();
 
   const { position, loading, error } = usePosition(Number(displayId));
   const { deletePosition, loading: deleting } = useDeletePosition();
 
   const handleDelete = async () => {
-    if (
-      !displayId ||
-      !window.confirm('Are you sure you want to delete this position?')
-    )
-      return;
+    if (!displayId) return;
+
+    const confirmed = await confirm({
+      title: 'Delete Position',
+      message:
+        'Are you sure you want to delete this position? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmColorScheme: 'red',
+    });
+
+    if (!confirmed) return;
 
     try {
       await deletePosition(Number(displayId));
@@ -168,6 +177,7 @@ const PositionDetailPage = () => {
           </Card.Body>
         </Card.Root>
       </Stack>
+      <ConfirmDialog {...confirmDialog} />
     </Box>
   );
 };

@@ -12,20 +12,29 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEmployment, useDeleteEmployment } from '../../hooks/useEmployments';
 import { formatCurrency } from '../../utils/formatters';
+import { useConfirm } from '../../hooks';
+import { ConfirmDialog } from '../../components/ui';
 
 const EmploymentDetailPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
+  const { confirm, confirmDialog } = useConfirm();
 
   const { employment, loading, error } = useEmployment(Number(displayId));
   const { deleteEmployment, loading: deleting } = useDeleteEmployment();
 
   const handleDelete = async () => {
-    if (
-      !displayId ||
-      !window.confirm('Are you sure you want to delete this employment record?')
-    )
-      return;
+    if (!displayId) return;
+
+    const confirmed = await confirm({
+      title: 'Delete Employment Record',
+      message:
+        'Are you sure you want to delete this employment record? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmColorScheme: 'red',
+    });
+
+    if (!confirmed) return;
 
     try {
       await deleteEmployment(Number(displayId));
@@ -362,6 +371,7 @@ const EmploymentDetailPage = () => {
           </Card.Body>
         </Card.Root>
       </Stack>
+      <ConfirmDialog {...confirmDialog} />
     </Box>
   );
 };

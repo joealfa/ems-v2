@@ -35,17 +35,18 @@ ems-v2/
 ## Technology Stack
 
 ### Backend (.NET 10)
-- **ASP.NET Core** - Web API framework
+- **ASP.NET Core 10.0** - Web API framework
 - **Clean Architecture** - Layered approach with strict separation of concerns
-- **Entity Framework Core** - ORM for SQL database
+- **Entity Framework Core 10.0** - ORM for SQL database
 - **Azure Blob Storage** - File storage for documents
-- **JWT Authentication** - Secure API authentication
+- **JWT Authentication** - Secure API authentication with refresh token rotation
+- **AspNetCoreRateLimit** - Rate limiting for API protection
 - **Swagger/OpenAPI** - API documentation
 - **xUnit** - Testing framework
 
-### GraphQL Gateway
-- **HotChocolate** - GraphQL server for .NET
-- **Redis** - Caching layer
+### GraphQL Gateway (.NET 10)
+- **HotChocolate 15** - GraphQL server for .NET
+- **Redis** - Caching layer with hash-based key generation
 
 ### Frontend (React 19)
 - **React** - UI framework
@@ -76,6 +77,7 @@ ems-v2/
 - Node.js 18+ and npm
 - SQL Server (LocalDB or SQL Server Express)
 - Azure Storage Account (for blob storage)
+- Docker (for Redis) or Redis installed locally
 
 ### Backend Setup
 
@@ -84,29 +86,42 @@ cd server
 dotnet restore
 dotnet build
 cd EmployeeManagementSystem.Api
-dotnet run --launch-profile https
+dotnet run
 ```
 
-The API will be available at `https://localhost:5001/` with Swagger UI.
+The API will be available at `https://localhost:7166` with Swagger UI at `https://localhost:7166/swagger`
 
 ### Gateway Setup
 
+First, ensure Redis is running:
+```bash
+docker run -d -p 6379:6379 redis
+```
+
+Then start the Gateway:
 ```bash
 cd gateway/EmployeeManagementSystem.Gateway
-dotnet run --launch-profile https
+dotnet run
 ```
 
 The GraphQL Gateway will be available at `https://localhost:5003/graphql`
 
 ### Frontend Setup
 
+Create a `.env` file from the template:
 ```bash
 cd application
+cp .env.example .env
+# Edit .env with your Google OAuth Client ID
+```
+
+Install dependencies and start:
+```bash
 npm install
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173/`
+The application will be available at `http://localhost:5173`
 
 ### Generate GraphQL Types
 
@@ -154,13 +169,16 @@ The application uses a **GraphQL Gateway** pattern:
 ### REST API (Backend)
 - **Lowercase URLs** - All API routes use lowercase (e.g., `/api/v1/persons`, `/api/v1/salarygrades`)
 - **Versioning** - URL-based versioning (currently v1)
-- **Secure Authentication** - JWT access tokens with HttpOnly cookies for refresh tokens
-- **OpenAPI/Swagger** - API documentation
+- **Secure Authentication** - JWT access tokens (15 min) with HttpOnly cookies for refresh tokens (7 days)
+- **Token Rotation** - Automatic refresh token rotation with reuse detection
+- **Rate Limiting** - Configurable rate limits (5 auth requests/min in production)
+- **OpenAPI/Swagger** - Interactive API documentation at `/swagger`
 
 ### GraphQL (Gateway)
 - **Type-safe** - Strongly typed schema
 - **Single endpoint** - All queries/mutations via `/graphql`
-- **Caching** - Redis caching for improved performance
+- **Redis Caching** - Hash-based key generation for accurate cache invalidation
+- **DataLoaders** - Prevents N+1 query problems
 
 ## Project Guidelines
 
@@ -168,8 +186,22 @@ See [.github/copilot-instructions.md](.github/copilot-instructions.md) for detai
 
 ## Documentation
 
+### Architecture & Development
 - [Frontend Documentation](docs/application/README.md)
 - [Backend Documentation](docs/server/README.md)
+- [Frontend Development Guide](docs/application/DEVELOPMENT.md)
+- [Backend Development Guide](docs/server/DEVELOPMENT.md)
+
+### Security & Deployment
+- [Security Guide](docs/SECURITY.md) - Authentication, vulnerabilities, best practices
+- [Deployment Guide](docs/DEPLOYMENT.md) - Azure deployment instructions
+- [Implementation Summary](docs/IMPLEMENTATION-SUMMARY.md) - Recent security fixes
+
+### Technical Details
+- [Analysis Summary](docs/ANALYSIS-SUMMARY.md) - Architecture analysis and improvements
+- [API Reference](docs/server/API-REFERENCE.md) - Complete API endpoint documentation
+- [Database Schema](docs/server/DATABASE.md) - Database structure and relationships
+- [GraphQL Quick Reference](docs/gateway/GRAPHQL-QUICK-REFERENCE.md) - GraphQL schema
 
 ## License
 

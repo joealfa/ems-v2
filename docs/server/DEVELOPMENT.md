@@ -6,7 +6,7 @@ This document provides guidelines for developing and contributing to the EMS bac
 
 ## Prerequisites
 
-- **.NET 8.0 SDK** or higher
+- **.NET 10.0 SDK** or higher
 - **SQL Server** (LocalDB, SQL Server, or Azure SQL)
 - **Azure Storage Account** (for blob storage)
 - **Visual Studio 2022** or **VS Code** with C# extension
@@ -58,7 +58,7 @@ For local blob storage, install [Azurite](https://docs.microsoft.com/en-us/azure
 3. Navigate to **APIs & Services** > **Credentials**
 4. Create **OAuth 2.0 Client ID** (Web application)
 5. Add authorized redirect URIs:
-   - `http://localhost:5031/swagger/oauth2-redirect.html` (Swagger)
+   - `https://localhost:7166/swagger/oauth2-redirect.html` (Swagger)
 6. Copy Client ID and Client Secret to `appsettings.json`
 
 ### 4. Apply Migrations
@@ -74,9 +74,8 @@ dotnet run --project EmployeeManagementSystem.Api
 ```
 
 The API will be available at:
-- HTTP: `http://localhost:5031`
-- HTTPS: `https://localhost:7009`
-- Swagger: `http://localhost:5031/swagger`
+- HTTPS: `https://localhost:7166`
+- Swagger: `https://localhost:7166/swagger`
 
 ---
 
@@ -500,22 +499,12 @@ builder.Services.AddSwaggerGen(c =>
 ```json
 {
   "profiles": {
-    "http": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "launchUrl": "swagger",
-      "applicationUrl": "http://localhost:5062",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
     "https": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "https://localhost:7009;http://localhost:5062",
+      "applicationUrl": "https://localhost:7166",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

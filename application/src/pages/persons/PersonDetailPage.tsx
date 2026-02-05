@@ -16,20 +16,29 @@ import {
   ProfileImageUpload,
 } from '../../components/documents';
 import { formatAddress } from '../../utils/formatters';
+import { useConfirm } from '../../hooks';
+import { ConfirmDialog } from '../../components/ui';
 
 const PersonDetailPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
+  const { confirm, confirmDialog } = useConfirm();
 
   const { person, loading, error, refetch } = usePerson(Number(displayId));
   const { deletePerson, loading: deleting } = useDeletePerson();
 
   const handleDelete = async () => {
-    if (
-      !displayId ||
-      !window.confirm('Are you sure you want to delete this person?')
-    )
-      return;
+    if (!displayId) return;
+
+    const confirmed = await confirm({
+      title: 'Delete Person',
+      message:
+        'Are you sure you want to delete this person? This action cannot be undone.',
+      confirmText: 'Delete',
+      confirmColorScheme: 'red',
+    });
+
+    if (!confirmed) return;
 
     try {
       await deletePerson(Number(displayId));
@@ -306,6 +315,7 @@ const PersonDetailPage = () => {
           </Card.Body>
         </Card.Root>
       </Stack>
+      <ConfirmDialog {...confirmDialog} />
     </Box>
   );
 };

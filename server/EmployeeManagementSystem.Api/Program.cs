@@ -1,3 +1,4 @@
+using AspNetCoreRateLimit;
 using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Infrastructure.Data;
@@ -53,6 +54,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+// Configure IP Rate Limiting
+builder.Services.AddMemoryCache();
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.AddInMemoryRateLimiting();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -240,6 +247,9 @@ if (app.Environment.IsDevelopment())
 
 // CORS must be before HttpsRedirection to handle preflight requests
 app.UseCors("AllowHost");
+
+// Use IP Rate Limiting
+app.UseIpRateLimiting();
 
 // OpenAPI should be accessible via HTTP in development
 if (app.Environment.IsDevelopment())

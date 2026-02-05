@@ -31,7 +31,7 @@ The Employee Management System (EMS) backend is a comprehensive ASP.NET Core Web
 
 ### Prerequisites
 
-- .NET 8.0 SDK or higher
+- .NET 10.0 SDK or higher
 - SQL Server (LocalDB, SQL Server, or Azure SQL)
 - Azure Storage Account (for document storage)
 - Visual Studio 2022 or VS Code
@@ -76,12 +76,11 @@ dotnet run --project EmployeeManagementSystem.Api
 ```
 
 The API will be available at:
-- HTTP: `http://localhost:5031`
-- HTTPS: `https://localhost:7009`
+- HTTPS: `https://localhost:7166`
 
 ### Swagger UI
 
-Access API documentation at: `http://localhost:5031/swagger`
+Access API documentation at: `https://localhost:7166/swagger`
 
 Swagger UI includes OAuth2 integration for testing authenticated endpoints.
 
@@ -91,7 +90,7 @@ Swagger UI includes OAuth2 integration for testing authenticated endpoints.
 
 |          Technology       |        Purpose         |
 |---------------------------|------------------------|
-| **ASP.NET Core 8.0**      | Web API framework      |
+| **ASP.NET Core 10.0**     | Web API framework      |
 | **Entity Framework Core** | ORM and data access    |
 | **SQL Server**            | Relational database    |
 | **Azure Blob Storage**    | File storage           |
