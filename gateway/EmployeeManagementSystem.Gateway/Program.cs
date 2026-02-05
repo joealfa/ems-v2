@@ -14,13 +14,17 @@ builder.Services.AddControllers();
 // Add gateway services (Redis, ApiClient, GraphQL)
 builder.Services.AddGatewayServices(builder.Configuration);
 
+// Get CORS configuration
+string[] allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? throw new InvalidOperationException("Cors:AllowedOrigins is not configured");
+
 // Configure CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowHost", policy =>
     {
         _ = policy
-            .WithOrigins("http://localhost:5173", "https://localhost:5173")
+            .WithOrigins(allowedOrigins)
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -29,7 +33,7 @@ builder.Services.AddCors(options =>
 
 WebApplication app = builder.Build();
 
-app.UseCors();
+app.UseCors("AllowHost");
 
 // Map REST controllers for file operations
 app.MapControllers();

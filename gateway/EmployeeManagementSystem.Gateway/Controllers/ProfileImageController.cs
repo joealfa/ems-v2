@@ -21,8 +21,6 @@ public class ProfileImageController(
     {
         try
         {
-            logger.LogDebug("Fetching profile image for person {PersonDisplayId}", personDisplayId);
-            
             // Create HTTP client and forward the request to the backend API
             using var client = httpClientFactory.CreateClient();
             string apiBaseUrl = configuration["ApiClient:BaseUrl"] ?? "https://localhost:7166";
@@ -41,7 +39,6 @@ public class ProfileImageController(
             {
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    logger.LogDebug("Profile image not found (404) for person {PersonDisplayId}", personDisplayId);
                     return NotFound();
                 }
                 
@@ -52,8 +49,6 @@ public class ProfileImageController(
             
             var stream = await response.Content.ReadAsStreamAsync(ct);
             var contentType = response.Content.Headers.ContentType?.ToString() ?? "image/jpeg";
-            
-            logger.LogDebug("Successfully retrieved profile image for person {PersonDisplayId}", personDisplayId);
             
             return File(stream, contentType);
         }

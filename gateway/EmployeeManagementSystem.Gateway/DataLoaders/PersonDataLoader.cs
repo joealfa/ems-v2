@@ -3,25 +3,14 @@ using EmployeeManagementSystem.Gateway.Caching;
 
 namespace EmployeeManagementSystem.Gateway.DataLoaders;
 
-public class PersonDataLoader : BatchDataLoader<long, PersonResponseDto?>
+public class PersonDataLoader(
+    EmsApiClient client,
+    IRedisCacheService cache,
+    ILogger<PersonDataLoader> logger,
+    IBatchScheduler batchScheduler,
+    DataLoaderOptions? options = null) : BatchDataLoader<long, PersonResponseDto?>(batchScheduler, options ?? new DataLoaderOptions())
 {
-    private readonly EmsApiClient _client;
-    private readonly IRedisCacheService _cache;
-    private readonly ILogger<PersonDataLoader> _logger;
     private readonly TimeSpan _cacheTtl = TimeSpan.FromMinutes(10);
-
-    public PersonDataLoader(
-        EmsApiClient client,
-        IRedisCacheService cache,
-        ILogger<PersonDataLoader> logger,
-        IBatchScheduler batchScheduler,
-        DataLoaderOptions? options = null)
-        : base(batchScheduler, options ?? new DataLoaderOptions())
-    {
-        _client = client;
-        _cache = cache;
-        _logger = logger;
-    }
 
     protected override async Task<IReadOnlyDictionary<long, PersonResponseDto?>> LoadBatchAsync(
         IReadOnlyList<long> keys,
@@ -33,7 +22,7 @@ public class PersonDataLoader : BatchDataLoader<long, PersonResponseDto?>
         // Check cache first
         foreach (long key in keys)
         {
-            PersonResponseDto? cached = await _cache.GetAsync<PersonResponseDto>(CacheKeys.Person(key), ct);
+            PersonResponseDto? cached = await cache.GetAsync<PersonResponseDto>(CacheKeys.Person(key), ct);
             if (cached is not null)
             {
                 results[key] = cached;
@@ -49,17 +38,17 @@ public class PersonDataLoader : BatchDataLoader<long, PersonResponseDto?>
         {
             try
             {
-                PersonResponseDto? person = await _client.PersonsGET2Async(key, ct);
+                PersonResponseDto? person = await client.PersonsGET2Async(key, ct);
                 results[key] = person;
 
                 if (person is not null)
                 {
-                    await _cache.SetAsync(CacheKeys.Person(key), person, _cacheTtl, ct);
+                    await cache.SetAsync(CacheKeys.Person(key), person, _cacheTtl, ct);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to fetch person {DisplayId}", key);
+                logger.LogWarning(ex, "Failed to fetch person {DisplayId}", key);
                 results[key] = null;
             }
         }

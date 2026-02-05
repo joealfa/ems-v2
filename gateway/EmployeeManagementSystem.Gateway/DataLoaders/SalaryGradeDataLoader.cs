@@ -3,25 +3,14 @@ using EmployeeManagementSystem.Gateway.Caching;
 
 namespace EmployeeManagementSystem.Gateway.DataLoaders;
 
-public class SalaryGradeDataLoader : BatchDataLoader<long, SalaryGradeResponseDto?>
+public class SalaryGradeDataLoader(
+    EmsApiClient client,
+    IRedisCacheService cache,
+    ILogger<SalaryGradeDataLoader> logger,
+    IBatchScheduler batchScheduler,
+    DataLoaderOptions? options = null) : BatchDataLoader<long, SalaryGradeResponseDto?>(batchScheduler, options ?? new DataLoaderOptions())
 {
-    private readonly EmsApiClient _client;
-    private readonly IRedisCacheService _cache;
-    private readonly ILogger<SalaryGradeDataLoader> _logger;
     private readonly TimeSpan _cacheTtl = TimeSpan.FromMinutes(10);
-
-    public SalaryGradeDataLoader(
-        EmsApiClient client,
-        IRedisCacheService cache,
-        ILogger<SalaryGradeDataLoader> logger,
-        IBatchScheduler batchScheduler,
-        DataLoaderOptions? options = null)
-        : base(batchScheduler, options ?? new DataLoaderOptions())
-    {
-        _client = client;
-        _cache = cache;
-        _logger = logger;
-    }
 
     protected override async Task<IReadOnlyDictionary<long, SalaryGradeResponseDto?>> LoadBatchAsync(
         IReadOnlyList<long> keys,
@@ -33,7 +22,7 @@ public class SalaryGradeDataLoader : BatchDataLoader<long, SalaryGradeResponseDt
         // Check cache first
         foreach (long key in keys)
         {
-            SalaryGradeResponseDto? cached = await _cache.GetAsync<SalaryGradeResponseDto>(CacheKeys.SalaryGrade(key), ct);
+            SalaryGradeResponseDto? cached = await cache.GetAsync<SalaryGradeResponseDto>(CacheKeys.SalaryGrade(key), ct);
             if (cached is not null)
             {
                 results[key] = cached;
@@ -49,17 +38,17 @@ public class SalaryGradeDataLoader : BatchDataLoader<long, SalaryGradeResponseDt
         {
             try
             {
-                SalaryGradeResponseDto? salaryGrade = await _client.SalaryGradesGET2Async(key, ct);
+                SalaryGradeResponseDto? salaryGrade = await client.SalaryGradesGET2Async(key, ct);
                 results[key] = salaryGrade;
 
                 if (salaryGrade is not null)
                 {
-                    await _cache.SetAsync(CacheKeys.SalaryGrade(key), salaryGrade, _cacheTtl, ct);
+                    await cache.SetAsync(CacheKeys.SalaryGrade(key), salaryGrade, _cacheTtl, ct);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to fetch salary grade {DisplayId}", key);
+                logger.LogWarning(ex, "Failed to fetch salary grade {DisplayId}", key);
                 results[key] = null;
             }
         }
