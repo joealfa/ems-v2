@@ -41,12 +41,14 @@ ems-v2/
 - **Azure Blob Storage** - File storage for documents
 - **JWT Authentication** - Secure API authentication with refresh token rotation
 - **AspNetCoreRateLimit** - Rate limiting for API protection
+- **Serilog + Seq** - Structured logging and centralized monitoring
 - **Swagger/OpenAPI** - API documentation
 - **xUnit** - Testing framework
 
 ### GraphQL Gateway (.NET 10)
 - **HotChocolate 15** - GraphQL server for .NET
 - **Redis** - Caching layer with hash-based key generation
+- **Serilog + Seq** - Structured logging and centralized monitoring
 
 ### Frontend (React 19)
 - **React** - UI framework
@@ -72,12 +74,14 @@ ems-v2/
 
 ## Getting Started
 
+**📚 New to the project? See the [Quick Start Guide](docs/QUICK-START.md) for detailed step-by-step setup instructions.**
+
 ### Prerequisites
 - .NET 10 SDK
 - Node.js 18+ and npm
 - SQL Server (LocalDB or SQL Server Express)
 - Azure Storage Account (for blob storage)
-- Docker (for Redis) or Redis installed locally
+- Docker (for Redis and Seq) or Redis/Seq installed locally
 
 ### Backend Setup
 
@@ -93,9 +97,13 @@ The API will be available at `https://localhost:7166` with Swagger UI at `https:
 
 ### Gateway Setup
 
-First, ensure Redis is running:
+First, ensure Redis and Seq are running:
 ```bash
-docker run -d -p 6379:6379 redis
+# Redis for caching
+docker run -d --name redis -p 6379:6379 redis
+
+# Seq for centralized logging
+docker run -d --name seq -e ACCEPT_EULA=Y -p 5341:80 datalust/seq:latest
 ```
 
 Then start the Gateway:
@@ -105,6 +113,8 @@ dotnet run
 ```
 
 The GraphQL Gateway will be available at `https://localhost:5003/graphql`
+
+Access Seq UI for logs: `http://localhost:5341`
 
 ### Frontend Setup
 
@@ -186,9 +196,12 @@ See [.github/copilot-instructions.md](.github/copilot-instructions.md) for detai
 
 ## Documentation
 
+### Quick Links
+- [**Changelog**](CHANGELOG.md) - Recent changes and updates
+
 ### Architecture & Development
 - [Frontend Documentation](docs/application/README.md)
-- [Backend Documentation](docs/server/README.md)
+- [Backend Documentation](server/README.md)
 - [Frontend Development Guide](docs/application/DEVELOPMENT.md)
 - [Backend Development Guide](docs/server/DEVELOPMENT.md)
 
@@ -202,6 +215,7 @@ See [.github/copilot-instructions.md](.github/copilot-instructions.md) for detai
 - [API Reference](docs/server/API-REFERENCE.md) - Complete API endpoint documentation
 - [Database Schema](docs/server/DATABASE.md) - Database structure and relationships
 - [GraphQL Quick Reference](docs/gateway/GRAPHQL-QUICK-REFERENCE.md) - GraphQL schema
+- [Logging & Monitoring](docs/server/LOGGING.md) - Serilog and Seq logging implementation
 
 ## License
 

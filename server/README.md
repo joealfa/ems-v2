@@ -149,6 +149,10 @@ Once running, access Swagger UI at: `https://localhost:5001/swagger`
 - **Swashbuckle.AspNetCore** - Swagger documentation
 - **Microsoft.EntityFrameworkCore** - ORM
 - **NSwag.ApiDescription.Client** - API client generation
+- **Serilog.AspNetCore** - Structured logging framework
+- **Serilog.Sinks.Seq** - Seq sink for centralized log monitoring
+- **Serilog.Sinks.Async** - Async logging for better performance
+- **Serilog.Enrichers.*** - Log enrichment (Machine, Thread, Environment)
 
 ## Modern C# Features
 
@@ -161,9 +165,21 @@ The codebase leverages modern C# 12+ features:
 ## Configuration
 
 Configuration is managed through:
-- `appsettings.json` - Base configuration
+- `appsettings.json` - Base configuration (including Serilog settings)
 - `appsettings.Development.json` - Development overrides
-- User Secrets - Sensitive data (connection strings, API keys)
+- User Secrets - Sensitive data (connection strings, API keys, Seq API key)
+
+### Logging
+
+The backend uses **Serilog** for structured logging with **Seq** as the centralized logging platform:
+
+- **Console Sink**: Local development output with colored themes
+- **Seq Sink**: Centralized log aggregation at `http://localhost:5341`
+- **Async Sinks**: Non-blocking logging for better performance
+- **Enrichers**: Automatic context (MachineName, ThreadId, EnvironmentName, UserId)
+- **Request Logging**: Structured HTTP request/response logging
+
+See [Logging Documentation](../docs/server/LOGGING.md) for detailed information.
 
 ## Regenerating API Client
 

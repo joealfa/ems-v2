@@ -526,7 +526,7 @@ Services are registered in `Program.cs`:
 // Generic Repository
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-// Entity Services
+// Entity Services (with ILogger injected automatically)
 builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<ISchoolService, SchoolService>();
 builder.Services.AddScoped<IPositionService, PositionService>();
@@ -534,13 +534,18 @@ builder.Services.AddScoped<ISalaryGradeService, SalaryGradeService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IEmploymentService, EmploymentService>();
 
-// Document Services
+// Document Services (with logging)
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+
+// Authentication (with logging)
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Reports
 builder.Services.AddScoped<IReportsService, ReportsService>();
 ```
+
+**Note**: All services use constructor injection for `ILogger<T>` automatically via ASP.NET Core's dependency injection.
 
 ---
 

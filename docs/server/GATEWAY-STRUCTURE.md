@@ -12,23 +12,26 @@ gateway/EmployeeManagementSystem.Gateway/
 ├── appsettings.Development.json        # Development configuration
 ├── Caching/                            # Redis caching implementation
 │   ├── IRedisCacheService.cs           # Cache service interface
-│   ├── RedisCacheService.cs            # Redis cache implementation
-│   ├── NoOpCacheService.cs             # No-op cache for debugging
+│   ├── RedisCacheService.cs            # Redis cache implementation (with logging)
 │   └── CacheKeys.cs                    # Centralized cache key generation
+├── Controllers/                        # REST proxy controllers
+│   └── ProfileImageController.cs       # Profile image proxy (with logging)
 ├── DataLoaders/                        # HotChocolate DataLoaders for batching
-│   ├── PersonDataLoader.cs             # Person entity data loader
-│   ├── EmploymentDataLoader.cs         # Employment entity data loader
-│   ├── SchoolDataLoader.cs             # School entity data loader
-│   ├── PositionDataLoader.cs           # Position entity data loader
-│   ├── SalaryGradeDataLoader.cs        # Salary grade data loader
-│   └── ItemDataLoader.cs               # Item entity data loader
+│   ├── PersonDataLoader.cs             # Person entity data loader (with logging)
+│   ├── EmploymentDataLoader.cs         # Employment entity data loader (with logging)
+│   ├── SchoolDataLoader.cs             # School entity data loader (with logging)
+│   ├── PositionDataLoader.cs           # Position entity data loader (with logging)
+│   ├── SalaryGradeDataLoader.cs        # Salary grade data loader (with logging)
+│   └── ItemDataLoader.cs               # Item entity data loader (with logging)
+├── Errors/                             # Error handling
+│   └── ApiExceptionErrorFilter.cs      # GraphQL error filter (with logging)
 ├── Extensions/                         # Service registration extensions
 │   └── ServiceCollectionExtensions.cs  # DI configuration
 ├── Mappings/                           # GraphQL input to DTO mappings
 │   └── InputMappingExtensions.cs       # Extension methods for mapping inputs
 ├── Types/                              # GraphQL type definitions
 │   ├── Query.cs                        # All GraphQL queries
-│   ├── Mutation.cs                     # All GraphQL mutations
+│   ├── Mutation.cs                     # All GraphQL mutations (with logging)
 │   ├── Configuration/                  # GraphQL configuration & scalars
 │   │   ├── PascalCaseNamingConventions.cs  # Custom naming conventions for enums
 │   │   └── LongType.cs                 # Custom Long scalar type
@@ -112,6 +115,26 @@ This will generate hooks like:
 - `useUploadProfileImageMutation()`
 - `useGetPersonDocumentsQuery()`
 
+## Logging and Monitoring
+
+### Serilog Integration
+
+The Gateway uses **Serilog** for structured logging with the following components logged:
+
+**Logged Operations**:
+- **Mutations**: All create/update/delete operations for persons, employments, documents, auth
+- **RedisCacheService**: Cache hits, misses, and failures
+- **DataLoaders**: Entity fetch failures
+- **ApiExceptionErrorFilter**: GraphQL API exceptions with status codes
+- **ProfileImageController**: Profile image proxy operations
+- **Request Logging**: All HTTP requests with response times, status codes, user IDs
+
+**Log Destinations**:
+- **Console**: Colored output for local development
+- **Seq**: Centralized log aggregation at `http://localhost:5341`
+
+See [Logging Documentation](./LOGGING.md) for detailed information.
+
 ## Benefits
 
 1. **Consistency**: All API operations now use GraphQL
@@ -119,3 +142,4 @@ This will generate hooks like:
 3. **Better Performance**: DataLoaders prevent N+1 queries
 4. **Cleaner Architecture**: No mixing of REST and GraphQL
 5. **Caching**: Redis caching at the GraphQL layer
+6. **Observability**: Comprehensive structured logging with Serilog + Seq
