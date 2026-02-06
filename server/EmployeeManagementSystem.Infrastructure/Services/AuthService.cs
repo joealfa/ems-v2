@@ -6,6 +6,7 @@ using EmployeeManagementSystem.Infrastructure.Data;
 using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
@@ -22,17 +23,22 @@ namespace EmployeeManagementSystem.Infrastructure.Services;
 /// <remarks>
 /// Initializes a new instance of the <see cref="AuthService"/> class.
 /// </remarks>
-public class AuthService(ApplicationDbContext context, IConfiguration configuration) : IAuthService
+public class AuthService(ApplicationDbContext context, IConfiguration configuration, ILogger<AuthService> logger) : IAuthService
 {
     private readonly ApplicationDbContext _context = context;
     private readonly IConfiguration _configuration = configuration;
+    private readonly ILogger<AuthService> _logger = logger;
     private static readonly HttpClient _httpClient = new();
 
     /// <inheritdoc />
     public async Task<AuthResponseDto> AuthenticateWithGoogleAsync(string idToken, string ipAddress)
     {
+        _logger.LogDebug("Validating Google ID token from IP {IpAddress}", ipAddress);
+
         // Validate the Google ID token
         GoogleJsonWebSignature.Payload payload = await ValidateGoogleTokenAsync(idToken);
+
+        _logger.LogDebug("Google token validated for email {Email}", payload.Email);
 
         // Find or create the user - use IgnoreQueryFilters to find soft-deleted users too
         User? user = await _context.Users
@@ -58,9 +64,13 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
 
             _ = _context.Users.Add(user);
             _ = await _context.SaveChangesAsync();
+
+            _logger.LogInformation("New user created: {UserId} ({Email}) from IP {IpAddress}", user.Id, user.Email, ipAddress);
         }
         else
         {
+            _logger.LogDebug("Existing user found: {UserId} ({Email}), updating login information", user.Id, user.Email);
+
             // Update user directly in database using ExecuteUpdateAsync to bypass change tracking issues
             _ = await _context.Users
                 .IgnoreQueryFilters()
@@ -75,13 +85,18 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
                     .SetProperty(u => u.IsDeleted, false));
 
             // Revoke all active refresh tokens for this user directly in database
-            _ = await _context.RefreshTokens
+            int revokedCount = await _context.RefreshTokens
                 .IgnoreQueryFilters()
                 .Where(rt => rt.UserId == user.Id && rt.RevokedOn == null && rt.ExpiresOn > DateTime.UtcNow)
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(rt => rt.RevokedOn, DateTime.UtcNow)
                     .SetProperty(rt => rt.RevokedByIp, ipAddress)
                     .SetProperty(rt => rt.ReasonRevoked, "Replaced by new token on login"));
+
+            if (revokedCount > 0)
+            {
+                _logger.LogInformation("Revoked {TokenCount} existing refresh tokens for user {UserId} on new login", revokedCount, user.Id);
+            }
 
             // Refresh user data after update
             user.Email = payload.Email;
@@ -193,12 +208,15 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
     /// <inheritdoc />
     public async Task<AuthResponseDto?> RefreshTokenAsync(string refreshToken, string ipAddress)
     {
+        _logger.LogDebug("Attempting to refresh token from IP {IpAddress}", ipAddress);
+
         User? user = await _context.Users
             .Include(u => u.RefreshTokens)
             .FirstOrDefaultAsync(u => u.RefreshTokens.Any(t => t.Token == refreshToken));
 
         if (user == null)
         {
+            _logger.LogWarning("Refresh token not found for any user from IP {IpAddress}", ipAddress);
             return null;
         }
 
@@ -209,8 +227,15 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
             // Token has been revoked or expired - revoke all tokens for security
             if (existingToken.IsRevoked)
             {
+                _logger.LogWarning("Attempted reuse of revoked refresh token for user {UserId} from IP {IpAddress}. Revoking descendant tokens for security.",
+                    user.Id, ipAddress);
+
                 // Potential token reuse - revoke all descendant tokens
                 RevokeDescendantTokens(existingToken, user.RefreshTokens, ipAddress, "Attempted reuse of revoked token");
+            }
+            else
+            {
+                _logger.LogDebug("Expired refresh token for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
             }
 
             return null;
@@ -228,6 +253,8 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
 
         _ = await _context.SaveChangesAsync();
 
+        _logger.LogInformation("Refresh token rotated successfully for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
+
         string accessToken = GenerateJwtToken(user);
 
         return new AuthResponseDto
@@ -242,12 +269,15 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
     /// <inheritdoc />
     public async Task<bool> RevokeTokenAsync(string refreshToken, string ipAddress)
     {
+        _logger.LogDebug("Attempting to revoke token from IP {IpAddress}", ipAddress);
+
         User? user = await _context.Users
             .Include(u => u.RefreshTokens)
             .FirstOrDefaultAsync(u => u.RefreshTokens.Any(t => t.Token == refreshToken));
 
         if (user == null)
         {
+            _logger.LogWarning("Token revoke failed - token not found for any user from IP {IpAddress}", ipAddress);
             return false;
         }
 
@@ -255,6 +285,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
 
         if (!token.IsActive)
         {
+            _logger.LogWarning("Token revoke failed - token already inactive for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
             return false;
         }
 
@@ -263,6 +294,8 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
         token.ReasonRevoked = "Revoked by user";
 
         _ = await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Refresh token successfully revoked for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
 
         return true;
     }
@@ -379,7 +412,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
     /// <summary>
     /// Fetches user information from Google using an access token.
     /// </summary>
-    private static async Task<GoogleUserInfo> GetGoogleUserInfoAsync(string accessToken)
+    private async Task<GoogleUserInfo> GetGoogleUserInfoAsync(string accessToken)
     {
         HttpRequestMessage request = new(HttpMethod.Get, "https://www.googleapis.com/oauth2/v3/userinfo");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -389,6 +422,8 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
         if (!response.IsSuccessStatusCode)
         {
             string error = await response.Content.ReadAsStringAsync();
+            _logger.LogError("Failed to get user info from Google. Status: {StatusCode}, Error: {Error}",
+                response.StatusCode, error);
             throw new InvalidOperationException($"Failed to get user info from Google: {error}");
         }
 

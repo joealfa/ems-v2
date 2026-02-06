@@ -4,6 +4,7 @@ using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
 using EmployeeManagementSystem.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace EmployeeManagementSystem.Infrastructure.Services;
 
@@ -14,16 +15,19 @@ public class BlobStorageService : IBlobStorageService
 {
     private readonly BlobServiceClient _blobServiceClient;
     private readonly string _connectionString;
+    private readonly ILogger<BlobStorageService> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BlobStorageService"/> class.
     /// </summary>
     /// <param name="configuration">The application configuration.</param>
-    public BlobStorageService(IConfiguration configuration)
+    /// <param name="logger">The logger instance.</param>
+    public BlobStorageService(IConfiguration configuration, ILogger<BlobStorageService> logger)
     {
         _connectionString = configuration.GetConnectionString("BlobStorage")
             ?? throw new InvalidOperationException("BlobStorage connection string is not configured.");
         _blobServiceClient = new BlobServiceClient(_connectionString);
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -34,22 +38,35 @@ public class BlobStorageService : IBlobStorageService
         string contentType,
         CancellationToken cancellationToken = default)
     {
-        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-        _ = await containerClient.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: cancellationToken);
+        _logger.LogDebug("Uploading blob {BlobName} to container {ContainerName}, Size: {Size} bytes, ContentType: {ContentType}",
+            blobName, containerName, content.Length, contentType);
 
-        BlobClient blobClient = containerClient.GetBlobClient(blobName);
-
-        BlobHttpHeaders blobHttpHeaders = new()
+        try
         {
-            ContentType = contentType
-        };
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            _ = await containerClient.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: cancellationToken);
 
-        _ = await blobClient.UploadAsync(content, new BlobUploadOptions
+            BlobClient blobClient = containerClient.GetBlobClient(blobName);
+
+            BlobHttpHeaders blobHttpHeaders = new()
+            {
+                ContentType = contentType
+            };
+
+            _ = await blobClient.UploadAsync(content, new BlobUploadOptions
+            {
+                HttpHeaders = blobHttpHeaders
+            }, cancellationToken);
+
+            _logger.LogInformation("Blob uploaded successfully: {BlobName} in container {ContainerName}", blobName, containerName);
+
+            return blobClient.Uri.ToString();
+        }
+        catch (Exception ex)
         {
-            HttpHeaders = blobHttpHeaders
-        }, cancellationToken);
-
-        return blobClient.Uri.ToString();
+            _logger.LogError(ex, "Failed to upload blob {BlobName} to container {ContainerName}", blobName, containerName);
+            throw;
+        }
     }
 
     /// <inheritdoc />
@@ -58,11 +75,24 @@ public class BlobStorageService : IBlobStorageService
         string blobName,
         CancellationToken cancellationToken = default)
     {
-        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-        BlobClient blobClient = containerClient.GetBlobClient(blobName);
+        _logger.LogDebug("Downloading blob {BlobName} from container {ContainerName}", blobName, containerName);
 
-        Response<BlobDownloadStreamingResult> response = await blobClient.DownloadStreamingAsync(cancellationToken: cancellationToken);
-        return response.Value.Content;
+        try
+        {
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            BlobClient blobClient = containerClient.GetBlobClient(blobName);
+
+            Response<BlobDownloadStreamingResult> response = await blobClient.DownloadStreamingAsync(cancellationToken: cancellationToken);
+
+            _logger.LogInformation("Blob downloaded successfully: {BlobName} from container {ContainerName}", blobName, containerName);
+
+            return response.Value.Content;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to download blob {BlobName} from container {ContainerName}", blobName, containerName);
+            throw;
+        }
     }
 
     /// <inheritdoc />
@@ -71,11 +101,31 @@ public class BlobStorageService : IBlobStorageService
         string blobName,
         CancellationToken cancellationToken = default)
     {
-        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-        BlobClient blobClient = containerClient.GetBlobClient(blobName);
+        _logger.LogDebug("Deleting blob {BlobName} from container {ContainerName}", blobName, containerName);
 
-        Response<bool> response = await blobClient.DeleteIfExistsAsync(cancellationToken: cancellationToken);
-        return response.Value;
+        try
+        {
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            BlobClient blobClient = containerClient.GetBlobClient(blobName);
+
+            Response<bool> response = await blobClient.DeleteIfExistsAsync(cancellationToken: cancellationToken);
+
+            if (response.Value)
+            {
+                _logger.LogInformation("Blob deleted successfully: {BlobName} from container {ContainerName}", blobName, containerName);
+            }
+            else
+            {
+                _logger.LogWarning("Blob not found for deletion: {BlobName} in container {ContainerName}", blobName, containerName);
+            }
+
+            return response.Value;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete blob {BlobName} from container {ContainerName}", blobName, containerName);
+            throw;
+        }
     }
 
     /// <inheritdoc />

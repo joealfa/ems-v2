@@ -16,9 +16,10 @@ namespace EmployeeManagementSystem.Api.v1.Controllers;
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
-public class AuthController(IAuthService authService) : ApiControllerBase
+public class AuthController(IAuthService authService, ILogger<AuthController> logger) : ApiControllerBase
 {
     private readonly IAuthService _authService = authService;
+    private readonly ILogger<AuthController> _logger = logger;
 
     /// <summary>
     /// Authenticates a user using Google OAuth2 ID token.
@@ -34,22 +35,31 @@ public class AuthController(IAuthService authService) : ApiControllerBase
     {
         if (string.IsNullOrWhiteSpace(request.IdToken))
         {
+            _logger.LogWarning("Google login attempt with empty ID token");
             return BadRequest(new { message = "ID token is required" });
         }
 
         try
         {
             string ipAddress = GetIpAddress();
+            _logger.LogInformation("Google login attempt from IP: {IpAddress}", ipAddress);
+
             AuthResponseDto result = await _authService.AuthenticateWithGoogleAsync(request.IdToken, ipAddress);
             SetRefreshTokenCookie(result.RefreshToken);
+
+            _logger.LogInformation("User {UserId} ({Email}) successfully authenticated via Google from IP {IpAddress}",
+                result.User.Id, result.User.Email, ipAddress);
+
             return Ok(result);
         }
-        catch (Google.Apis.Auth.InvalidJwtException)
+        catch (Google.Apis.Auth.InvalidJwtException ex)
         {
+            _logger.LogWarning(ex, "Invalid Google ID token received from IP {IpAddress}", GetIpAddress());
             return Unauthorized(new { message = "Invalid Google ID token" });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error during Google authentication from IP {IpAddress}", GetIpAddress());
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -69,18 +79,26 @@ public class AuthController(IAuthService authService) : ApiControllerBase
     {
         if (string.IsNullOrWhiteSpace(request.AccessToken))
         {
+            _logger.LogWarning("Google access token login attempt with empty access token");
             return BadRequest(new { message = "Access token is required" });
         }
 
         try
         {
             string ipAddress = GetIpAddress();
+            _logger.LogInformation("Google access token login attempt from IP: {IpAddress}", ipAddress);
+
             AuthResponseDto result = await _authService.AuthenticateWithGoogleAccessTokenAsync(request.AccessToken, ipAddress);
             SetRefreshTokenCookie(result.RefreshToken);
+
+            _logger.LogInformation("User {UserId} ({Email}) successfully authenticated via Google access token from IP {IpAddress}",
+                result.User.Id, result.User.Email, ipAddress);
+
             return Ok(result);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error during Google access token authentication from IP {IpAddress}", GetIpAddress());
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -100,18 +118,23 @@ public class AuthController(IAuthService authService) : ApiControllerBase
 
         if (string.IsNullOrEmpty(refreshToken))
         {
+            _logger.LogWarning("Token refresh attempt without refresh token from IP {IpAddress}", GetIpAddress());
             return Unauthorized(new { message = "Refresh token is required" });
         }
 
         string ipAddress = GetIpAddress();
+        _logger.LogDebug("Token refresh attempt from IP {IpAddress}", ipAddress);
+
         AuthResponseDto? result = await _authService.RefreshTokenAsync(refreshToken, ipAddress);
 
         if (result == null)
         {
+            _logger.LogWarning("Token refresh failed - invalid or expired token from IP {IpAddress}", ipAddress);
             return Unauthorized(new { message = "Invalid or expired refresh token" });
         }
 
         SetRefreshTokenCookie(result.RefreshToken);
+        _logger.LogInformation("Token successfully refreshed for user {UserId} from IP {IpAddress}", result.User.Id, ipAddress);
         return Ok(result);
     }
 
@@ -131,19 +154,26 @@ public class AuthController(IAuthService authService) : ApiControllerBase
 
         if (string.IsNullOrEmpty(refreshToken))
         {
+            _logger.LogWarning("Token revoke attempt without refresh token from IP {IpAddress}", GetIpAddress());
             return BadRequest(new { message = "Refresh token is required" });
         }
 
         string ipAddress = GetIpAddress();
+        string? userId = CurrentUser;
+
         bool result = await _authService.RevokeTokenAsync(refreshToken, ipAddress);
 
         if (!result)
         {
+            _logger.LogWarning("Token revoke failed - token not found or already revoked for user {UserId} from IP {IpAddress}",
+                userId, ipAddress);
             return BadRequest(new { message = "Token not found or already revoked" });
         }
 
         // Clear the refresh token cookie
         Response.Cookies.Delete("refreshToken");
+
+        _logger.LogInformation("User {UserId} successfully revoked token (logout) from IP {IpAddress}", userId, ipAddress);
 
         return NoContent();
     }

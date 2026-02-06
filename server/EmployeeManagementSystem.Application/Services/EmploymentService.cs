@@ -5,6 +5,7 @@ using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EmployeeManagementSystem.Application.Services;
 
@@ -21,7 +22,8 @@ public class EmploymentService(
     IRepository<Position> positionRepository,
     IRepository<SalaryGrade> salaryGradeRepository,
     IRepository<Item> itemRepository,
-    IRepository<School> schoolRepository) : IEmploymentService
+    IRepository<School> schoolRepository,
+    ILogger<EmploymentService> logger) : IEmploymentService
 {
     private readonly IRepository<Employment> _employmentRepository = employmentRepository;
     private readonly IRepository<EmploymentSchool> _employmentSchoolRepository = employmentSchoolRepository;
@@ -30,6 +32,7 @@ public class EmploymentService(
     private readonly IRepository<SalaryGrade> _salaryGradeRepository = salaryGradeRepository;
     private readonly IRepository<Item> _itemRepository = itemRepository;
     private readonly IRepository<School> _schoolRepository = schoolRepository;
+    private readonly ILogger<EmploymentService> _logger = logger;
 
     /// <inheritdoc />
     public async Task<Result<EmploymentResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
@@ -149,10 +152,14 @@ public class EmploymentService(
     /// <inheritdoc />
     public async Task<Result<EmploymentResponseDto>> CreateAsync(CreateEmploymentDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Creating employment for person {PersonDisplayId}, Position: {PositionDisplayId}, DepEdId: {DepEdId} by user {CreatedBy}",
+            dto.PersonDisplayId, dto.PositionDisplayId, dto.DepEdId, createdBy);
+
         // Resolve foreign key references by display ID
         Person? person = await _personRepository.GetByDisplayIdAsync(dto.PersonDisplayId, cancellationToken);
         if (person == null)
         {
+            _logger.LogWarning("Employment creation failed - Person {PersonDisplayId} not found", dto.PersonDisplayId);
             return Result<EmploymentResponseDto>.BadRequest($"Person with DisplayId {dto.PersonDisplayId} not found.");
         }
 
@@ -226,12 +233,17 @@ public class EmploymentService(
         employment.SalaryGrade = salaryGrade;
         employment.Item = item;
 
+        _logger.LogInformation("Employment created successfully: DisplayId {EmploymentDisplayId}, Person: {PersonName}, Position: {PositionTitle}, Schools: {SchoolCount}",
+            employment.DisplayId, person.FullName, position.TitleName, employment.EmploymentSchools.Count);
+
         return Result<EmploymentResponseDto>.Success(employment.ToResponseDto());
     }
 
     /// <inheritdoc />
     public async Task<Result<EmploymentResponseDto>> UpdateAsync(long displayId, UpdateEmploymentDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
+        _logger.LogDebug("Updating employment {EmploymentDisplayId} by user {ModifiedBy}", displayId, modifiedBy);
+
         Employment? employment = await _employmentRepository.Query()
             .Include(e => e.Person)
             .Include(e => e.Position)
@@ -243,6 +255,7 @@ public class EmploymentService(
 
         if (employment == null)
         {
+            _logger.LogWarning("Employment update failed - DisplayId {EmploymentDisplayId} not found", displayId);
             return Result<EmploymentResponseDto>.NotFound("Employment not found.");
         }
 
@@ -343,18 +356,24 @@ public class EmploymentService(
         employment.SalaryGrade = salaryGrade;
         employment.Item = item;
 
+        _logger.LogInformation("Employment updated successfully: DisplayId {EmploymentDisplayId}, Person: {PersonName}, Position: {PositionTitle}",
+            displayId, employment.Person.FullName, position.TitleName);
+
         return Result<EmploymentResponseDto>.Success(employment.ToResponseDto());
     }
 
     /// <inheritdoc />
     public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Deleting employment {EmploymentDisplayId} by user {DeletedBy}", displayId, deletedBy);
+
         Employment? employment = await _employmentRepository.Query()
             .Include(e => e.EmploymentSchools.Where(es => !es.IsDeleted))
             .FirstOrDefaultAsync(e => e.DisplayId == displayId, cancellationToken);
 
         if (employment == null)
         {
+            _logger.LogWarning("Employment delete failed - DisplayId {EmploymentDisplayId} not found", displayId);
             return Result.NotFound("Employment not found.");
         }
 
@@ -368,6 +387,10 @@ public class EmploymentService(
         // Soft delete the employment
         employment.ModifiedBy = deletedBy;
         await _employmentRepository.DeleteAsync(employment, cancellationToken);
+
+        _logger.LogInformation("Employment deleted successfully: DisplayId {EmploymentDisplayId}, DepEdId: {DepEdId}, School assignments: {SchoolCount}",
+            displayId, employment.DepEdId, employment.EmploymentSchools.Count);
+
         return Result.Success();
     }
 

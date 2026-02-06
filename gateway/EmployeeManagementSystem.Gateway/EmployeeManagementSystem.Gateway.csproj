@@ -10,12 +10,18 @@
     <!-- HotChocolate GraphQL -->
     <PackageReference Include="HotChocolate.AspNetCore" Version="15.*" />
     <PackageReference Include="HotChocolate.Data" Version="15.*" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+    <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
 
     <!-- Redis -->
     <PackageReference Include="StackExchange.Redis" Version="2.10.1" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.*" />
 
     <!-- ApiClient (local NuGet) -->
-    <PackageReference Include="EmployeeManagementSystem.ApiClient" Version="1.0.2636.1300" />
+    <PackageReference Include="EmployeeManagementSystem.ApiClient" Version="1.0.2636.2357" />
   </ItemGroup>
 </Project>

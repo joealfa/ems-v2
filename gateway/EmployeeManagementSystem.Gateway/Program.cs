@@ -1,47 +1,104 @@
 using EmployeeManagementSystem.Gateway.Extensions;
+using Serilog;
+using Serilog.Events;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+// Configure Serilog early to capture startup errors
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-// Add HTTP context accessor for token forwarding in GraphQL mutations
-builder.Services.AddHttpContextAccessor();
+Log.Information("Starting up Employee Management System Gateway");
 
-// Add HttpClient for REST proxy controllers
-builder.Services.AddHttpClient();
-
-// Add controllers for REST endpoints (profile images, file downloads)
-builder.Services.AddControllers();
-
-// Add gateway services (Redis, ApiClient, GraphQL)
-builder.Services.AddGatewayServices(builder.Configuration);
-
-// Get CORS configuration
-string[] allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? throw new InvalidOperationException("Cors:AllowedOrigins is not configured");
-
-// Configure CORS
-builder.Services.AddCors(options =>
+try
 {
-    options.AddPolicy("AllowHost", policy =>
+    WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+    // Add Serilog to the application
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .Enrich.WithMachineName()
+        .Enrich.WithThreadId()
+        .Enrich.WithEnvironmentName());
+
+    // Add HTTP context accessor for token forwarding in GraphQL mutations
+    builder.Services.AddHttpContextAccessor();
+
+    // Add HttpClient for REST proxy controllers
+    builder.Services.AddHttpClient();
+
+    // Add controllers for REST endpoints (profile images, file downloads)
+    builder.Services.AddControllers();
+
+    // Add gateway services (Redis, ApiClient, GraphQL)
+    builder.Services.AddGatewayServices(builder.Configuration);
+
+    // Get CORS configuration
+    string[] allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+        ?? throw new InvalidOperationException("Cors:AllowedOrigins is not configured");
+
+    // Configure CORS
+    builder.Services.AddCors(options =>
     {
-        _ = policy
-            .WithOrigins(allowedOrigins)
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
+        options.AddPolicy("AllowHost", policy =>
+        {
+            _ = policy
+                .WithOrigins(allowedOrigins)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
     });
-});
 
-WebApplication app = builder.Build();
+    WebApplication app = builder.Build();
 
-app.UseCors("AllowHost");
+    app.UseCors("AllowHost");
 
-// Map REST controllers for file operations
-app.MapControllers();
+    // Add Serilog request logging - replaces default logging with structured logging
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+        options.GetLevel = (httpContext, elapsed, ex) => ex != null
+            ? LogEventLevel.Error
+            : httpContext.Response.StatusCode > 499
+                ? LogEventLevel.Error
+                : httpContext.Response.StatusCode > 399
+                    ? LogEventLevel.Warning
+                    : LogEventLevel.Information;
 
-// Map GraphQL endpoint
-app.MapGraphQL();
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+            diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
 
-// Health check endpoint
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+            if (httpContext.User.Identity?.IsAuthenticated == true)
+            {
+                diagnosticContext.Set("UserId", httpContext.User.FindFirst("sub")?.Value);
+            }
+        };
+    });
 
-app.Run();
+    // Map REST controllers for file operations
+    app.MapControllers();
+
+    // Map GraphQL endpoint
+    app.MapGraphQL();
+
+    // Health check endpoint
+    app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
+    Log.Information("Employee Management System Gateway started successfully");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Gateway application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

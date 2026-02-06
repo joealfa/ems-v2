@@ -6,6 +6,7 @@ using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EmployeeManagementSystem.Application.Services;
 
@@ -18,11 +19,13 @@ namespace EmployeeManagementSystem.Application.Services;
 public class DocumentService(
     IRepository<Document> documentRepository,
     IRepository<Person> personRepository,
-    IBlobStorageService blobStorageService) : IDocumentService
+    IBlobStorageService blobStorageService,
+    ILogger<DocumentService> logger) : IDocumentService
 {
     private readonly IRepository<Document> _documentRepository = documentRepository;
     private readonly IRepository<Person> _personRepository = personRepository;
     private readonly IBlobStorageService _blobStorageService = blobStorageService;
+    private readonly ILogger<DocumentService> _logger = logger;
 
     private const string DocumentsContainer = "documents";
     private const string ProfileImagesContainer = "profile-images";
@@ -143,17 +146,23 @@ public class DocumentService(
         string createdBy,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Uploading document {FileName} ({FileSize} bytes) for person {PersonDisplayId} by user {CreatedBy}",
+            dto.FileName, dto.FileSizeBytes, personDisplayId, createdBy);
+
         Person? person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
         {
+            _logger.LogWarning("Document upload failed - Person {PersonDisplayId} not found", personDisplayId);
             return Result<DocumentResponseDto>.NotFound("Person not found.");
         }
 
         string extension = Path.GetExtension(dto.FileName);
         if (!AllowedExtensions.Contains(extension))
         {
+            _logger.LogWarning("Document upload rejected - Invalid file extension {Extension} for person {PersonDisplayId}",
+                extension, personDisplayId);
             return Result<DocumentResponseDto>.BadRequest($"File extension '{extension}' is not allowed. Allowed extensions: {string.Join(", ", AllowedExtensions)}");
         }
 
@@ -183,6 +192,9 @@ public class DocumentService(
         };
 
         _ = await _documentRepository.AddAsync(document, cancellationToken);
+
+        _logger.LogInformation("Document uploaded successfully: DisplayId {DocumentDisplayId}, FileName: {FileName} for person {PersonDisplayId}",
+            document.DisplayId, dto.FileName, personDisplayId);
 
         return Result<DocumentResponseDto>.Success(document.ToResponseDto(personDisplayId));
     }
@@ -261,11 +273,15 @@ public class DocumentService(
         string deletedBy,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Deleting document {DocumentDisplayId} for person {PersonDisplayId} by user {DeletedBy}",
+            documentDisplayId, personDisplayId, deletedBy);
+
         Person? person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
         {
+            _logger.LogWarning("Document delete failed - Person {PersonDisplayId} not found", personDisplayId);
             return Result.NotFound("Person not found.");
         }
 
@@ -274,6 +290,8 @@ public class DocumentService(
 
         if (document == null)
         {
+            _logger.LogWarning("Document delete failed - Document {DocumentDisplayId} not found for person {PersonDisplayId}",
+                documentDisplayId, personDisplayId);
             return Result.NotFound("Document not found.");
         }
 
@@ -285,6 +303,9 @@ public class DocumentService(
         document.ModifiedBy = deletedBy;
         await _documentRepository.DeleteAsync(document, cancellationToken);
 
+        _logger.LogInformation("Document deleted successfully: {FileName} (DisplayId: {DocumentDisplayId}) for person {PersonDisplayId}",
+            document.FileName, documentDisplayId, personDisplayId);
+
         return Result.Success();
     }
 
@@ -295,17 +316,23 @@ public class DocumentService(
         string modifiedBy,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Uploading profile image {FileName} ({FileSize} bytes) for person {PersonDisplayId} by user {ModifiedBy}",
+            dto.FileName, dto.FileSizeBytes, personDisplayId, modifiedBy);
+
         Person? person = await _personRepository.Query()
             .FirstOrDefaultAsync(p => p.DisplayId == personDisplayId, cancellationToken);
 
         if (person == null)
         {
+            _logger.LogWarning("Profile image upload failed - Person {PersonDisplayId} not found", personDisplayId);
             return Result<string>.NotFound("Person not found.");
         }
 
         string extension = Path.GetExtension(dto.FileName);
         if (!AllowedImageExtensions.Contains(extension))
         {
+            _logger.LogWarning("Profile image upload rejected - Invalid extension {Extension} for person {PersonDisplayId}",
+                extension, personDisplayId);
             return Result<string>.BadRequest($"File extension '{extension}' is not allowed for profile images. Allowed extensions: {string.Join(", ", AllowedImageExtensions)}");
         }
 
@@ -314,6 +341,7 @@ public class DocumentService(
         {
             string existingBlobName = $"{person.Id}/profile{Path.GetExtension(person.ProfileImageUrl)}";
             _ = await _blobStorageService.DeleteAsync(ProfileImagesContainer, existingBlobName, cancellationToken);
+            _logger.LogDebug("Deleted existing profile image for person {PersonDisplayId}", personDisplayId);
         }
 
         string blobName = $"{person.Id}/profile{extension}";
@@ -329,6 +357,8 @@ public class DocumentService(
         person.ModifiedBy = modifiedBy;
 
         await _personRepository.UpdateAsync(person, cancellationToken);
+
+        _logger.LogInformation("Profile image uploaded successfully for person {PersonDisplayId}", personDisplayId);
 
         return Result<string>.Success(blobUrl);
     }

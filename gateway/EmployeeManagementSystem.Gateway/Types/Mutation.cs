@@ -20,11 +20,18 @@ public class Mutation
         CreatePersonInput input,
         [Service] EmsApiClient client,
         [Service] IRedisCacheService cache,
+        [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
+        logger.LogInformation("Creating person via GraphQL: {FirstName} {LastName}",
+            input.FirstName, input.LastName);
+
         PersonResponseDto result = await client.PersonsPOSTAsync(input.ToDto(), ct);
         await cache.RemoveByPrefixAsync(CacheKeys.PersonsListPrefix, ct);
         await cache.RemoveAsync(CacheKeys.DashboardStats, ct);
+
+        logger.LogInformation("Person created successfully: DisplayId {DisplayId}, Name: {FullName}",
+            result.DisplayId, result.FullName);
         return result;
     }
 
@@ -47,12 +54,17 @@ public class Mutation
         long displayId,
         [Service] EmsApiClient client,
         [Service] IRedisCacheService cache,
+        [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
+        logger.LogInformation("Deleting person via GraphQL: DisplayId {DisplayId}", displayId);
+
         await client.PersonsDELETEAsync(displayId, ct);
         await cache.RemoveAsync(CacheKeys.Person(displayId), ct);
         await cache.RemoveByPrefixAsync(CacheKeys.PersonsListPrefix, ct);
         await cache.RemoveAsync(CacheKeys.DashboardStats, ct);
+
+        logger.LogInformation("Person deleted successfully: DisplayId {DisplayId}", displayId);
         return true;
     }
 
@@ -65,11 +77,18 @@ public class Mutation
         CreateEmploymentInput input,
         [Service] EmsApiClient client,
         [Service] IRedisCacheService cache,
+        [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
+        logger.LogInformation("Creating employment via GraphQL: Person {PersonDisplayId}, Position {PositionDisplayId}",
+            input.PersonDisplayId, input.PositionDisplayId);
+
         EmploymentResponseDto result = await client.EmploymentsPOSTAsync(input.ToDto(), ct);
         await cache.RemoveByPrefixAsync(CacheKeys.EmploymentsListPrefix, ct);
         await cache.RemoveAsync(CacheKeys.DashboardStats, ct);
+
+        logger.LogInformation("Employment created successfully: DisplayId {DisplayId}, DepEdId {DepEdId}",
+            result.DisplayId, result.DepEdId);
         return result;
     }
 
@@ -92,12 +111,17 @@ public class Mutation
         long displayId,
         [Service] EmsApiClient client,
         [Service] IRedisCacheService cache,
+        [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
+        logger.LogInformation("Deleting employment via GraphQL: DisplayId {DisplayId}", displayId);
+
         await client.EmploymentsDELETEAsync(displayId, ct);
         await cache.RemoveAsync(CacheKeys.Employment(displayId), ct);
         await cache.RemoveByPrefixAsync(CacheKeys.EmploymentsListPrefix, ct);
         await cache.RemoveAsync(CacheKeys.DashboardStats, ct);
+
+        logger.LogInformation("Employment deleted successfully: DisplayId {DisplayId}", displayId);
         return true;
     }
 
@@ -316,8 +340,12 @@ public class Mutation
         [Service] IConfiguration configuration,
         [Service] IHttpContextAccessor httpContextAccessor,
         [Service] IRedisCacheService cache,
+        [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
+        logger.LogInformation("Uploading document via GraphQL for person {PersonDisplayId}: {FileName} ({Length} bytes)",
+            personDisplayId, file.Name, file.Length);
+
         using HttpClient client = CreateApiClient(httpClientFactory, configuration, httpContextAccessor);
         using MultipartFormDataContent content = [];
 
@@ -341,6 +369,8 @@ public class Mutation
         string responseBody = await response.Content.ReadAsStringAsync(ct);
         if (!response.IsSuccessStatusCode)
         {
+            logger.LogWarning("Document upload failed for person {PersonDisplayId}: {StatusCode} {ReasonPhrase}",
+                personDisplayId, response.StatusCode, response.ReasonPhrase);
             throw new GraphQLException(
                 $"Backend upload failed ({(int)response.StatusCode} {response.ReasonPhrase}). {responseBody}");
         }
@@ -384,6 +414,9 @@ public class Mutation
             }
         }
 
+        logger.LogInformation("Document uploaded successfully for person {PersonDisplayId}: {FileName}",
+            personDisplayId, file.Name);
+
         await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
         return result;
     }
@@ -393,13 +426,17 @@ public class Mutation
         long personDisplayId,
         [Service] EmsApiClient client,
         [Service] IRedisCacheService cache,
+        [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
+        logger.LogInformation("Deleting profile image via GraphQL for person {PersonDisplayId}", personDisplayId);
+
         await client.ProfileImageDELETEAsync(personDisplayId, ct);
 
         await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
         await cache.RemoveByPrefixAsync(CacheKeys.PersonsListPrefix, ct);
 
+        logger.LogInformation("Profile image deleted successfully for person {PersonDisplayId}", personDisplayId);
         return true;
     }
 
@@ -428,10 +465,17 @@ public class Mutation
         long documentDisplayId,
         [Service] EmsApiClient client,
         [Service] IRedisCacheService cache,
+        [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
+        logger.LogInformation("Deleting document via GraphQL: Person {PersonDisplayId}, Document {DocumentDisplayId}",
+            personDisplayId, documentDisplayId);
+
         await client.DocumentsDELETEAsync(personDisplayId, documentDisplayId, ct);
         await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
+
+        logger.LogInformation("Document deleted successfully: Person {PersonDisplayId}, Document {DocumentDisplayId}",
+            personDisplayId, documentDisplayId);
         return true;
     }
 
@@ -443,8 +487,12 @@ public class Mutation
         [Service] IConfiguration configuration,
         [Service] IHttpContextAccessor httpContextAccessor,
         [Service] IRedisCacheService cache,
+        [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
+        logger.LogInformation("Uploading profile image via GraphQL for person {PersonDisplayId}: {FileName} ({Length} bytes)",
+            personDisplayId, file.Name, file.Length);
+
         using HttpClient client = CreateApiClient(httpClientFactory, configuration, httpContextAccessor);
         using MultipartFormDataContent content = [];
 
@@ -463,9 +511,13 @@ public class Mutation
         string result = await response.Content.ReadAsStringAsync(ct);
         if (!response.IsSuccessStatusCode)
         {
+            logger.LogWarning("Profile image upload failed for person {PersonDisplayId}: {StatusCode} {ReasonPhrase}",
+                personDisplayId, response.StatusCode, response.ReasonPhrase);
             throw new GraphQLException(
                 $"Backend profile image upload failed ({(int)response.StatusCode} {response.ReasonPhrase}). {result}");
         }
+
+        logger.LogInformation("Profile image uploaded successfully for person {PersonDisplayId}", personDisplayId);
 
         await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
         return result.Trim('"');
@@ -496,38 +548,69 @@ public class Mutation
     public async Task<AuthResponseDto?> GoogleLoginAsync(
         string idToken,
         [Service] EmsApiClient client,
+        [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        return await client.GoogleAsync(
+        logger.LogInformation("Google login attempt via GraphQL");
+
+        AuthResponseDto? result = await client.GoogleAsync(
             new GoogleAuthRequestDto { IdToken = idToken },
             ct);
+
+        if (result != null)
+        {
+            logger.LogInformation("Google login successful for user {UserId}", result.User.Id);
+        }
+
+        return result;
     }
 
     [GraphQLDescription("Login with Google access token")]
     public async Task<AuthResponseDto?> GoogleTokenLoginAsync(
         string accessToken,
         [Service] EmsApiClient client,
+        [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        return await client.TokenAsync(
+        logger.LogInformation("Google token login attempt via GraphQL");
+
+        AuthResponseDto? result = await client.TokenAsync(
             new GoogleAccessTokenRequestDto { AccessToken = accessToken },
             ct);
+
+        if (result != null)
+        {
+            logger.LogInformation("Google token login successful for user {UserId}", result.User.Id);
+        }
+
+        return result;
     }
 
     [GraphQLDescription("Refresh authentication token")]
     public async Task<AuthResponseDto?> RefreshTokenAsync(
         string? refreshToken,
         [Service] EmsApiClient client,
+        [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
+        logger.LogDebug("Token refresh attempt via GraphQL");
+
         try
         {
-            return await client.RefreshAsync(
+            AuthResponseDto? result = await client.RefreshAsync(
                 new RefreshTokenRequestDto { RefreshToken = refreshToken },
                 ct);
+
+            if (result != null)
+            {
+                logger.LogInformation("Token refreshed successfully for user {UserId}", result.User.Id);
+            }
+
+            return result;
         }
         catch (ApiException ex) when (ex.StatusCode == 401)
         {
+            logger.LogWarning("Token refresh failed: Invalid or expired refresh token");
             // Treat invalid/expired/missing refresh token as a non-error for GraphQL.
             // The frontend will interpret null and clear local auth state.
             return null;
@@ -538,17 +621,22 @@ public class Mutation
     public async Task<bool> LogoutAsync(
         string? refreshToken,
         [Service] EmsApiClient client,
+        [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
+        logger.LogInformation("Logout attempt via GraphQL");
+
         try
         {
             await client.RevokeAsync(
                 new RevokeTokenRequestDto { RefreshToken = refreshToken },
                 ct);
+            logger.LogInformation("Logout successful - tokens revoked");
             return true;
         }
         catch (ApiException ex) when (ex.StatusCode == 400 || ex.StatusCode == 401)
         {
+            logger.LogDebug("Logout completed - token was already invalid/expired");
             // If the token is already invalid/expired, consider logout successful.
             return true;
         }
