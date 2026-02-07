@@ -50,15 +50,16 @@ export function useSchools(variables?: {
 }
 
 export function useSchoolsLazy() {
-  const fetchSchools = useCallback(async (args: {
-    variables: GetSchoolsQueryVariables;
-  }) => {
-    const data = await graphqlRequest<
-      GetSchoolsQuery,
-      GetSchoolsQueryVariables
-    >(GetSchoolsDocument, args.variables);
-    return { data };
-  }, []);
+  const fetchSchools = useCallback(
+    async (args: { variables: GetSchoolsQueryVariables }) => {
+      const data = await graphqlRequest<
+        GetSchoolsQuery,
+        GetSchoolsQueryVariables
+      >(GetSchoolsDocument, args.variables);
+      return { data };
+    },
+    []
+  );
 
   return {
     fetchSchools,

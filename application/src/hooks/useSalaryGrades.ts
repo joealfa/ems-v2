@@ -50,15 +50,16 @@ export function useSalaryGrades(variables?: {
 }
 
 export function useSalaryGradesLazy() {
-  const fetchSalaryGrades = useCallback(async (args: {
-    variables: GetSalaryGradesQueryVariables;
-  }) => {
-    const data = await graphqlRequest<
-      GetSalaryGradesQuery,
-      GetSalaryGradesQueryVariables
-    >(GetSalaryGradesDocument, args.variables);
-    return { data };
-  }, []);
+  const fetchSalaryGrades = useCallback(
+    async (args: { variables: GetSalaryGradesQueryVariables }) => {
+      const data = await graphqlRequest<
+        GetSalaryGradesQuery,
+        GetSalaryGradesQueryVariables
+      >(GetSalaryGradesDocument, args.variables);
+      return { data };
+    },
+    []
+  );
 
   return {
     fetchSalaryGrades,

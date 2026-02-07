@@ -54,15 +54,16 @@ export function usePersons(variables?: {
 }
 
 export function usePersonsLazy() {
-  const fetchPersons = useCallback(async (args: {
-    variables: GetPersonsQueryVariables;
-  }) => {
-    const data = await graphqlRequest<
-      GetPersonsQuery,
-      GetPersonsQueryVariables
-    >(GetPersonsDocument, args.variables);
-    return { data };
-  }, []);
+  const fetchPersons = useCallback(
+    async (args: { variables: GetPersonsQueryVariables }) => {
+      const data = await graphqlRequest<
+        GetPersonsQuery,
+        GetPersonsQueryVariables
+      >(GetPersonsDocument, args.variables);
+      return { data };
+    },
+    []
+  );
 
   return {
     fetchPersons,

@@ -50,13 +50,16 @@ export function useItems(variables?: {
 }
 
 export function useItemsLazy() {
-  const fetchItems = useCallback(async (args: { variables: GetItemsQueryVariables }) => {
-    const data = await graphqlRequest<GetItemsQuery, GetItemsQueryVariables>(
-      GetItemsDocument,
-      args.variables
-    );
-    return { data };
-  }, []);
+  const fetchItems = useCallback(
+    async (args: { variables: GetItemsQueryVariables }) => {
+      const data = await graphqlRequest<GetItemsQuery, GetItemsQueryVariables>(
+        GetItemsDocument,
+        args.variables
+      );
+      return { data };
+    },
+    []
+  );
 
   return {
     fetchItems,

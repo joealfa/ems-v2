@@ -6,6 +6,7 @@ using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Domain.Enums;
 using EmployeeManagementSystem.Tests.Helpers;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System.Reflection;
 
@@ -20,6 +21,7 @@ public class EmploymentServiceTests
     private readonly Mock<IRepository<SalaryGrade>> _salaryGradeRepositoryMock;
     private readonly Mock<IRepository<Item>> _itemRepositoryMock;
     private readonly Mock<IRepository<School>> _schoolRepositoryMock;
+    private readonly Mock<ILogger<EmploymentService>> _loggerMock;
     private readonly EmploymentService _employmentService;
 
     public EmploymentServiceTests()
@@ -31,6 +33,7 @@ public class EmploymentServiceTests
         _salaryGradeRepositoryMock = new Mock<IRepository<SalaryGrade>>();
         _itemRepositoryMock = new Mock<IRepository<Item>>();
         _schoolRepositoryMock = new Mock<IRepository<School>>();
+        _loggerMock = new Mock<ILogger<EmploymentService>>();
 
         _employmentService = new EmploymentService(
             _employmentRepositoryMock.Object,
@@ -39,7 +42,8 @@ public class EmploymentServiceTests
             _positionRepositoryMock.Object,
             _salaryGradeRepositoryMock.Object,
             _itemRepositoryMock.Object,
-            _schoolRepositoryMock.Object);
+            _schoolRepositoryMock.Object,
+            _loggerMock.Object);
     }
 
     #region GetByDisplayIdAsync Tests

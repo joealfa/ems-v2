@@ -6,6 +6,7 @@ using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Domain.Enums;
 using EmployeeManagementSystem.Tests.Helpers;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System.Reflection;
 
@@ -16,6 +17,7 @@ public class DocumentServiceTests
     private readonly Mock<IRepository<Document>> _documentRepositoryMock;
     private readonly Mock<IRepository<Person>> _personRepositoryMock;
     private readonly Mock<IBlobStorageService> _blobStorageServiceMock;
+    private readonly Mock<ILogger<DocumentService>> _loggerMock;
     private readonly DocumentService _documentService;
 
     public DocumentServiceTests()
@@ -23,11 +25,13 @@ public class DocumentServiceTests
         _documentRepositoryMock = new Mock<IRepository<Document>>();
         _personRepositoryMock = new Mock<IRepository<Person>>();
         _blobStorageServiceMock = new Mock<IBlobStorageService>();
+        _loggerMock = new Mock<ILogger<DocumentService>>();
 
         _documentService = new DocumentService(
             _documentRepositoryMock.Object,
             _personRepositoryMock.Object,
-            _blobStorageServiceMock.Object);
+            _blobStorageServiceMock.Object,
+            _loggerMock.Object);
     }
 
     #region GetByDisplayIdAsync Tests

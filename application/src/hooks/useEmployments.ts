@@ -63,15 +63,16 @@ export function useEmployments(variables?: {
 }
 
 export function useEmploymentsLazy() {
-  const fetchEmployments = useCallback(async (args: {
-    variables: GetEmploymentsQueryVariables;
-  }) => {
-    const data = await graphqlRequest<
-      GetEmploymentsQuery,
-      GetEmploymentsQueryVariables
-    >(GetEmploymentsDocument, args.variables);
-    return { data };
-  }, []);
+  const fetchEmployments = useCallback(
+    async (args: { variables: GetEmploymentsQueryVariables }) => {
+      const data = await graphqlRequest<
+        GetEmploymentsQuery,
+        GetEmploymentsQueryVariables
+      >(GetEmploymentsDocument, args.variables);
+      return { data };
+    },
+    []
+  );
 
   return {
     fetchEmployments,

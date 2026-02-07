@@ -6,6 +6,7 @@ using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Domain.Enums;
 using EmployeeManagementSystem.Tests.Helpers;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System.Reflection;
 
@@ -17,6 +18,7 @@ public class PersonServiceTests
     private readonly Mock<IRepository<Address>> _addressRepositoryMock;
     private readonly Mock<IRepository<Contact>> _contactRepositoryMock;
     private readonly Mock<IRepository<Document>> _documentRepositoryMock;
+    private readonly Mock<ILogger<PersonService>> _loggerMock;
     private readonly PersonService _personService;
 
     public PersonServiceTests()
@@ -25,12 +27,14 @@ public class PersonServiceTests
         _addressRepositoryMock = new Mock<IRepository<Address>>();
         _contactRepositoryMock = new Mock<IRepository<Contact>>();
         _documentRepositoryMock = new Mock<IRepository<Document>>();
+        _loggerMock = new Mock<ILogger<PersonService>>();
 
         _personService = new PersonService(
             _personRepositoryMock.Object,
             _addressRepositoryMock.Object,
             _contactRepositoryMock.Object,
-            _documentRepositoryMock.Object);
+            _documentRepositoryMock.Object,
+            _loggerMock.Object);
     }
 
     #region GetByDisplayIdAsync Tests

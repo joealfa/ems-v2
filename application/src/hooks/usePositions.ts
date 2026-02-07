@@ -50,15 +50,16 @@ export function usePositions(variables?: {
 }
 
 export function usePositionsLazy() {
-  const fetchPositions = useCallback(async (args: {
-    variables: GetPositionsQueryVariables;
-  }) => {
-    const data = await graphqlRequest<
-      GetPositionsQuery,
-      GetPositionsQueryVariables
-    >(GetPositionsDocument, args.variables);
-    return { data };
-  }, []);
+  const fetchPositions = useCallback(
+    async (args: { variables: GetPositionsQueryVariables }) => {
+      const data = await graphqlRequest<
+        GetPositionsQuery,
+        GetPositionsQueryVariables
+      >(GetPositionsDocument, args.variables);
+      return { data };
+    },
+    []
+  );
 
   return {
     fetchPositions,

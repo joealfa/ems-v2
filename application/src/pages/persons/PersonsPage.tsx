@@ -63,12 +63,9 @@ const ProfileImageCell = ({
   imageUrl,
   hasProfileImage,
 }: ProfileImageCellProps) => {
-  const [imgError, setImgError] = useState(false);
-
-  // Reset error state when imageUrl or hasProfileImage changes
-  useEffect(() => {
-    setImgError(false);
-  }, [imageUrl, hasProfileImage]);
+  // Track which URL failed - error state automatically resets when URL changes
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  const imgError = failedImageUrl === imageUrl;
 
   const nameParts = fullName.split(' ');
   const initials =
@@ -89,7 +86,7 @@ const ProfileImageCell = ({
           minH="32px"
           borderRadius="50%"
           objectFit="cover"
-          onError={() => setImgError(true)}
+          onError={() => setFailedImageUrl(imageUrl)}
         />
       </Flex>
     );
