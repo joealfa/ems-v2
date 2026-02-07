@@ -167,6 +167,11 @@ public record PersonResponseDto : BaseResponseDto
     /// Gets the URL of the person's profile image.
     /// </summary>
     public string? ProfileImageUrl { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether the person has a profile image.
+    /// </summary>
+    public bool HasProfileImage { get; init; }
 }
 
 /// <summary>
@@ -198,6 +203,11 @@ public record PersonListDto : BaseResponseDto
     /// Gets the URL of the person's profile image.
     /// </summary>
     public string? ProfileImageUrl { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether the person has a profile image.
+    /// </summary>
+    public bool HasProfileImage { get; init; }
 }
 
 /// <summary>

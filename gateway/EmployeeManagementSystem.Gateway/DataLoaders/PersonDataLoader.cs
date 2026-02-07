@@ -1,11 +1,13 @@
 using EmployeeManagementSystem.ApiClient.Generated;
 using EmployeeManagementSystem.Gateway.Caching;
+using Microsoft.Extensions.Configuration;
 
 namespace EmployeeManagementSystem.Gateway.DataLoaders;
 
 public class PersonDataLoader(
     EmsApiClient client,
     IRedisCacheService cache,
+    IConfiguration configuration,
     ILogger<PersonDataLoader> logger,
     IBatchScheduler batchScheduler,
     DataLoaderOptions? options = null) : BatchDataLoader<long, PersonResponseDto?>(batchScheduler, options ?? new DataLoaderOptions())
@@ -34,11 +36,24 @@ public class PersonDataLoader(
         }
 
         // Fetch missing items from API
+        string gatewayBaseUrl = configuration["Gateway:BaseUrl"] ?? "https://localhost:5003";
+        if (!gatewayBaseUrl.StartsWith("http://") && !gatewayBaseUrl.StartsWith("https://"))
+        {
+            gatewayBaseUrl = $"https://{gatewayBaseUrl}";
+        }
+
         foreach (long key in keysToFetch)
         {
             try
             {
                 PersonResponseDto? person = await client.PersonsGET2Async(key, ct);
+                
+                // Transform profileImageUrl to Gateway proxy URL
+                if (person is not null && person.HasProfileImage)
+                {
+                    person.ProfileImageUrl = $"{gatewayBaseUrl}/api/persons/{person.DisplayId}/profile-image";
+                }
+                
                 results[key] = person;
 
                 if (person is not null)

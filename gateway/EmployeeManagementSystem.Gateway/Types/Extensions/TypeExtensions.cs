@@ -21,6 +21,33 @@ public class PersonResponseDtoExtensions
     {
         return person.DisplayId;
     }
+
+    /// <summary>
+    /// Get the profile image URL (Gateway proxy URL instead of direct Azure Blob URL for CORS)
+    /// Overrides the ProfileImageUrl property from the DTO
+    /// </summary>
+    [GraphQLName("profileImageUrl")]
+    public string? GetProfileImageUrl(
+        [Parent] PersonResponseDto person,
+        [Service] IConfiguration configuration)
+    {
+        // Only return URL if person has a profile image
+        if (!person.HasProfileImage)
+        {
+            return null;
+        }
+
+        // Return Gateway proxy URL for CORS handling
+        string gatewayBaseUrl = configuration["Gateway:BaseUrl"] ?? "https://localhost:5003";
+        
+        // Ensure the base URL has a protocol
+        if (!gatewayBaseUrl.StartsWith("http://") && !gatewayBaseUrl.StartsWith("https://"))
+        {
+            gatewayBaseUrl = $"https://{gatewayBaseUrl}";
+        }
+        
+        return $"{gatewayBaseUrl}/api/persons/{person.DisplayId}/profile-image";
+    }
 }
 
 [ExtendObjectType<PersonListDto>]
@@ -32,6 +59,33 @@ public class PersonListDtoExtensions
     public long GetDisplayId([Parent] PersonListDto person)
     {
         return person.DisplayId;
+    }
+
+    /// <summary>
+    /// Get the profile image URL (Gateway proxy URL instead of direct Azure Blob URL for CORS)
+    /// Overrides the ProfileImageUrl property from the DTO
+    /// </summary>
+    [GraphQLName("profileImageUrl")]
+    public string? GetProfileImageUrl(
+        [Parent] PersonListDto person,
+        [Service] IConfiguration configuration)
+    {
+        // Only return URL if person has a profile image
+        if (!person.HasProfileImage)
+        {
+            return null;
+        }
+
+        // Return Gateway proxy URL for CORS handling
+        string gatewayBaseUrl = configuration["Gateway:BaseUrl"] ?? "https://localhost:5003";
+        
+        // Ensure the base URL has a protocol
+        if (!gatewayBaseUrl.StartsWith("http://") && !gatewayBaseUrl.StartsWith("https://"))
+        {
+            gatewayBaseUrl = $"https://{gatewayBaseUrl}";
+        }
+        
+        return $"{gatewayBaseUrl}/api/persons/{person.DisplayId}/profile-image";
     }
 }
 

@@ -377,7 +377,8 @@ A comprehensive analysis of the Employee Management System (EMS-v2) was conducte
 | TypeScript | ~5.9.3 | ✅ Excellent | Type safety, developer experience |
 | Vite | 7.3.1 | ✅ Excellent | Fast build tool |
 | Chakra-UI | 3.31.0 | ✅ Excellent | Accessible, customizable |
-| Apollo Client | 3.12.0 | ✅ Excellent | Best React GraphQL client |
+| TanStack Query | 5.x | ✅ Excellent | Server state management and data fetching |
+| graphql-request | 7.x | ✅ Excellent | Lightweight GraphQL client |
 | AG Grid | 35.0.1 | ✅ Excellent | Enterprise-grade data grid |
 | React Router | 7.12.0 | ✅ Excellent | Latest routing solution |
 

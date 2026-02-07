@@ -6,7 +6,7 @@ This document describes how the frontend application integrates with the backend
 
 ## Overview
 
-The EMS frontend uses **Apollo Client** with **GraphQL Code Generator** to communicate with the backend via a GraphQL Gateway (HotChocolate). This ensures type safety and provides a great developer experience with auto-generated types and hooks.
+The EMS frontend uses **TanStack Query** with **graphql-request** and **GraphQL Code Generator** to communicate with the backend via a GraphQL Gateway (HotChocolate). This ensures type safety and provides a great developer experience with auto-generated types and custom hooks.
 
 ---
 
@@ -27,8 +27,8 @@ The EMS frontend uses **Apollo Client** with **GraphQL Code Generator** to commu
 │           │                                                 │
 │           ▼                                                 │
 │  ┌─────────────────┐    ┌─────────────────┐                 │
-│  │  Apollo Client  │    │  Generated Types│                 │
-│  │  (GraphQL)      │◄───│  & Documents    │                 │
+│  │  TanStack Query │    │  Generated Types│                 │
+│  │  + graphql-req  │◄───│  & Documents    │                 │
 │  └────────┬────────┘    └─────────────────┘                 │
 │           │                    src/graphql/generated/       │
 │           ▼                                                 │
@@ -78,21 +78,32 @@ The application uses a dual-token authentication system:
 
 1. **Access tokens in localStorage**: Required for making API calls with custom headers
 2. **Refresh tokens in cookies**: Maximum security for long-lived credentials
-3. **Automatic refresh**: Seamless token renewal via Apollo link
+3. **Automatic refresh**: Seamless token renewal via AuthContext
 4. **No token exposure**: Refresh tokens never touch JavaScript code
 
 ---
 
 ## Configuration
 
-### Apollo Client Configuration
+### GraphQL Client Configuration
 
-**File:** `src/graphql/client.ts`
+**File:** `src/graphql/graphql-client.ts`
 
-The Apollo Client is configured with:
-- Authentication link for adding Bearer tokens
-- Error link for handling token refresh
-- HTTP link pointing to the GraphQL Gateway
+The GraphQL client is configured with:
+- `graphql-request` `GraphQLClient` pointing to the GraphQL Gateway
+- Automatic Bearer token injection from `localStorage`
+- Credentials included for cookie-based refresh tokens
+- `GraphQL-Preflight` header for HotChocolate CSRF protection
+
+### TanStack QueryClient Configuration
+
+**File:** `src/graphql/query-client.ts`
+
+The QueryClient is configured with:
+- Global error handling via `QueryCache` and `MutationCache` `onError` callbacks
+- Default `staleTime: 2 minutes`, `gcTime: 5 minutes`
+- `refetchOnWindowFocus: true` for automatic background refetching
+- `retry: 1` for queries, `retry: false` for mutations
 
 ### GraphQL Code Generator
 
@@ -103,14 +114,15 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
   schema: 'https://localhost:5003/graphql',
-  documents: ['src/graphql/operations/**/*.graphql'],
+  documents: ['src/**/*.graphql', 'src/**/operations.ts'],
   generates: {
-    './src/graphql/generated/graphql.ts': {
-      plugins: [
-        'typescript',
-        'typescript-operations',
-        'typescript-react-apollo'
-      ]
+    './src/graphql/generated/': {
+      preset: 'client',
+      config: {
+        enumsAsTypes: true,
+        skipTypename: false,
+        useTypeImports: true,
+      }
     }
   }
 };
@@ -325,35 +337,26 @@ interface AuthContextType {
 5. Backend returns JWT access token, refresh token, and user info
 6. Frontend stores access token in localStorage and user in context
 7. Subsequent GraphQL requests include Bearer token in Authorization header
-8. When access token expires, Apollo link automatically refreshes using refresh token
+8. When access token expires, AuthContext automatically refreshes using refresh token
 
 ---
 
 ## Error Handling
 
-### Apollo Error Link
+### Global Error Handling
 
-Errors are handled at the Apollo Client level with an error link that:
-- Logs errors for debugging
-- Handles 401 Unauthorized by attempting token refresh
-- Redirects to login on authentication failure
+Errors are handled at the TanStack QueryClient level via `QueryCache` and `MutationCache` `onError` callbacks that:
+- Log errors for debugging
+- Detect auth errors (401/403) and redirect to login
+- Clear stored tokens on authentication failure
 
 ### Component-Level Handling
 
 ```typescript
-const { data, loading, error } = usePersons();
+const { persons, loading, error } = usePersons();
 
 if (loading) return <Spinner />;
-
-if (error) {
-  if (error.networkError) {
-    return <Alert>Network error. Please check your connection.</Alert>;
-  }
-  if (error.graphQLErrors) {
-    return <Alert>{error.graphQLErrors[0].message}</Alert>;
-  }
-  return <Alert>An unexpected error occurred.</Alert>;
-}
+if (error) return <Alert>{error.message}</Alert>;
 ```
 
 ---

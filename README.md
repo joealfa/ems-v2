@@ -56,8 +56,9 @@ ems-v2/
 - **Vite** - Build tool
 - **Chakra-UI** - Component library
 - **AG Grid** - Data grid component
-- **Apollo Client** - GraphQL client
-- **GraphQL Code Generator** - Auto-generated types and hooks
+- **TanStack Query** - Server state management and data fetching
+- **graphql-request** - Lightweight GraphQL client
+- **GraphQL Code Generator** - Auto-generated types and documents
 - **React Router** - Client-side routing
 
 ## Features
@@ -153,7 +154,7 @@ The application uses a **GraphQL Gateway** pattern:
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         Frontend (React)                            │
-│                  Apollo Client + REST fetch calls                   │
+│            TanStack Query + graphql-request + REST fetch            │
 └─────────────────────────────────────────────────────────────────────┘
                 │                                  │
                 │ GraphQL                          │ REST (files)
@@ -173,6 +174,92 @@ The application uses a **GraphQL Gateway** pattern:
 │                                 └──→ Azure Blob Storage             │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+### Detailed Architecture Flow
+
+```mermaid
+graph TB
+    subgraph Client["🖥️ Client Layer"]
+        Browser["Web Browser<br/>(React + TypeScript + Vite)"]
+    end
+
+    subgraph Gateway["🌐 GraphQL Gateway Layer - Port 5003"]
+        GQL["GraphQL API<br/>(HotChocolate)"]
+        DataLoaders["DataLoaders<br/>(Batch + Dedup)"]
+        RestProxy["REST Controllers<br/>(File Operations)"]
+        CacheService["Cache Service"]
+    end
+
+    subgraph Backend["⚙️ Backend API Layer - Port 7166"]
+        API["REST API<br/>(ASP.NET Core)"]
+        Controllers["Controllers<br/>(v1, v2)"]
+        Services["Application Services"]
+        Domain["Domain Models"]
+        Infrastructure["Infrastructure Layer"]
+    end
+
+    subgraph Data["💾 Data & Storage Layer"]
+        SQL[(SQL Server<br/>Database)]
+        Blob[("Azure Blob<br/>Storage")]
+        Redis[("Redis<br/>Cache")]
+    end
+
+    subgraph Monitoring["📊 Monitoring & Logging"]
+        Seq["Seq<br/>(Datalust)<br/>Port 5341"]
+    end
+
+    %% Client interactions
+    Browser -->|"GraphQL Queries/Mutations"| GQL
+    Browser -->|"REST (File Upload/Download)"| RestProxy
+
+    %% Gateway internal flow
+    GQL --> DataLoaders
+    GQL --> CacheService
+    RestProxy --> CacheService
+    
+    %% Gateway to Backend
+    DataLoaders -->|"NSwag API Client"| Controllers
+    GQL -->|"NSwag API Client"| Controllers
+    RestProxy -->|"NSwag API Client"| Controllers
+
+    %% Cache interactions
+    CacheService <-->|"Get/Set/Invalidate"| Redis
+
+    %% Backend internal flow
+    Controllers --> Services
+    Services --> Domain
+    Services --> Infrastructure
+
+    %% Data access
+    Infrastructure -->|"Entity Framework Core"| SQL
+    Infrastructure -->|"Azure SDK"| Blob
+
+    %% Logging
+    Browser -.->|"Serilog"| Seq
+    GQL -.->|"Serilog"| Seq
+    API -.->|"Serilog"| Seq
+    Services -.->|"Serilog"| Seq
+
+    %% Styling
+    classDef clientStyle fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef gatewayStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef backendStyle fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef dataStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef monitorStyle fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+
+    class Browser clientStyle
+    class GQL,DataLoaders,RestProxy,CacheService gatewayStyle
+    class API,Controllers,Services,Domain,Infrastructure backendStyle
+    class SQL,Blob,Redis dataStyle
+    class Seq monitorStyle
+```
+
+**Key Components:**
+- **Redis Cache**: Used by the Gateway for caching GraphQL queries and responses with hash-based key generation
+- **Seq (Datalust)**: Centralized logging platform for structured logs from all layers (accessible at `http://localhost:5341`)
+- **SQL Server**: Primary database for persisting entities using Entity Framework Core
+- **Azure Blob Storage**: File storage for documents, profile images, and other binary content
+- **DataLoaders**: Prevent N+1 query problems by batching and deduplicating requests to the Backend API
 
 ## API Standards
 

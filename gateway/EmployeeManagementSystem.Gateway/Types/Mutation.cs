@@ -519,7 +519,10 @@ public class Mutation
 
         logger.LogInformation("Profile image uploaded successfully for person {PersonDisplayId}", personDisplayId);
 
+        // Invalidate both individual person cache and persons list cache
         await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
+        await cache.RemoveByPrefixAsync(CacheKeys.PersonsListPrefix, ct);
+        
         return result.Trim('"');
     }
 

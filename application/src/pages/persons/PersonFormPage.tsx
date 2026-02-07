@@ -12,8 +12,6 @@ import {
   Spinner,
   Text,
   Checkbox,
-  Image,
-  Center,
   Accordion,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -25,11 +23,8 @@ import {
 import {
   usePersonDocuments,
   useUploadDocument,
-  useUploadProfileImage,
-  useDeleteProfileImage,
   getDocumentDownloadUrl,
   useDeleteDocument,
-  useProfileImageUrl,
 } from '../../hooks/useDocuments';
 import { AuthContext } from '../../contexts/AuthContext';
 import type {
@@ -44,7 +39,11 @@ import type {
   AddressType,
   ContactType,
 } from '../../graphql/generated/graphql';
-import { DocumentsTable, formatFileSize } from '../../components/documents';
+import {
+  DocumentsTable,
+  formatFileSize,
+  ProfileImageUpload,
+} from '../../components/documents';
 import { formatEnumLabel } from '../../utils/formatters';
 import { useConfirm } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
@@ -162,15 +161,6 @@ const PersonFormPage = () => {
   // GraphQL mutations for document operations
   const { uploadDocument: uploadDocumentMutation } = useUploadDocument();
   const { deleteDocument: deleteDocumentMutation } = useDeleteDocument();
-  const { uploadProfileImage: uploadProfileImageMutation } =
-    useUploadProfileImage();
-  const { deleteProfileImage: deleteProfileImageMutation } =
-    useDeleteProfileImage();
-
-  // Use GraphQL query to get the profile image URL
-  const { profileImageUrl: graphqlImageUrl } = useProfileImageUrl(
-    isEditMode ? Number(displayId) : 0
-  );
 
   const [formData, setFormData] = useState<PersonFormData>(initialFormData);
   const [addresses, setAddresses] = useState<AddressFormData[]>([]);
@@ -179,14 +169,6 @@ const PersonFormPage = () => {
 
   const loading = loadingPerson;
   const saving = creating || updating;
-
-  // Profile image state
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-  const [profileImageVersion, setProfileImageVersion] = useState(0);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [profileBlobUrl, setProfileBlobUrl] = useState<string | null>(null);
-  const [loadingProfileImage, setLoadingProfileImage] = useState(false);
-  const profileInputRef = useRef<HTMLInputElement>(null);
 
   // Documents state - transform GraphQL documents for DocumentsTable
   const documents: DocumentListItem[] = graphqlDocuments
@@ -220,7 +202,6 @@ const PersonFormPage = () => {
         gender: person.gender || 'MALE',
         civilStatus: person.civilStatus || 'SINGLE',
       });
-      setProfileImageUrl(person.profileImageUrl || null);
 
       // Load existing addresses
       if (person.addresses && person.addresses.length > 0) {
@@ -261,56 +242,6 @@ const PersonFormPage = () => {
     }
   }, [person, displayId]);
   /* eslint-enable react-hooks/exhaustive-deps */
-
-  // Fetch profile image with authentication through Gateway
-  useEffect(() => {
-    let currentBlobUrl: string | null = null;
-
-    const fetchProfileImage = async () => {
-      if (!profileImageUrl || !accessToken || !displayId || !graphqlImageUrl) {
-        setProfileBlobUrl(null);
-        return;
-      }
-
-      setLoadingProfileImage(true);
-      try {
-        // Use the URL from GraphQL query with cache busting
-        const url = `${graphqlImageUrl}?v=${profileImageVersion}`;
-        const response = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const blob = await response.blob();
-        currentBlobUrl = URL.createObjectURL(blob);
-        setProfileBlobUrl(currentBlobUrl);
-      } catch (err) {
-        console.error('Error loading profile image:', err);
-        setProfileBlobUrl(null);
-      } finally {
-        setLoadingProfileImage(false);
-      }
-    };
-
-    fetchProfileImage();
-
-    return () => {
-      if (currentBlobUrl) {
-        URL.revokeObjectURL(currentBlobUrl);
-      }
-    };
-  }, [
-    displayId,
-    profileImageUrl,
-    accessToken,
-    profileImageVersion,
-    graphqlImageUrl,
-  ]);
 
   const handleChange = (field: keyof PersonFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -354,69 +285,6 @@ const PersonFormPage = () => {
         i === index ? { ...contact, [field]: value } : contact
       )
     );
-  };
-
-  // Profile image handlers - using Gateway proxy
-  const handleProfileImageSelect = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file || !displayId || !accessToken) return;
-
-    if (!['image/jpeg', 'image/png'].includes(file.type)) {
-      setError('Only JPEG and PNG images are allowed');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be less than 5 MB');
-      return;
-    }
-
-    setUploadingImage(true);
-    setError(null);
-
-    try {
-      await uploadProfileImageMutation(Number(displayId), file);
-
-      setProfileImageVersion((v) => v + 1);
-      await refetchPerson();
-    } catch (err) {
-      console.error('Error uploading profile image:', err);
-      setError('Failed to upload profile image');
-    } finally {
-      setUploadingImage(false);
-      if (profileInputRef.current) {
-        profileInputRef.current.value = '';
-      }
-    }
-  };
-
-  const handleDeleteProfileImage = async () => {
-    if (!displayId || !accessToken) return;
-
-    const confirmed = await confirm({
-      title: 'Delete Profile Image',
-      message:
-        'Are you sure you want to delete the profile image? This action cannot be undone.',
-      confirmText: 'Delete',
-      confirmColorScheme: 'red',
-    });
-
-    if (!confirmed) return;
-
-    setUploadingImage(true);
-    try {
-      await deleteProfileImageMutation(Number(displayId));
-
-      setProfileImageUrl(null);
-      setProfileBlobUrl(null);
-    } catch (err) {
-      console.error('Error deleting profile image:', err);
-      setError('Failed to delete profile image');
-    } finally {
-      setUploadingImage(false);
-    }
   };
 
   // Document handlers - using Gateway proxy
@@ -620,13 +488,6 @@ const PersonFormPage = () => {
     }
   };
 
-  // Generate initials for avatar
-  const getInitials = () => {
-    const first = formData.firstName?.[0] || '';
-    const last = formData.lastName?.[0] || '';
-    return (first + last).toUpperCase() || '?';
-  };
-
   // Generate address summary for accordion header
   const getAddressSummary = (address: AddressFormData, index: number) => {
     const parts = [];
@@ -693,77 +554,12 @@ const PersonFormPage = () => {
                 {/* Profile Image Section - only show in edit mode */}
                 {isEditMode && (
                   <Box>
-                    <Flex direction="column" align="center" gap={4}>
-                      <Box
-                        w="120px"
-                        h="120px"
-                        borderRadius="full"
-                        overflow="hidden"
-                        bg="bg.muted"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        borderWidth={2}
-                        borderColor="border.muted"
-                      >
-                        {uploadingImage || loadingProfileImage ? (
-                          <Spinner size="lg" />
-                        ) : profileBlobUrl ? (
-                          <Image
-                            src={profileBlobUrl}
-                            alt="Profile"
-                            w="100%"
-                            h="100%"
-                            objectFit="cover"
-                          />
-                        ) : (
-                          <Center
-                            w="100%"
-                            h="100%"
-                            bg="bg.muted"
-                            color="fg.muted"
-                            fontSize="2xl"
-                            fontWeight="bold"
-                          >
-                            {getInitials()}
-                          </Center>
-                        )}
-                      </Box>
-
-                      <Flex gap={2}>
-                        <Button
-                          size="xs"
-                          variant="outline"
-                          onClick={() => profileInputRef.current?.click()}
-                          disabled={uploadingImage}
-                        >
-                          {profileImageUrl ? 'Change' : 'Upload'}
-                        </Button>
-                        {profileImageUrl && (
-                          <Button
-                            size="xs"
-                            variant="outline"
-                            colorPalette="red"
-                            onClick={handleDeleteProfileImage}
-                            disabled={uploadingImage}
-                          >
-                            Remove
-                          </Button>
-                        )}
-                      </Flex>
-
-                      <input
-                        ref={profileInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png"
-                        onChange={handleProfileImageSelect}
-                        style={{ display: 'none' }}
-                      />
-
-                      <Text fontSize="xs" color="fg.muted">
-                        JPEG or PNG, max 5 MB
-                      </Text>
-                    </Flex>
+                    <ProfileImageUpload
+                      personDisplayId={Number(displayId)}
+                      currentImageUrl={person?.profileImageUrl}
+                      hasProfileImage={person?.hasProfileImage}
+                      onImageUpdated={refetchPerson}
+                    />
                   </Box>
                 )}
 

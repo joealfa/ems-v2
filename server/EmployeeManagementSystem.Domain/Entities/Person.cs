@@ -73,6 +73,11 @@ public class Person : BaseEntity
     public string? ProfileImageUrl { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the person has a profile image.
+    /// </summary>
+    public bool HasProfileImage { get; set; }
+
+    /// <summary>
     /// Gets the full name of the person.
     /// </summary>
     public string FullName => string.IsNullOrWhiteSpace(MiddleName)

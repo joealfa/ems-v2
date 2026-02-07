@@ -1,17 +1,26 @@
-import { useQuery, useMutation, useLazyQuery } from '@apollo/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { graphqlRequest } from '../graphql/graphql-client';
+import { schoolKeys, dashboardKeys } from '../graphql/query-keys';
 import {
   GetSchoolsDocument,
   GetSchoolDocument,
   CreateSchoolDocument,
   UpdateSchoolDocument,
   DeleteSchoolDocument,
+  type GetSchoolsQuery,
+  type GetSchoolsQueryVariables,
+  type GetSchoolQuery,
   type CreateSchoolInput,
   type UpdateSchoolInput,
+  type CreateSchoolMutation,
+  type CreateSchoolMutationVariables,
+  type UpdateSchoolMutation,
+  type UpdateSchoolMutationVariables,
+  type DeleteSchoolMutation,
+  type DeleteSchoolMutationVariables,
 } from '../graphql/generated/graphql';
 
-/**
- * Hook for fetching paginated schools list
- */
 export function useSchools(variables?: {
   pageNumber?: number;
   pageSize?: number;
@@ -19,120 +28,146 @@ export function useSchools(variables?: {
   sortBy?: string;
   sortDescending?: boolean;
 }) {
-  const { data, loading, error, refetch } = useQuery(GetSchoolsDocument, {
-    variables,
-    fetchPolicy: 'cache-and-network',
+  const query = useQuery({
+    queryKey: schoolKeys.list(variables ?? {}),
+    queryFn: () =>
+      graphqlRequest<GetSchoolsQuery, GetSchoolsQueryVariables>(
+        GetSchoolsDocument,
+        variables ?? {}
+      ),
   });
 
   return {
-    schools: data?.schools?.items ?? [],
-    totalCount: data?.schools?.totalCount ?? 0,
-    pageNumber: data?.schools?.pageNumber ?? 1,
-    pageSize: data?.schools?.pageSize ?? 10,
-    totalPages: data?.schools?.totalPages ?? 0,
-    loading,
-    error,
-    refetch,
+    schools: query.data?.schools?.items ?? [],
+    totalCount: query.data?.schools?.totalCount ?? 0,
+    pageNumber: query.data?.schools?.pageNumber ?? 1,
+    pageSize: query.data?.schools?.pageSize ?? 10,
+    totalPages: query.data?.schools?.totalPages ?? 0,
+    loading: query.isPending,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
 
-/**
- * Hook for lazy fetching schools (useful for AG Grid infinite scrolling)
- */
 export function useSchoolsLazy() {
-  const [fetchSchools, { data, loading, error }] = useLazyQuery(
-    GetSchoolsDocument,
-    {
-      fetchPolicy: 'network-only',
-    }
-  );
+  const fetchSchools = useCallback(async (args: {
+    variables: GetSchoolsQueryVariables;
+  }) => {
+    const data = await graphqlRequest<
+      GetSchoolsQuery,
+      GetSchoolsQueryVariables
+    >(GetSchoolsDocument, args.variables);
+    return { data };
+  }, []);
 
   return {
     fetchSchools,
-    schools: data?.schools?.items ?? [],
-    totalCount: data?.schools?.totalCount ?? 0,
-    loading,
-    error,
+    loading: false,
   };
 }
 
-/**
- * Hook for fetching a single school by displayId
- */
 export function useSchool(displayId: number) {
-  const { data, loading, error, refetch } = useQuery(GetSchoolDocument, {
-    variables: { displayId },
-    skip: !displayId,
+  const query = useQuery({
+    queryKey: schoolKeys.detail(displayId),
+    queryFn: () =>
+      graphqlRequest<GetSchoolQuery, { displayId: number }>(GetSchoolDocument, {
+        displayId,
+      }),
+    enabled: !!displayId,
   });
 
   return {
-    school: data?.school,
-    loading,
-    error,
-    refetch,
+    school: query.data?.school,
+    loading: query.isPending,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
 
-/**
- * Hook for creating a school
- */
 export function useCreateSchool() {
-  const [createSchool, { data, loading, error }] = useMutation(
-    CreateSchoolDocument,
-    {
-      refetchQueries: [GetSchoolsDocument],
-    }
-  );
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (variables: CreateSchoolMutationVariables) =>
+      graphqlRequest<CreateSchoolMutation, CreateSchoolMutationVariables>(
+        CreateSchoolDocument,
+        variables
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: schoolKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+    },
+  });
 
   const handleCreate = async (input: CreateSchoolInput) => {
-    const result = await createSchool({ variables: { input } });
-    return result.data?.createSchool;
+    const result = await mutation.mutateAsync({ input });
+    return result.createSchool;
   };
 
   return {
     createSchool: handleCreate,
-    school: data?.createSchool,
-    loading,
-    error,
+    school: mutation.data?.createSchool,
+    loading: mutation.isPending,
+    error: mutation.error,
   };
 }
 
-/**
- * Hook for updating a school
- */
 export function useUpdateSchool() {
-  const [updateSchool, { data, loading, error }] =
-    useMutation(UpdateSchoolDocument);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (variables: UpdateSchoolMutationVariables) =>
+      graphqlRequest<UpdateSchoolMutation, UpdateSchoolMutationVariables>(
+        UpdateSchoolDocument,
+        variables
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: schoolKeys.detail(variables.displayId),
+      });
+      queryClient.invalidateQueries({ queryKey: schoolKeys.lists() });
+    },
+  });
 
   const handleUpdate = async (displayId: number, input: UpdateSchoolInput) => {
-    const result = await updateSchool({ variables: { displayId, input } });
-    return result.data?.updateSchool;
+    const result = await mutation.mutateAsync({ displayId, input });
+    return result.updateSchool;
   };
 
   return {
     updateSchool: handleUpdate,
-    school: data?.updateSchool,
-    loading,
-    error,
+    school: mutation.data?.updateSchool,
+    loading: mutation.isPending,
+    error: mutation.error,
   };
 }
 
-/**
- * Hook for deleting a school
- */
 export function useDeleteSchool() {
-  const [deleteSchool, { loading, error }] = useMutation(DeleteSchoolDocument, {
-    refetchQueries: [GetSchoolsDocument],
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (variables: DeleteSchoolMutationVariables) =>
+      graphqlRequest<DeleteSchoolMutation, DeleteSchoolMutationVariables>(
+        DeleteSchoolDocument,
+        variables
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.removeQueries({
+        queryKey: schoolKeys.detail(variables.displayId),
+      });
+      queryClient.invalidateQueries({ queryKey: schoolKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+    },
   });
 
   const handleDelete = async (displayId: number) => {
-    const result = await deleteSchool({ variables: { displayId } });
-    return result.data?.deleteSchool ?? false;
+    const result = await mutation.mutateAsync({ displayId });
+    return result.deleteSchool ?? false;
   };
 
   return {
     deleteSchool: handleDelete,
-    loading,
-    error,
+    loading: mutation.isPending,
+    error: mutation.error,
   };
 }

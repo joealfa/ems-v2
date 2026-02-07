@@ -1,6 +1,6 @@
 # GraphQL Usage Guide
 
-This application uses **Apollo Client** with **GraphQL Code Generator** for type-safe API communication.
+This application uses **TanStack Query** with **graphql-request** and **GraphQL Code Generator** for type-safe API communication.
 
 ## Quick Start
 
@@ -19,7 +19,7 @@ This will:
 
 ### 2. Using Custom Hooks (Recommended)
 
-We've created custom hooks that wrap Apollo Client for easier usage:
+We've created custom hooks that wrap TanStack Query for easier usage:
 
 #### Fetching Data
 
@@ -82,22 +82,20 @@ function PersonForm() {
 }
 ```
 
-### 3. Using Apollo Hooks Directly (Advanced)
+### 3. Using graphqlRequest Directly (Advanced)
 
-You can also use Apollo's hooks directly:
+You can also use the `graphqlRequest` function directly:
 
 ```tsx
-import { useQuery, useMutation } from '@apollo/client';
-import { GetPersonsDocument, CreatePersonDocument } from '../graphql/generated/graphql';
+import { graphqlRequest } from '../graphql/graphql-client';
+import { GetPersonsDocument, type GetPersonsQuery, type GetPersonsQueryVariables } from '../graphql/generated/graphql';
 
-function MyComponent() {
-  const { data, loading, error } = useQuery(GetPersonsDocument, {
-    variables: { pageNumber: 1, pageSize: 10 }
-  });
-
-  const [createPerson] = useMutation(CreatePersonDocument);
-
-  // ...
+async function fetchPersons() {
+  const data = await graphqlRequest<GetPersonsQuery, GetPersonsQueryVariables>(
+    GetPersonsDocument,
+    { pageNumber: 1, pageSize: 10 }
+  );
+  return data.persons;
 }
 ```
 
@@ -137,24 +135,37 @@ function MyComponent() {
 - `useLogout()` - Logout user
 - `useCurrentUser()` - Get current user info
 
-## Apollo Client Features
+## TanStack Query Features
 
 ### Automatic Caching
-Apollo automatically caches query results. When you refetch data, it uses the cache first, then updates with fresh data:
+TanStack Query caches query results using query keys. Data is considered fresh for a configurable `staleTime`, then automatically refetched in the background:
 
 ```tsx
-const { data } = useQuery(GetPersonsDocument, {
-  fetchPolicy: 'cache-and-network' // Use cache, then fetch fresh data
-});
+// Default staleTime is 2 minutes (configured in query-client.ts)
+const { persons, loading, error } = usePersons({ pageNumber: 1, pageSize: 10 });
 ```
 
-### Refetch Queries
-Mutations automatically refetch related queries:
+### Cache Invalidation
+Mutations automatically invalidate related queries via `onSuccess` callbacks:
 
 ```tsx
-const [createPerson] = useMutation(CreatePersonDocument, {
-  refetchQueries: [GetPersonsDocument] // Auto-refresh persons list
-});
+// After creating a person, the persons list and dashboard stats are invalidated
+const { createPerson, loading } = useCreatePerson();
+// onSuccess internally calls:
+//   queryClient.invalidateQueries({ queryKey: personKeys.lists() });
+//   queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+```
+
+### Query Key Factory
+All cache keys are managed by a centralized query key factory in `src/graphql/query-keys.ts`:
+
+```tsx
+// Hierarchical key structure for fine-grained invalidation
+personKeys.all           // ['persons'] - invalidate everything
+personKeys.lists()       // ['persons', 'list'] - invalidate all lists
+personKeys.list(filters) // ['persons', 'list', {...}] - specific list
+personKeys.details()     // ['persons', 'detail'] - all details
+personKeys.detail(id)    // ['persons', 'detail', 123] - specific detail
 ```
 
 ### Loading and Error States
@@ -179,8 +190,13 @@ Run `npm run codegen` when:
 ```
 src/
 ├── graphql/
-│   ├── client.ts              # Apollo Client setup
-│   ├── ApolloProvider.tsx     # React provider
+│   ├── graphql-client.ts      # graphql-request client setup
+│   ├── query-client.ts        # TanStack QueryClient configuration
+│   ├── QueryProvider.tsx      # TanStack Query provider wrapper
+│   ├── query-keys.ts         # Query key factory for cache management
+│   ├── error-handler.ts      # Global error handling utilities
+│   ├── types.ts              # Shared pagination types
+│   ├── index.ts              # Barrel exports
 │   ├── operations/            # GraphQL queries/mutations (.graphql files)
 │   │   ├── auth.graphql       # Authentication mutations
 │   │   ├── dashboard.graphql  # Dashboard statistics query
@@ -198,18 +214,23 @@ src/
     ├── index.ts               # Barrel export file
     ├── useAuth.ts             # Authentication hook
     ├── useAuthMutations.ts    # Auth mutations (login, logout)
+    ├── useDashboard.ts        # Dashboard statistics hook
     ├── useDebounce.ts         # Debounce utility hook
     ├── useDocuments.ts        # Document operations and helpers
     ├── useEmployments.ts      # Employment CRUD hooks
-    └── usePersons.ts          # Person CRUD hooks
+    ├── useItems.ts            # Item CRUD hooks
+    ├── usePersons.ts          # Person CRUD hooks
+    ├── usePositions.ts        # Position CRUD hooks
+    ├── useSalaryGrades.ts     # Salary grade CRUD hooks
+    └── useSchools.ts          # School CRUD hooks
 ```
 
 ## Best Practices
 
 1. **Always use custom hooks** - They provide better error handling and TypeScript support
 2. **Don't edit generated files** - They're overwritten by codegen
-3. **Use refetchQueries** - Keep UI in sync after mutations
-4. **Leverage caching** - Apollo's cache reduces network requests
+3. **Use query key factory** - Keep cache keys consistent via `query-keys.ts`
+4. **Invalidate on mutation** - Use `onSuccess` to invalidate related query keys
 5. **Handle loading/error states** - Always show feedback to users
 
 ## Troubleshooting
@@ -220,11 +241,11 @@ npm run codegen
 ```
 
 ### Query not updating after mutation
-Add `refetchQueries` to your mutation:
+Ensure the mutation's `onSuccess` invalidates the correct query keys:
 ```tsx
-const [createPerson] = useMutation(CreatePersonDocument, {
-  refetchQueries: [GetPersonsDocument]
-});
+onSuccess: () => {
+  queryClient.invalidateQueries({ queryKey: personKeys.lists() });
+}
 ```
 
 ### Network errors

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
-import { useMutation } from '@apollo/client';
+import { graphqlRequest } from '../graphql/graphql-client';
+import { queryClient } from '../graphql/query-client';
 import {
   GoogleLoginDocument,
   RefreshTokenDocument,
@@ -32,21 +33,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserDto | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // GraphQL mutations
-  const [googleLoginMutation] = useMutation<
-    GoogleLoginMutation,
-    GoogleLoginMutationVariables
-  >(GoogleLoginDocument);
-
-  const [refreshTokenMutation] = useMutation<
-    RefreshTokenMutation,
-    RefreshTokenMutationVariables
-  >(RefreshTokenDocument);
-
-  const [logoutMutation] = useMutation<LogoutMutation, LogoutMutationVariables>(
-    LogoutDocument
-  );
 
   const clearAuthData = useCallback(() => {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -86,38 +72,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 
-      // In this app the refresh token is stored in localStorage (the backend cookie is not forwarded to the browser
-      // when using the Gateway). If it's missing, avoid calling the server and just reset auth state.
       if (!storedRefreshToken) {
         clearAuthData();
         return null;
       }
 
-      const { data } = await refreshTokenMutation({
-        variables: { refreshToken: storedRefreshToken },
-      });
+      const data = await graphqlRequest<
+        RefreshTokenMutation,
+        RefreshTokenMutationVariables
+      >(RefreshTokenDocument, { refreshToken: storedRefreshToken });
 
       if (data?.refreshToken) {
         saveAuthData(data.refreshToken);
         return data.refreshToken.accessToken || null;
       }
 
-      // Refresh failed (e.g. invalid/expired refresh token). Clear stale local auth data.
       clearAuthData();
       return null;
     } catch {
       clearAuthData();
       return null;
     }
-  }, [clearAuthData, saveAuthData, refreshTokenMutation]);
+  }, [clearAuthData, saveAuthData]);
 
   const login = useCallback(
     async (googleIdToken: string) => {
       setIsLoading(true);
       try {
-        const { data } = await googleLoginMutation({
-          variables: { idToken: googleIdToken },
-        });
+        const data = await graphqlRequest<
+          GoogleLoginMutation,
+          GoogleLoginMutationVariables
+        >(GoogleLoginDocument, { idToken: googleIdToken });
 
         if (data?.googleLogin) {
           saveAuthData(data.googleLogin);
@@ -126,7 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
       }
     },
-    [saveAuthData, googleLoginMutation]
+    [saveAuthData]
   );
 
   const logout = useCallback(async () => {
@@ -134,16 +119,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (storedRefreshToken) {
       try {
-        await logoutMutation({
-          variables: { refreshToken: storedRefreshToken },
-        });
+        await graphqlRequest<LogoutMutation, LogoutMutationVariables>(
+          LogoutDocument,
+          { refreshToken: storedRefreshToken }
+        );
       } catch {
         // Ignore errors during logout
       }
     }
 
     clearAuthData();
-  }, [clearAuthData, logoutMutation]);
+    queryClient.clear();
+  }, [clearAuthData]);
 
   // Initialize auth state from localStorage
   useEffect(() => {

@@ -16,8 +16,6 @@ const config: CodegenConfig = {
         enumsAsTypes: true,
         // Skip __typename in types
         skipTypename: false,
-        // Generate hooks for Apollo Client
-        withHooks: true,
         // Use 'import type' for type imports
         useTypeImports: true,
         // Avoid 'as const' assertions for better compatibility

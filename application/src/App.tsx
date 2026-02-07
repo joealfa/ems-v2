@@ -6,7 +6,7 @@ import { system } from './theme';
 import { ColorModeProvider } from './components/ui/color-mode';
 import { MainLayout } from './components/layout';
 import { AuthProvider } from './contexts/AuthContext';
-import { ApolloProvider } from './graphql';
+import { QueryProvider } from './graphql/QueryProvider';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Lazy load page components for code splitting
@@ -77,7 +77,7 @@ if (!googleClientId) {
 const App = () => {
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <ApolloProvider>
+      <QueryProvider>
         <ChakraProvider value={system}>
           <ColorModeProvider>
             <BrowserRouter>
@@ -185,7 +185,7 @@ const App = () => {
             </BrowserRouter>
           </ColorModeProvider>
         </ChakraProvider>
-      </ApolloProvider>
+      </QueryProvider>
     </GoogleOAuthProvider>
   );
 };

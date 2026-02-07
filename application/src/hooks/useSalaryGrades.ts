@@ -1,17 +1,26 @@
-import { useQuery, useMutation, useLazyQuery } from '@apollo/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { graphqlRequest } from '../graphql/graphql-client';
+import { salaryGradeKeys, dashboardKeys } from '../graphql/query-keys';
 import {
   GetSalaryGradesDocument,
   GetSalaryGradeDocument,
   CreateSalaryGradeDocument,
   UpdateSalaryGradeDocument,
   DeleteSalaryGradeDocument,
+  type GetSalaryGradesQuery,
+  type GetSalaryGradesQueryVariables,
+  type GetSalaryGradeQuery,
   type CreateSalaryGradeInput,
   type UpdateSalaryGradeInput,
+  type CreateSalaryGradeMutation,
+  type CreateSalaryGradeMutationVariables,
+  type UpdateSalaryGradeMutation,
+  type UpdateSalaryGradeMutationVariables,
+  type DeleteSalaryGradeMutation,
+  type DeleteSalaryGradeMutationVariables,
 } from '../graphql/generated/graphql';
 
-/**
- * Hook for fetching paginated salary grades list
- */
 export function useSalaryGrades(variables?: {
   pageNumber?: number;
   pageSize?: number;
@@ -19,127 +28,150 @@ export function useSalaryGrades(variables?: {
   sortBy?: string;
   sortDescending?: boolean;
 }) {
-  const { data, loading, error, refetch } = useQuery(GetSalaryGradesDocument, {
-    variables,
-    fetchPolicy: 'cache-and-network',
+  const query = useQuery({
+    queryKey: salaryGradeKeys.list(variables ?? {}),
+    queryFn: () =>
+      graphqlRequest<GetSalaryGradesQuery, GetSalaryGradesQueryVariables>(
+        GetSalaryGradesDocument,
+        variables ?? {}
+      ),
   });
 
   return {
-    salaryGrades: data?.salaryGrades?.items ?? [],
-    totalCount: data?.salaryGrades?.totalCount ?? 0,
-    pageNumber: data?.salaryGrades?.pageNumber ?? 1,
-    pageSize: data?.salaryGrades?.pageSize ?? 10,
-    totalPages: data?.salaryGrades?.totalPages ?? 0,
-    loading,
-    error,
-    refetch,
+    salaryGrades: query.data?.salaryGrades?.items ?? [],
+    totalCount: query.data?.salaryGrades?.totalCount ?? 0,
+    pageNumber: query.data?.salaryGrades?.pageNumber ?? 1,
+    pageSize: query.data?.salaryGrades?.pageSize ?? 10,
+    totalPages: query.data?.salaryGrades?.totalPages ?? 0,
+    loading: query.isPending,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
 
-/**
- * Hook for lazy fetching salary grades (useful for AG Grid infinite scrolling)
- */
 export function useSalaryGradesLazy() {
-  const [fetchSalaryGrades, { data, loading, error }] = useLazyQuery(
-    GetSalaryGradesDocument,
-    {
-      fetchPolicy: 'network-only',
-    }
-  );
+  const fetchSalaryGrades = useCallback(async (args: {
+    variables: GetSalaryGradesQueryVariables;
+  }) => {
+    const data = await graphqlRequest<
+      GetSalaryGradesQuery,
+      GetSalaryGradesQueryVariables
+    >(GetSalaryGradesDocument, args.variables);
+    return { data };
+  }, []);
 
   return {
     fetchSalaryGrades,
-    salaryGrades: data?.salaryGrades?.items ?? [],
-    totalCount: data?.salaryGrades?.totalCount ?? 0,
-    loading,
-    error,
+    loading: false,
   };
 }
 
-/**
- * Hook for fetching a single salary grade by displayId
- */
 export function useSalaryGrade(displayId: number) {
-  const { data, loading, error, refetch } = useQuery(GetSalaryGradeDocument, {
-    variables: { displayId },
-    skip: !displayId,
+  const query = useQuery({
+    queryKey: salaryGradeKeys.detail(displayId),
+    queryFn: () =>
+      graphqlRequest<GetSalaryGradeQuery, { displayId: number }>(
+        GetSalaryGradeDocument,
+        { displayId }
+      ),
+    enabled: !!displayId,
   });
 
   return {
-    salaryGrade: data?.salaryGrade,
-    loading,
-    error,
-    refetch,
+    salaryGrade: query.data?.salaryGrade,
+    loading: query.isPending,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
 
-/**
- * Hook for creating a salary grade
- */
 export function useCreateSalaryGrade() {
-  const [createSalaryGrade, { data, loading, error }] = useMutation(
-    CreateSalaryGradeDocument,
-    {
-      refetchQueries: [GetSalaryGradesDocument],
-    }
-  );
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (variables: CreateSalaryGradeMutationVariables) =>
+      graphqlRequest<
+        CreateSalaryGradeMutation,
+        CreateSalaryGradeMutationVariables
+      >(CreateSalaryGradeDocument, variables),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salaryGradeKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+    },
+  });
 
   const handleCreate = async (input: CreateSalaryGradeInput) => {
-    const result = await createSalaryGrade({ variables: { input } });
-    return result.data?.createSalaryGrade;
+    const result = await mutation.mutateAsync({ input });
+    return result.createSalaryGrade;
   };
 
   return {
     createSalaryGrade: handleCreate,
-    salaryGrade: data?.createSalaryGrade,
-    loading,
-    error,
+    salaryGrade: mutation.data?.createSalaryGrade,
+    loading: mutation.isPending,
+    error: mutation.error,
   };
 }
 
-/**
- * Hook for updating a salary grade
- */
 export function useUpdateSalaryGrade() {
-  const [updateSalaryGrade, { data, loading, error }] = useMutation(
-    UpdateSalaryGradeDocument
-  );
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (variables: UpdateSalaryGradeMutationVariables) =>
+      graphqlRequest<
+        UpdateSalaryGradeMutation,
+        UpdateSalaryGradeMutationVariables
+      >(UpdateSalaryGradeDocument, variables),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: salaryGradeKeys.detail(variables.displayId),
+      });
+      queryClient.invalidateQueries({ queryKey: salaryGradeKeys.lists() });
+    },
+  });
 
   const handleUpdate = async (
     displayId: number,
     input: UpdateSalaryGradeInput
   ) => {
-    const result = await updateSalaryGrade({ variables: { displayId, input } });
-    return result.data?.updateSalaryGrade;
+    const result = await mutation.mutateAsync({ displayId, input });
+    return result.updateSalaryGrade;
   };
 
   return {
     updateSalaryGrade: handleUpdate,
-    salaryGrade: data?.updateSalaryGrade,
-    loading,
-    error,
+    salaryGrade: mutation.data?.updateSalaryGrade,
+    loading: mutation.isPending,
+    error: mutation.error,
   };
 }
 
-/**
- * Hook for deleting a salary grade
- */
 export function useDeleteSalaryGrade() {
-  const [deleteSalaryGrade, { loading, error }] = useMutation(
-    DeleteSalaryGradeDocument,
-    {
-      refetchQueries: [GetSalaryGradesDocument],
-    }
-  );
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (variables: DeleteSalaryGradeMutationVariables) =>
+      graphqlRequest<
+        DeleteSalaryGradeMutation,
+        DeleteSalaryGradeMutationVariables
+      >(DeleteSalaryGradeDocument, variables),
+    onSuccess: (_data, variables) => {
+      queryClient.removeQueries({
+        queryKey: salaryGradeKeys.detail(variables.displayId),
+      });
+      queryClient.invalidateQueries({ queryKey: salaryGradeKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+    },
+  });
 
   const handleDelete = async (displayId: number) => {
-    const result = await deleteSalaryGrade({ variables: { displayId } });
-    return result.data?.deleteSalaryGrade ?? false;
+    const result = await mutation.mutateAsync({ displayId });
+    return result.deleteSalaryGrade ?? false;
   };
 
   return {
     deleteSalaryGrade: handleDelete,
-    loading,
-    error,
+    loading: mutation.isPending,
+    error: mutation.error,
   };
 }

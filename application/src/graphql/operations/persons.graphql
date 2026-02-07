@@ -6,6 +6,7 @@ fragment PersonListFields on PersonListDto {
   civilStatus
   dateOfBirth
   profileImageUrl
+  hasProfileImage
   createdBy
   createdOn
   modifiedBy
@@ -22,6 +23,7 @@ fragment PersonDetailFields on PersonResponseDto {
   civilStatus
   dateOfBirth
   profileImageUrl
+  hasProfileImage
   createdBy
   createdOn
   modifiedBy

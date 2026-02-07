@@ -6751,6 +6751,9 @@ namespace EmployeeManagementSystem.ApiClient.Generated
         [Newtonsoft.Json.JsonProperty("profileImageUrl", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string ProfileImageUrl { get; set; }
 
+        [Newtonsoft.Json.JsonProperty("hasProfileImage", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool HasProfileImage { get; set; }
+
         [Newtonsoft.Json.JsonProperty("displayId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.RegularExpression(@"^-?(?:0|[1-9]\d*)$")]
         public long DisplayId { get; set; }
@@ -6814,6 +6817,9 @@ namespace EmployeeManagementSystem.ApiClient.Generated
 
         [Newtonsoft.Json.JsonProperty("profileImageUrl", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string ProfileImageUrl { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("hasProfileImage", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool HasProfileImage { get; set; }
 
         [Newtonsoft.Json.JsonProperty("displayId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [System.ComponentModel.DataAnnotations.RegularExpression(@"^-?(?:0|[1-9]\d*)$")]

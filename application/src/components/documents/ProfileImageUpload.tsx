@@ -12,12 +12,14 @@ import { ConfirmDialog } from '../ui';
 interface ProfileImageUploadProps {
   personDisplayId: number;
   currentImageUrl?: string | null;
+  hasProfileImage?: boolean;
   onImageUpdated: () => void;
 }
 
 const ProfileImageUpload = ({
   personDisplayId,
   currentImageUrl,
+  hasProfileImage,
   onImageUpdated,
 }: ProfileImageUploadProps) => {
   const authContext = useContext(AuthContext);
@@ -41,7 +43,13 @@ const ProfileImageUpload = ({
   // Fetch profile image with authentication
   useEffect(() => {
     const fetchImage = async () => {
-      if (!currentImageUrl || !accessToken || !graphqlImageUrl) {
+      // Only fetch if hasProfileImage flag is true or currentImageUrl exists
+      if (
+        !currentImageUrl ||
+        !accessToken ||
+        !graphqlImageUrl ||
+        !hasProfileImage
+      ) {
         setImageBlobUrl(null);
         return;
       }
@@ -83,6 +91,7 @@ const ProfileImageUpload = ({
   }, [
     personDisplayId,
     currentImageUrl,
+    hasProfileImage,
     accessToken,
     imageVersion,
     graphqlImageUrl,

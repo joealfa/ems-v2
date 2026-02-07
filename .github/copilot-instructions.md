@@ -23,8 +23,9 @@
 - **TypeScript** - Static typing
 - **Vite** - Build tool
 - **Chakra-UI** - Component library
-- **Apollo Client** - GraphQL client
-- **GraphQL Code Generator** - Auto-generated types and hooks
+- **TanStack Query** - Server state management and data fetching
+- **graphql-request** - Lightweight GraphQL client
+- **GraphQL Code Generator** - Auto-generated types and documents
 - **AG Grid** - Data grid component
 
 **Gateway**:
@@ -59,9 +60,13 @@ ems-v2/
 │   └── src/                                        # Source code
 │       ├── components/                             # Reusable UI components
 │       ├── graphql/                                # GraphQL operations and generated code
+│       │   ├── graphql-client.ts                   # graphql-request client setup
+│       │   ├── query-client.ts                     # TanStack QueryClient configuration
+│       │   ├── QueryProvider.tsx                    # TanStack Query provider wrapper
+│       │   ├── query-keys.ts                       # Query key factory for cache management
 │       │   ├── operations/                         # .graphql query/mutation files
-│       │   └── generated/                          # Auto-generated types and hooks
-│       ├── hooks/                                  # Custom React hooks for GraphQL
+│       │   └── generated/                          # Auto-generated types and documents
+│       ├── hooks/                                  # Custom React hooks (TanStack Query)
 │       └── contexts/                               # React context providers (AuthContext)
 ├── docs/                                           # Shared documentation
 │   ├── server/                                     # Backend related documentation
@@ -325,7 +330,8 @@ This project follows security best practices:
 - [TypeScript Documentation](https://www.typescriptlang.org/docs/handbook/)
 - [Vite Documentation](https://vite.dev/guide/)
 - [Chakra-UI Documentation](https://chakra-ui.com/docs/get-started/installation)
-- [Apollo Client Documentation](https://www.apollographql.com/docs/react/)
+- [TanStack Query Documentation](https://tanstack.com/query/latest)
+- [graphql-request Documentation](https://github.com/graffle-js/graffle)
 - [GraphQL Code Generator Documentation](https://the-guild.dev/graphql/codegen)
 - [HotChocolate GraphQL Documentation](https://chillicream.com/docs/hotchocolate)
 - [Clean Architecture Principles](https://8thlight.com/blog/uncle-bob/2012/08/13/the-clean-architecture.html)

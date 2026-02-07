@@ -1,21 +1,25 @@
-import { useQuery } from '@apollo/client';
-import { GetDashboardStatsDocument } from '../graphql/generated/graphql';
+import { useQuery } from '@tanstack/react-query';
+import { graphqlRequest } from '../graphql/graphql-client';
+import { dashboardKeys } from '../graphql/query-keys';
+import {
+  GetDashboardStatsDocument,
+  type GetDashboardStatsQuery,
+} from '../graphql/generated/graphql';
 
-/**
- * Hook to fetch dashboard statistics
- */
 export function useDashboardStats() {
-  const { data, loading, error, refetch } = useQuery(
-    GetDashboardStatsDocument,
-    {
-      fetchPolicy: 'cache-and-network',
-    }
-  );
+  const query = useQuery({
+    queryKey: dashboardKeys.stats(),
+    queryFn: () =>
+      graphqlRequest<GetDashboardStatsQuery, Record<string, unknown>>(
+        GetDashboardStatsDocument
+      ),
+    staleTime: 1 * 60 * 1000,
+  });
 
   return {
-    stats: data?.dashboardStats,
-    loading,
-    error,
-    refetch,
+    stats: query.data?.dashboardStats,
+    loading: query.isPending,
+    error: query.error,
+    refetch: query.refetch,
   };
 }

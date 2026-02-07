@@ -25,7 +25,6 @@ import {
 } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
 import { usePersonsLazy } from '../../hooks/usePersons';
-import { useProfileImageUrl } from '../../hooks/useDocuments';
 import type {
   PersonListDto,
   Gender,
@@ -52,21 +51,24 @@ import { EyeIcon, EditIcon } from '../../components/icons';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// Profile image cell renderer with authenticated image fetching
+// Profile image cell renderer using the URL from the list data directly
 interface ProfileImageCellProps {
-  displayId: number;
   fullName: string;
-  hasImage: boolean;
+  imageUrl?: string | null;
+  hasProfileImage?: boolean;
 }
 
 const ProfileImageCell = ({
-  displayId,
   fullName,
-  hasImage,
+  imageUrl,
+  hasProfileImage,
 }: ProfileImageCellProps) => {
-  const { profileImageUrl, loading, error } = useProfileImageUrl(
-    hasImage ? displayId : 0
-  );
+  const [imgError, setImgError] = useState(false);
+
+  // Reset error state when imageUrl or hasProfileImage changes
+  useEffect(() => {
+    setImgError(false);
+  }, [imageUrl, hasProfileImage]);
 
   const nameParts = fullName.split(' ');
   const initials =
@@ -74,28 +76,12 @@ const ProfileImageCell = ({
       ? `${nameParts[0]?.[0] || ''}${nameParts[nameParts.length - 1]?.[0] || ''}`.toUpperCase()
       : (fullName[0] || '?').toUpperCase();
 
-  if (loading) {
-    return (
-      <Flex align="center" justify="center" h="100%">
-        <Center
-          w="32px"
-          h="32px"
-          minW="32px"
-          minH="32px"
-          borderRadius="50%"
-          bg="bg.muted"
-        >
-          <Spinner size="xs" />
-        </Center>
-      </Flex>
-    );
-  }
-
-  if (profileImageUrl && !error) {
+  // Only attempt to load image if hasProfileImage flag is true
+  if (hasProfileImage && imageUrl && !imgError) {
     return (
       <Flex align="center" justify="center" h="100%">
         <Image
-          src={profileImageUrl}
+          src={imageUrl}
           alt="Profile"
           w="32px"
           h="32px"
@@ -103,6 +89,7 @@ const ProfileImageCell = ({
           minH="32px"
           borderRadius="50%"
           objectFit="cover"
+          onError={() => setImgError(true)}
         />
       </Flex>
     );
@@ -417,15 +404,13 @@ const PersonsPage = () => {
         filter: false,
         cellRenderer: (params: ICellRendererParams<PersonListDto>) => {
           const fullName = params.data?.fullName || '';
-          const displayId = params.data?.displayId;
-
-          if (!displayId) return null;
+          if (!params.data) return null;
 
           return (
             <ProfileImageCell
-              displayId={displayId}
               fullName={fullName}
-              hasImage={!!params.value}
+              imageUrl={params.value}
+              hasProfileImage={params.data.hasProfileImage}
             />
           );
         },

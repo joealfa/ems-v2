@@ -354,6 +354,7 @@ public class DocumentService(
             cancellationToken);
 
         person.ProfileImageUrl = blobUrl;
+        person.HasProfileImage = true;
         person.ModifiedBy = modifiedBy;
 
         await _personRepository.UpdateAsync(person, cancellationToken);
@@ -388,6 +389,7 @@ public class DocumentService(
         _ = await _blobStorageService.DeleteAsync(ProfileImagesContainer, blobName, cancellationToken);
 
         person.ProfileImageUrl = null;
+        person.HasProfileImage = false;
         person.ModifiedBy = modifiedBy;
 
         await _personRepository.UpdateAsync(person, cancellationToken);

@@ -1,10 +1,10 @@
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { graphqlRequest } from '../graphql/graphql-client';
+import { documentKeys } from '../graphql/query-keys';
 import {
   GetPersonDocumentsDocument,
   GetDocumentDocument,
   GetProfileImageUrlDocument,
-  UploadDocumentDocument,
-  UploadProfileImageDocument,
   UpdateDocumentDocument,
   DeleteDocumentDocument,
   DeleteProfileImageDocument,
@@ -14,10 +14,6 @@ import {
   type GetDocumentQueryVariables,
   type GetProfileImageUrlQuery,
   type GetProfileImageUrlQueryVariables,
-  type UploadDocumentMutation,
-  type UploadDocumentMutationVariables,
-  type UploadProfileImageMutation,
-  type UploadProfileImageMutationVariables,
   type UpdateDocumentMutation,
   type UpdateDocumentMutationVariables,
   type DeleteDocumentMutation,
@@ -26,10 +22,49 @@ import {
   type DeleteProfileImageMutationVariables,
 } from '../graphql/generated/graphql';
 
-// Gateway base URL for REST file download endpoints (GraphQL doesn't handle file streaming)
+const GRAPHQL_URL =
+  import.meta.env.VITE_GRAPHQL_URL || 'https://localhost:5003/graphql';
+
 const GATEWAY_BASE_URL =
   import.meta.env.VITE_GRAPHQL_URL?.replace('/graphql', '') ||
   'https://localhost:5003';
+
+const performUpload = async (
+  query: string,
+  variables: Record<string, unknown>,
+  fileFieldPath: string,
+  file: File
+) => {
+  const variablesForOp = { ...variables, [fileFieldPath]: null };
+
+  const formData = new FormData();
+  formData.append(
+    'operations',
+    JSON.stringify({ query, variables: variablesForOp })
+  );
+  formData.append(
+    'map',
+    JSON.stringify({ '0': [`variables.${fileFieldPath}`] })
+  );
+  formData.append('0', file);
+
+  const token = localStorage.getItem('accessToken');
+  const response = await fetch(GRAPHQL_URL, {
+    method: 'POST',
+    headers: {
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+      'GraphQL-Preflight': '1',
+    },
+    credentials: 'include',
+    body: formData,
+  });
+
+  const result = await response.json();
+  if (result.errors) {
+    throw new Error(result.errors[0].message);
+  }
+  return result.data;
+};
 
 export const usePersonDocuments = (
   personDisplayId: number,
@@ -41,27 +76,31 @@ export const usePersonDocuments = (
     sortDescending?: boolean;
   }
 ) => {
-  const { data, loading, error, refetch } = useQuery<
-    GetPersonDocumentsQuery,
-    GetPersonDocumentsQueryVariables
-  >(GetPersonDocumentsDocument, {
-    variables: {
-      personDisplayId,
-      pageNumber: options?.pageNumber ?? 1,
-      pageSize: options?.pageSize ?? 100,
-      searchTerm: options?.searchTerm,
-      sortBy: options?.sortBy,
-      sortDescending: options?.sortDescending,
-    },
-    fetchPolicy: 'cache-and-network',
+  const variables: GetPersonDocumentsQueryVariables = {
+    personDisplayId,
+    pageNumber: options?.pageNumber ?? 1,
+    pageSize: options?.pageSize ?? 100,
+    searchTerm: options?.searchTerm,
+    sortBy: options?.sortBy,
+    sortDescending: options?.sortDescending,
+  };
+
+  const query = useQuery({
+    queryKey: documentKeys.list(personDisplayId, variables),
+    queryFn: () =>
+      graphqlRequest<GetPersonDocumentsQuery, GetPersonDocumentsQueryVariables>(
+        GetPersonDocumentsDocument,
+        variables
+      ),
+    enabled: !!personDisplayId,
   });
 
   return {
-    documents: data?.personDocuments?.items ?? [],
-    totalCount: data?.personDocuments?.totalCount ?? 0,
-    loading,
-    error,
-    refetch,
+    documents: query.data?.personDocuments?.items ?? [],
+    totalCount: query.data?.personDocuments?.totalCount ?? 0,
+    loading: query.isPending,
+    error: query.error,
+    refetch: query.refetch,
   };
 };
 
@@ -69,27 +108,39 @@ export const useDocument = (
   personDisplayId: number,
   documentDisplayId: number
 ) => {
-  const { data, loading, error, refetch } = useQuery<
-    GetDocumentQuery,
-    GetDocumentQueryVariables
-  >(GetDocumentDocument, {
-    variables: { personDisplayId, documentDisplayId },
-    skip: !documentDisplayId,
+  const query = useQuery({
+    queryKey: documentKeys.detail(personDisplayId, documentDisplayId),
+    queryFn: () =>
+      graphqlRequest<GetDocumentQuery, GetDocumentQueryVariables>(
+        GetDocumentDocument,
+        { personDisplayId, documentDisplayId }
+      ),
+    enabled: !!documentDisplayId,
   });
 
   return {
-    document: data?.document,
-    loading,
-    error,
-    refetch,
+    document: query.data?.document,
+    loading: query.isPending,
+    error: query.error,
+    refetch: query.refetch,
   };
 };
 
 export const useUpdateDocument = () => {
-  const [updateDocument, { loading, error }] = useMutation<
-    UpdateDocumentMutation,
-    UpdateDocumentMutationVariables
-  >(UpdateDocumentDocument);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (variables: UpdateDocumentMutationVariables) =>
+      graphqlRequest<UpdateDocumentMutation, UpdateDocumentMutationVariables>(
+        UpdateDocumentDocument,
+        variables
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: documentKeys.list(variables.personDisplayId),
+      });
+    },
+  });
 
   return {
     updateDocument: async (
@@ -97,84 +148,130 @@ export const useUpdateDocument = () => {
       documentDisplayId: number,
       description?: string
     ) => {
-      const result = await updateDocument({
-        variables: { personDisplayId, documentDisplayId, description },
+      const result = await mutation.mutateAsync({
+        personDisplayId,
+        documentDisplayId,
+        description,
       });
-      return result.data?.updateDocument;
+      return result.updateDocument;
     },
-    updating: loading,
-    error,
+    updating: mutation.isPending,
+    error: mutation.error,
   };
 };
 
 export const useDeleteDocument = () => {
-  const [deleteDocument, { loading, error }] = useMutation<
-    DeleteDocumentMutation,
-    DeleteDocumentMutationVariables
-  >(DeleteDocumentDocument);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (variables: DeleteDocumentMutationVariables) =>
+      graphqlRequest<DeleteDocumentMutation, DeleteDocumentMutationVariables>(
+        DeleteDocumentDocument,
+        variables
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: documentKeys.list(variables.personDisplayId),
+      });
+    },
+  });
 
   return {
     deleteDocument: async (
       personDisplayId: number,
       documentDisplayId: number
     ) => {
-      const result = await deleteDocument({
-        variables: { personDisplayId, documentDisplayId },
-        refetchQueries: [
-          {
-            query: GetPersonDocumentsDocument,
-            variables: { personDisplayId, pageNumber: 1, pageSize: 100 },
-          },
-        ],
+      const result = await mutation.mutateAsync({
+        personDisplayId,
+        documentDisplayId,
       });
-      return result.data?.deleteDocument;
+      return result.deleteDocument;
     },
-    deleting: loading,
-    error,
+    deleting: mutation.isPending,
+    error: mutation.error,
   };
 };
 
 export const useDeleteProfileImage = () => {
-  const [deleteProfileImage, { loading, error }] = useMutation<
-    DeleteProfileImageMutation,
-    DeleteProfileImageMutationVariables
-  >(DeleteProfileImageDocument);
+  const queryClient = useQueryClient();
 
-  return {
-    deleteProfileImage: async (personDisplayId: number) => {
-      const result = await deleteProfileImage({
-        variables: { personDisplayId },
+  const mutation = useMutation({
+    mutationFn: (variables: DeleteProfileImageMutationVariables) =>
+      graphqlRequest<
+        DeleteProfileImageMutation,
+        DeleteProfileImageMutationVariables
+      >(DeleteProfileImageDocument, variables),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: documentKeys.profileImage(variables.personDisplayId),
       });
-      return result.data?.deleteProfileImage;
     },
-    deleting: loading,
-    error,
-  };
-};
-
-// Hook to get profile image URL
-export const useProfileImageUrl = (personDisplayId: number) => {
-  const { data, loading, error } = useQuery<
-    GetProfileImageUrlQuery,
-    GetProfileImageUrlQueryVariables
-  >(GetProfileImageUrlDocument, {
-    variables: { personDisplayId },
-    skip: !personDisplayId,
   });
 
   return {
-    profileImageUrl: data?.profileImageUrl,
-    loading,
-    error,
+    deleteProfileImage: async (personDisplayId: number) => {
+      const result = await mutation.mutateAsync({ personDisplayId });
+      return result.deleteProfileImage;
+    },
+    deleting: mutation.isPending,
+    error: mutation.error,
   };
 };
 
-// Hook to upload a document
+export const useProfileImageUrl = (personDisplayId: number) => {
+  const query = useQuery({
+    queryKey: documentKeys.profileImage(personDisplayId),
+    queryFn: () =>
+      graphqlRequest<GetProfileImageUrlQuery, GetProfileImageUrlQueryVariables>(
+        GetProfileImageUrlDocument,
+        { personDisplayId }
+      ),
+    enabled: !!personDisplayId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return {
+    profileImageUrl: query.data?.profileImageUrl,
+    loading: query.isPending,
+    error: query.error,
+  };
+};
+
 export const useUploadDocument = () => {
-  const [uploadDocument, { loading, error }] = useMutation<
-    UploadDocumentMutation,
-    UploadDocumentMutationVariables
-  >(UploadDocumentDocument);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async ({
+      personDisplayId,
+      file,
+      description,
+    }: {
+      personDisplayId: number;
+      file: File;
+      description?: string;
+    }) => {
+      return performUpload(
+        `mutation UploadDocument($personDisplayId: Long!, $file: Upload!, $description: String) {
+          uploadDocument(personDisplayId: $personDisplayId, file: $file, description: $description) {
+            displayId
+            fileName
+            fileSize
+            contentType
+            description
+            uploadedAt
+          }
+        }`,
+        { personDisplayId, description },
+        'file',
+        file
+      );
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: documentKeys.list(variables.personDisplayId),
+      });
+    },
+  });
 
   return {
     uploadDocument: async (
@@ -182,48 +279,55 @@ export const useUploadDocument = () => {
       file: File,
       description?: string
     ) => {
-      const result = await uploadDocument({
-        variables: { personDisplayId, file, description },
-        refetchQueries: [
-          {
-            query: GetPersonDocumentsDocument,
-            variables: { personDisplayId, pageNumber: 1, pageSize: 100 },
-          },
-        ],
+      const result = await mutation.mutateAsync({
+        personDisplayId,
+        file,
+        description,
       });
-      return result.data?.uploadDocument;
+      return result.uploadDocument;
     },
-    uploading: loading,
-    error,
+    uploading: mutation.isPending,
+    error: mutation.error,
   };
 };
 
-// Hook to upload a profile image
 export const useUploadProfileImage = () => {
-  const [uploadProfileImage, { loading, error }] = useMutation<
-    UploadProfileImageMutation,
-    UploadProfileImageMutationVariables
-  >(UploadProfileImageDocument);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async ({
+      personDisplayId,
+      file,
+    }: {
+      personDisplayId: number;
+      file: File;
+    }) => {
+      return performUpload(
+        `mutation UploadProfileImage($personDisplayId: Long!, $file: Upload!) {
+          uploadProfileImage(personDisplayId: $personDisplayId, file: $file)
+        }`,
+        { personDisplayId },
+        'file',
+        file
+      );
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: documentKeys.profileImage(variables.personDisplayId),
+      });
+    },
+  });
 
   return {
     uploadProfileImage: async (personDisplayId: number, file: File) => {
-      const result = await uploadProfileImage({
-        variables: { personDisplayId, file },
-        refetchQueries: [
-          {
-            query: GetProfileImageUrlDocument,
-            variables: { personDisplayId },
-          },
-        ],
-      });
-      return result.data?.uploadProfileImage;
+      const result = await mutation.mutateAsync({ personDisplayId, file });
+      return result.uploadProfileImage;
     },
-    uploading: loading,
-    error,
+    uploading: mutation.isPending,
+    error: mutation.error,
   };
 };
 
-// Helper function to get the document download URL (still uses REST endpoint for file streaming)
 export const getDocumentDownloadUrl = (
   personDisplayId: number,
   documentDisplayId: number

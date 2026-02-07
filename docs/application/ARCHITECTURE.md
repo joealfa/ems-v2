@@ -23,7 +23,7 @@ Each major feature (persons, schools, positions, etc.) has its own folder under 
 
 ### 3. Centralized API Layer
 
-All API communication goes through Apollo Client for GraphQL operations and direct fetch calls for file operations via the Gateway REST endpoints.
+All API communication goes through TanStack Query with graphql-request for GraphQL operations and direct fetch calls for file operations via the Gateway REST endpoints.
 
 ---
 
@@ -227,18 +227,14 @@ const PersonDetail = ({ displayId }: { displayId: number }) => {
 ### GraphQL Errors
 
 ```tsx
-const { data, loading, error } = usePersons();
+const { persons, loading, error } = usePersons();
 
 if (error) {
-  if (error.networkError) {
-    return <Alert>Network error. Please check your connection.</Alert>;
-  }
-  if (error.graphQLErrors) {
-    return <Alert>{error.graphQLErrors[0].message}</Alert>;
-  }
-  return <Alert>An unexpected error occurred.</Alert>;
+  return <Alert>{error.message}</Alert>;
 }
 ```
+
+Global error handling is configured in `query-client.ts` via `QueryCache` and `MutationCache` `onError` callbacks, which handle auth errors and redirects automatically.
 
 ### Error Display
 

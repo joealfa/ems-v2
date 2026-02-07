@@ -341,17 +341,24 @@ When the GraphQL Gateway schema changes:
 
 3. **Create custom hook** in `src/hooks/`:
    ```typescript
-   import { useQuery } from '@apollo/client';
-   import { GetNewEntitiesDocument } from '../graphql/generated/graphql';
+   import { useQuery } from '@tanstack/react-query';
+   import { graphqlRequest } from '../graphql/graphql-client';
+   import { newEntityKeys } from '../graphql/query-keys';
+   import { GetNewEntitiesDocument, type GetNewEntitiesQuery, type GetNewEntitiesQueryVariables } from '../graphql/generated/graphql';
 
    export const useNewEntities = (variables?: { pageNumber?: number; pageSize?: number }) => {
-     const { data, loading, error, refetch } = useQuery(GetNewEntitiesDocument, { variables });
+     const query = useQuery({
+       queryKey: newEntityKeys.list(variables ?? {}),
+       queryFn: () => graphqlRequest<GetNewEntitiesQuery, GetNewEntitiesQueryVariables>(
+         GetNewEntitiesDocument, variables ?? {}
+       ),
+     });
      return {
-       newEntities: data?.newEntities?.items ?? [],
-       totalCount: data?.newEntities?.totalCount ?? 0,
-       loading,
-       error,
-       refetch,
+       newEntities: query.data?.newEntities?.items ?? [],
+       totalCount: query.data?.newEntities?.totalCount ?? 0,
+       loading: query.isPending,
+       error: query.error,
+       refetch: query.refetch,
      };
    };
    ```

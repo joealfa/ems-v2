@@ -9,8 +9,9 @@ Modern desktop and web application built with React, TypeScript, and Vite.
 - **Vite** - Build tool and dev server
 - **Chakra-UI** - Component library
 - **AG Grid** - Data grid component
-- **Apollo Client** - GraphQL client
-- **GraphQL Code Generator** - Auto-generated types and hooks
+- **TanStack Query** - Server state management and data fetching
+- **graphql-request** - Lightweight GraphQL client
+- **GraphQL Code Generator** - Auto-generated types and documents
 - **React Router** - Client-side routing
 
 ## Project Structure
@@ -19,8 +20,10 @@ Modern desktop and web application built with React, TypeScript, and Vite.
 application/
 ├── src/
 │   ├── graphql/          # GraphQL configuration
-│   │   ├── client.ts     # Apollo Client setup
-│   │   ├── ApolloProvider.tsx
+│   │   ├── graphql-client.ts  # graphql-request client setup
+│   │   ├── query-client.ts    # TanStack QueryClient configuration
+│   │   ├── QueryProvider.tsx  # TanStack Query provider wrapper
+│   │   ├── query-keys.ts     # Query key factory for cache management
 │   │   ├── operations/   # GraphQL queries and mutations (.graphql files)
 │   │   └── generated/    # Auto-generated types (DO NOT EDIT)
 │   ├── assets/           # Static assets (images, fonts, etc.)
@@ -31,14 +34,19 @@ application/
 │   │   └── ui/           # Generic UI components
 │   ├── contexts/         # React context providers
 │   │   └── AuthContext.tsx
-│   ├── hooks/            # Custom React hooks
+│   ├── hooks/            # Custom React hooks (TanStack Query)
 │   │   ├── index.ts        # Barrel exports
 │   │   ├── useAuth.ts
 │   │   ├── useAuthMutations.ts
+│   │   ├── useDashboard.ts
 │   │   ├── useDebounce.ts
 │   │   ├── useDocuments.ts
 │   │   ├── useEmployments.ts
-│   │   └── usePersons.ts
+│   │   ├── useItems.ts
+│   │   ├── usePersons.ts
+│   │   ├── usePositions.ts
+│   │   ├── useSalaryGrades.ts
+│   │   └── useSchools.ts
 │   ├── pages/            # Page components
 │   │   ├── Dashboard.tsx
 │   │   ├── LoginPage.tsx
@@ -137,12 +145,12 @@ npm run preview
 
 - **Access Tokens** - Stored in localStorage for API authorization (short-lived, 15 minutes)
 - **Refresh Tokens** - Stored as HttpOnly cookies for enhanced security (long-lived, 7 days)
-- **Automatic Token Refresh** - Apollo Client handles token expiration seamlessly
+- **Automatic Token Refresh** - AuthContext handles token expiration seamlessly
 - **CSRF Protection** - SameSite cookie policy prevents cross-site attacks
 
 ## API Integration
 
-The application uses **Apollo Client** with **GraphQL Code Generator** to communicate with the backend via a GraphQL Gateway. To regenerate types after schema changes:
+The application uses **TanStack Query** with **graphql-request** and **GraphQL Code Generator** to communicate with the backend via a GraphQL Gateway. To regenerate types after schema changes:
 
 ```bash
 npm run codegen

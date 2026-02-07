@@ -1,17 +1,26 @@
-import { useQuery, useMutation, useLazyQuery } from '@apollo/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { graphqlRequest } from '../graphql/graphql-client';
+import { positionKeys, dashboardKeys } from '../graphql/query-keys';
 import {
   GetPositionsDocument,
   GetPositionDocument,
   CreatePositionDocument,
   UpdatePositionDocument,
   DeletePositionDocument,
+  type GetPositionsQuery,
+  type GetPositionsQueryVariables,
+  type GetPositionQuery,
   type CreatePositionInput,
   type UpdatePositionInput,
+  type CreatePositionMutation,
+  type CreatePositionMutationVariables,
+  type UpdatePositionMutation,
+  type UpdatePositionMutationVariables,
+  type DeletePositionMutation,
+  type DeletePositionMutationVariables,
 } from '../graphql/generated/graphql';
 
-/**
- * Hook for fetching paginated positions list
- */
 export function usePositions(variables?: {
   pageNumber?: number;
   pageSize?: number;
@@ -19,127 +28,150 @@ export function usePositions(variables?: {
   sortBy?: string;
   sortDescending?: boolean;
 }) {
-  const { data, loading, error, refetch } = useQuery(GetPositionsDocument, {
-    variables,
-    fetchPolicy: 'cache-and-network',
+  const query = useQuery({
+    queryKey: positionKeys.list(variables ?? {}),
+    queryFn: () =>
+      graphqlRequest<GetPositionsQuery, GetPositionsQueryVariables>(
+        GetPositionsDocument,
+        variables ?? {}
+      ),
   });
 
   return {
-    positions: data?.positions?.items ?? [],
-    totalCount: data?.positions?.totalCount ?? 0,
-    pageNumber: data?.positions?.pageNumber ?? 1,
-    pageSize: data?.positions?.pageSize ?? 10,
-    totalPages: data?.positions?.totalPages ?? 0,
-    loading,
-    error,
-    refetch,
+    positions: query.data?.positions?.items ?? [],
+    totalCount: query.data?.positions?.totalCount ?? 0,
+    pageNumber: query.data?.positions?.pageNumber ?? 1,
+    pageSize: query.data?.positions?.pageSize ?? 10,
+    totalPages: query.data?.positions?.totalPages ?? 0,
+    loading: query.isPending,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
 
-/**
- * Hook for lazy fetching positions (useful for AG Grid infinite scrolling)
- */
 export function usePositionsLazy() {
-  const [fetchPositions, { data, loading, error }] = useLazyQuery(
-    GetPositionsDocument,
-    {
-      fetchPolicy: 'network-only',
-    }
-  );
+  const fetchPositions = useCallback(async (args: {
+    variables: GetPositionsQueryVariables;
+  }) => {
+    const data = await graphqlRequest<
+      GetPositionsQuery,
+      GetPositionsQueryVariables
+    >(GetPositionsDocument, args.variables);
+    return { data };
+  }, []);
 
   return {
     fetchPositions,
-    positions: data?.positions?.items ?? [],
-    totalCount: data?.positions?.totalCount ?? 0,
-    loading,
-    error,
+    loading: false,
   };
 }
 
-/**
- * Hook for fetching a single position by displayId
- */
 export function usePosition(displayId: number) {
-  const { data, loading, error, refetch } = useQuery(GetPositionDocument, {
-    variables: { displayId },
-    skip: !displayId,
+  const query = useQuery({
+    queryKey: positionKeys.detail(displayId),
+    queryFn: () =>
+      graphqlRequest<GetPositionQuery, { displayId: number }>(
+        GetPositionDocument,
+        { displayId }
+      ),
+    enabled: !!displayId,
   });
 
   return {
-    position: data?.position,
-    loading,
-    error,
-    refetch,
+    position: query.data?.position,
+    loading: query.isPending,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
 
-/**
- * Hook for creating a position
- */
 export function useCreatePosition() {
-  const [createPosition, { data, loading, error }] = useMutation(
-    CreatePositionDocument,
-    {
-      refetchQueries: [GetPositionsDocument],
-    }
-  );
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (variables: CreatePositionMutationVariables) =>
+      graphqlRequest<CreatePositionMutation, CreatePositionMutationVariables>(
+        CreatePositionDocument,
+        variables
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: positionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+    },
+  });
 
   const handleCreate = async (input: CreatePositionInput) => {
-    const result = await createPosition({ variables: { input } });
-    return result.data?.createPosition;
+    const result = await mutation.mutateAsync({ input });
+    return result.createPosition;
   };
 
   return {
     createPosition: handleCreate,
-    position: data?.createPosition,
-    loading,
-    error,
+    position: mutation.data?.createPosition,
+    loading: mutation.isPending,
+    error: mutation.error,
   };
 }
 
-/**
- * Hook for updating a position
- */
 export function useUpdatePosition() {
-  const [updatePosition, { data, loading, error }] = useMutation(
-    UpdatePositionDocument
-  );
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (variables: UpdatePositionMutationVariables) =>
+      graphqlRequest<UpdatePositionMutation, UpdatePositionMutationVariables>(
+        UpdatePositionDocument,
+        variables
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: positionKeys.detail(variables.displayId),
+      });
+      queryClient.invalidateQueries({ queryKey: positionKeys.lists() });
+    },
+  });
 
   const handleUpdate = async (
     displayId: number,
     input: UpdatePositionInput
   ) => {
-    const result = await updatePosition({ variables: { displayId, input } });
-    return result.data?.updatePosition;
+    const result = await mutation.mutateAsync({ displayId, input });
+    return result.updatePosition;
   };
 
   return {
     updatePosition: handleUpdate,
-    position: data?.updatePosition,
-    loading,
-    error,
+    position: mutation.data?.updatePosition,
+    loading: mutation.isPending,
+    error: mutation.error,
   };
 }
 
-/**
- * Hook for deleting a position
- */
 export function useDeletePosition() {
-  const [deletePosition, { loading, error }] = useMutation(
-    DeletePositionDocument,
-    {
-      refetchQueries: [GetPositionsDocument],
-    }
-  );
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (variables: DeletePositionMutationVariables) =>
+      graphqlRequest<DeletePositionMutation, DeletePositionMutationVariables>(
+        DeletePositionDocument,
+        variables
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.removeQueries({
+        queryKey: positionKeys.detail(variables.displayId),
+      });
+      queryClient.invalidateQueries({ queryKey: positionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+    },
+  });
 
   const handleDelete = async (displayId: number) => {
-    const result = await deletePosition({ variables: { displayId } });
-    return result.data?.deletePosition ?? false;
+    const result = await mutation.mutateAsync({ displayId });
+    return result.deletePosition ?? false;
   };
 
   return {
     deletePosition: handleDelete,
-    loading,
-    error,
+    loading: mutation.isPending,
+    error: mutation.error,
   };
 }

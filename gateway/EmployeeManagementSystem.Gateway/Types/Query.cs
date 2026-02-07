@@ -30,6 +30,7 @@ public class Query
         bool? sortDescending,
         [Service] EmsApiClient client,
         [Service] IRedisCacheService cache,
+        [Service] IConfiguration configuration,
         CancellationToken ct)
     {
         string cacheKey = CacheKeys.PersonsList(
@@ -43,9 +44,13 @@ public class Query
             sortBy,
             sortDescending);
 
-        return await cache.GetOrSetAsync(
-            cacheKey,
-            async token => await client.PersonsGETAsync(
+        // Try to get from cache first
+        PagedResultOfPersonListDto? result = await cache.GetAsync<PagedResultOfPersonListDto>(cacheKey, ct);
+
+        if (result is null)
+        {
+            // Fetch from API
+            result = await client.PersonsGETAsync(
                 gender != null ? Enum.Parse<Gender>(gender, ignoreCase: true) : null,
                 civilStatus != null ? Enum.Parse<CivilStatus>(civilStatus, ignoreCase: true) : null,
                 displayIdFilter,
@@ -55,9 +60,34 @@ public class Query
                 searchTerm,
                 sortBy,
                 sortDescending,
-                token),
-            TimeSpan.FromMinutes(2),
-            ct);
+                ct);
+
+            // Transform profileImageUrl to Gateway proxy URL BEFORE caching
+            if (result?.Items != null)
+            {
+                string gatewayBaseUrl = configuration["Gateway:BaseUrl"] ?? "https://localhost:5003";
+                if (!gatewayBaseUrl.StartsWith("http://") && !gatewayBaseUrl.StartsWith("https://"))
+                {
+                    gatewayBaseUrl = $"https://{gatewayBaseUrl}";
+                }
+
+                foreach (PersonListDto person in result.Items)
+                {
+                    if (person.HasProfileImage)
+                    {
+                        person.ProfileImageUrl = $"{gatewayBaseUrl}/api/persons/{person.DisplayId}/profile-image";
+                    }
+                }
+            }
+
+            // Cache the transformed data
+            if (result is not null)
+            {
+                await cache.SetAsync(cacheKey, result, TimeSpan.FromMinutes(1), ct);
+            }
+        }
+
+        return result;
     }
 
     #endregion

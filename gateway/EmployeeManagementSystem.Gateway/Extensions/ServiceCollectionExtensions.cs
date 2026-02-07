@@ -1,4 +1,5 @@
 using EmployeeManagementSystem.ApiClient.Extensions;
+using EmployeeManagementSystem.ApiClient.Generated;
 using EmployeeManagementSystem.Gateway.Caching;
 using EmployeeManagementSystem.Gateway.DataLoaders;
 using HotChocolate.Types.Descriptors;

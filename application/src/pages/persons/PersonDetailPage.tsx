@@ -109,6 +109,7 @@ const PersonDetailPage = () => {
                 <ProfileImageUpload
                   personDisplayId={Number(displayId)}
                   currentImageUrl={person.profileImageUrl}
+                  hasProfileImage={person.hasProfileImage}
                   onImageUpdated={refetch}
                 />
               </Box>

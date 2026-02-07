@@ -1,4 +1,4 @@
-@EmployeeManagementSystem.Api_HostAddress = https://localhost:7009
+@EmployeeManagementSystem.Api_HostAddress = https://localhost:7166
 
 ###############################################################################
 # AUTHENTICATION API
@@ -52,24 +52,55 @@ Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 }
 
 ###############################################################################
+# DEV AUTH API (DEBUG only - not available in production)
+###############################################################################
+
+### Generate Dev Token (no Google auth required)
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/dev/auth/token
+Content-Type: application/json
+
+{
+  "userId": "dev-user-001",
+  "email": "dev@example.com",
+  "name": "Dev User"
+}
+
+###
+
+### Get Current Dev User (requires dev token)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/dev/auth/me
+Accept: application/json
+Authorization: Bearer YOUR_DEV_TOKEN_HERE
+
+###############################################################################
 # PERSONS API
 ###############################################################################
 
 ### Get all persons (paginated)
-GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons?page=1&pageSize=10
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons?pageNumber=1&pageSize=10
 Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### Get all persons (with filters)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons?pageNumber=1&pageSize=10&searchTerm=Juan&gender=0&civilStatus=0&sortBy=fullName&sortDescending=false&displayIdFilter=1&fullNameFilter=Dela Cruz
+Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###
 
 ### Get person by display ID
 GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1
 Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###
 
 ### Create a new person
 POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons
 Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 {
   "firstName": "Juan",
@@ -102,6 +133,7 @@ Content-Type: application/json
 ### Update a person
 PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1
 Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 {
   "firstName": "Juan",
@@ -109,33 +141,148 @@ Content-Type: application/json
   "middleName": "Santos Jr.",
   "dateOfBirth": "1990-05-15",
   "gender": 0,
-  "civilStatus": 1
+  "civilStatus": 1,
+  "addresses": [
+    {
+      "displayId": 1,
+      "street": "456 Updated St",
+      "barangay": "Barangay 2",
+      "city": "Quezon City",
+      "province": "Metro Manila",
+      "postalCode": "1100",
+      "country": "Philippines",
+      "addressType": 0
+    }
+  ],
+  "contacts": [
+    {
+      "displayId": 1,
+      "contactType": 0,
+      "contactValue": "09987654321"
+    }
+  ]
 }
 
 ###
 
 ### Delete a person
 DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###############################################################################
+# DOCUMENTS API (nested under Persons)
+###############################################################################
+
+### Get all documents for a person (paginated)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1/documents?pageNumber=1&pageSize=10
+Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### Get document by display ID
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1/documents/1
+Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### Upload a document (multipart/form-data)
+# Note: Use an actual file path for the file parameter
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1/documents
+Content-Type: multipart/form-data; boundary=----FormBoundary
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+------FormBoundary
+Content-Disposition: form-data; name="file"; filename="sample.pdf"
+Content-Type: application/pdf
+
+< ./sample.pdf
+------FormBoundary
+Content-Disposition: form-data; name="description"
+
+Sample document description
+------FormBoundary--
+
+###
+
+### Update document metadata
+PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1/documents/1
+Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+{
+  "description": "Updated document description"
+}
+
+###
+
+### Download a document
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1/documents/1/download
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### Delete a document
+DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1/documents/1
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### Upload profile image (multipart/form-data)
+# Max file size: 5 MB. Allowed types: JPEG, PNG
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1/documents/profile-image
+Content-Type: multipart/form-data; boundary=----FormBoundary
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+------FormBoundary
+Content-Disposition: form-data; name="file"; filename="profile.jpg"
+Content-Type: image/jpeg
+
+< ./profile.jpg
+------FormBoundary--
+
+###
+
+### Get profile image (allows anonymous)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1/documents/profile-image
+Accept: image/*
+
+###
+
+### Delete profile image
+DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/persons/1/documents/profile-image
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###############################################################################
 # SCHOOLS API
 ###############################################################################
 
 ### Get all schools (paginated)
-GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/schools?page=1&pageSize=10
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/schools?pageNumber=1&pageSize=10
 Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### Get all schools (with search and sorting)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/schools?pageNumber=1&pageSize=10&searchTerm=Elementary&sortBy=schoolName&sortDescending=false
+Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###
 
 ### Get school by display ID
 GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/schools/1
 Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###
 
 ### Create a new school
 POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/schools
 Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 {
   "schoolName": "Sample Elementary School",
@@ -163,36 +310,67 @@ Content-Type: application/json
 ### Update a school
 PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/schools/1
 Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 {
   "schoolName": "Updated Elementary School",
-  "isActive": true
+  "isActive": true,
+  "addresses": [
+    {
+      "displayId": 1,
+      "street": "789 Updated Education Blvd",
+      "barangay": "Barangay 3",
+      "city": "Manila",
+      "province": "Metro Manila",
+      "postalCode": "1000",
+      "country": "Philippines",
+      "addressType": 0
+    }
+  ],
+  "contacts": [
+    {
+      "displayId": 1,
+      "contactType": 1,
+      "contactValue": "updated-school@example.com"
+    }
+  ]
 }
 
 ###
 
 ### Delete a school
 DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/schools/1
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###############################################################################
 # ITEMS API
 ###############################################################################
 
 ### Get all items (paginated)
-GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/items?page=1&pageSize=10
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/items?pageNumber=1&pageSize=10
 Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### Get all items (with search and sorting)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/items?pageNumber=1&pageSize=10&searchTerm=Teacher&sortBy=itemName&sortDescending=false
+Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###
 
 ### Get item by display ID
 GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/items/1
 Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###
 
 ### Create a new item
 POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/items
 Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 {
   "itemName": "Teacher I",
@@ -204,6 +382,7 @@ Content-Type: application/json
 ### Update an item
 PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/items/1
 Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 {
   "itemName": "Teacher I (Updated)",
@@ -215,26 +394,37 @@ Content-Type: application/json
 
 ### Delete an item
 DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/items/1
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###############################################################################
 # POSITIONS API
 ###############################################################################
 
 ### Get all positions (paginated)
-GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/positions?page=1&pageSize=10
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/positions?pageNumber=1&pageSize=10
 Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### Get all positions (with search and sorting)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/positions?pageNumber=1&pageSize=10&searchTerm=Teacher&sortBy=titleName&sortDescending=false
+Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###
 
 ### Get position by display ID
 GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/positions/1
 Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###
 
 ### Create a new position
 POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/positions
 Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 {
   "titleName": "Teacher I",
@@ -246,6 +436,7 @@ Content-Type: application/json
 ### Update a position
 PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/positions/1
 Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 {
   "titleName": "Teacher I (Updated)",
@@ -257,26 +448,37 @@ Content-Type: application/json
 
 ### Delete a position
 DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/positions/1
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###############################################################################
 # SALARY GRADES API
 ###############################################################################
 
 ### Get all salary grades (paginated)
-GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/salarygrades?page=1&pageSize=10
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/salarygrades?pageNumber=1&pageSize=10
 Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### Get all salary grades (with search and sorting)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/salarygrades?pageNumber=1&pageSize=10&searchTerm=SG-11&sortBy=salaryGradeName&sortDescending=false
+Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###
 
 ### Get salary grade by display ID
 GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/salarygrades/1
 Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###
 
 ### Create a new salary grade
 POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/salarygrades
 Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 {
   "salaryGradeName": "SG-11",
@@ -290,6 +492,7 @@ Content-Type: application/json
 ### Update a salary grade
 PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/salarygrades/1
 Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 {
   "salaryGradeName": "SG-11",
@@ -303,26 +506,37 @@ Content-Type: application/json
 
 ### Delete a salary grade
 DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/salarygrades/1
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###############################################################################
 # EMPLOYMENTS API
 ###############################################################################
 
 ### Get all employments (paginated)
-GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments?page=1&pageSize=10
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments?pageNumber=1&pageSize=10
 Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### Get all employments (with filters)
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments?pageNumber=1&pageSize=10&searchTerm=DEP&employmentStatus=0&isActive=true&displayIdFilter=1&employeeNameFilter=Dela Cruz&depEdIdFilter=DEP-001&positionFilter=Teacher&sortBy=displayId&sortDescending=false
+Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###
 
 ### Get employment by display ID
 GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments/1
 Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###
 
 ### Create a new employment
 POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments
 Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 {
   "depEdId": "DEP-001",
@@ -343,7 +557,7 @@ Content-Type: application/json
       "schoolDisplayId": 1,
       "startDate": "2024-01-15",
       "endDate": null,
-      "isPrimary": true
+      "isCurrent": true
     }
   ]
 }
@@ -353,6 +567,7 @@ Content-Type: application/json
 ### Update an employment
 PUT {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments/1
 Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 {
   "depEdId": "DEP-001-UPDATED",
@@ -367,12 +582,51 @@ Content-Type: application/json
   "positionDisplayId": 1,
   "salaryGradeDisplayId": 1,
   "itemDisplayId": 1,
-  "isActive": true
+  "isActive": true,
+  "schools": [
+    {
+      "displayId": 1,
+      "schoolDisplayId": 1,
+      "startDate": "2024-01-15",
+      "endDate": null,
+      "isCurrent": true
+    }
+  ]
 }
 
 ###
 
 ### Delete an employment
 DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments/1
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###
+
+### Add school assignment to employment
+POST {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments/1/schools
+Content-Type: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+{
+  "schoolDisplayId": 2,
+  "startDate": "2025-06-01",
+  "endDate": null,
+  "isCurrent": true
+}
+
+###
+
+### Remove school assignment from employment
+DELETE {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/employments/1/schools/1
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+###############################################################################
+# REPORTS API
+###############################################################################
+
+### Get dashboard statistics
+GET {{EmployeeManagementSystem.Api_HostAddress}}/api/v1/reports/dashboard
+Accept: application/json
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
 
 ###

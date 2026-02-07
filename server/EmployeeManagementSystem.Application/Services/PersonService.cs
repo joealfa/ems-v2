@@ -106,6 +106,7 @@ public class PersonService(
                 Gender = p.Gender,
                 CivilStatus = p.CivilStatus,
                 ProfileImageUrl = p.ProfileImageUrl,
+                HasProfileImage = p.HasProfileImage,
                 CreatedOn = p.CreatedOn,
                 CreatedBy = p.CreatedBy,
                 ModifiedOn = p.ModifiedOn,

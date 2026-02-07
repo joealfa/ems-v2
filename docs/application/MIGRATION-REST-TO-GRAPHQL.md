@@ -183,26 +183,18 @@ const uploadDocument = async (personId: number, file: File, description?: string
 };
 ```
 
-**After (GraphQL with Apollo Client)**:
+**After (GraphQL with TanStack Query)**:
 ```typescript
-import { useUploadDocumentMutation } from '@/graphql/generated/graphql';
+import { useUploadDocument } from '../hooks/useDocuments';
 
 const DocumentUpload = ({ personId }: { personId: number }) => {
-  const [uploadDocument, { loading, error }] = useUploadDocumentMutation();
+  const { uploadDocument, uploading, error } = useUploadDocument();
 
   const handleUpload = async (file: File, description?: string) => {
     try {
-      const { data } = await uploadDocument({
-        variables: {
-          personDisplayId: personId,
-          file,
-          description
-        },
-        // Optional: refetch queries after upload
-        refetchQueries: ['GetPersonDocuments', 'GetPerson']
-      });
-
-      console.log('Document uploaded:', data?.uploadDocument);
+      const result = await uploadDocument(personId, file, description);
+      console.log('Document uploaded:', result);
+      // Cache invalidation happens automatically via onSuccess
     } catch (err) {
       console.error('Upload failed:', err);
     }
@@ -313,24 +305,7 @@ const DocumentList = ({ personId }: { personId: number }) => {
 
 ### File Upload Configuration
 
-Make sure your Apollo Client is configured to support file uploads:
-
-```typescript
-// In your Apollo Client setup
-import { createUploadLink } from 'apollo-upload-client';
-
-const uploadLink = createUploadLink({
-  uri: 'http://localhost:5000/graphql',
-  headers: {
-    'apollo-require-preflight': 'true'
-  }
-});
-
-const client = new ApolloClient({
-  link: uploadLink,
-  cache: new InMemoryCache()
-});
-```
+File uploads use the GraphQL multipart request specification via raw `fetch` with `FormData`. The `useUploadDocument` and `useUploadProfileImage` hooks in `src/hooks/useDocuments.ts` handle this automatically, including auth headers and cache invalidation.
 
 ### Authentication
 
@@ -395,4 +370,5 @@ const authLink = setContext((_, { headers }) => {
 For questions or issues, refer to:
 - [Gateway Structure Documentation](../server/GATEWAY-STRUCTURE.md)
 - [GraphQL Usage Guide](../application/GRAPHQL_USAGE.md)
-- [Apollo Client Documentation](https://www.apollographql.com/docs/react/)
+- [TanStack Query Documentation](https://tanstack.com/query/latest)
+- [graphql-request Documentation](https://github.com/graffle-js/graffle)

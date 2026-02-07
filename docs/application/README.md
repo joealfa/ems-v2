@@ -24,7 +24,7 @@ The Employee Management System (EMS) frontend is a modern React-based single-pag
 - **Position, Salary Grade, and Item Management**
 - **Dark/Light Mode** theming support
 - **AG Grid** integration for powerful data tables with infinite scrolling
-- **Apollo Client** with GraphQL Code Generator for type-safe API communication
+- **TanStack Query** with graphql-request and GraphQL Code Generator for type-safe API communication
 - **Protected Routes** with automatic token refresh
 
 ---
@@ -94,7 +94,8 @@ This fetches the schema from `https://localhost:5003/graphql` and generates type
 
 | Package              | Version  | Purpose                                                          |
 |----------------------|----------|------------------------------------------------------------------|
-| `@apollo/client`     | ^3.x     | GraphQL client for data fetching and caching                     |
+| `@tanstack/react-query` | ^5.x  | Server state management and data fetching                        |
+| `graphql-request`    | ^7.x     | Lightweight GraphQL client                                       |
 | `@chakra-ui/react`   | ^3.31.0  | Component library for UI elements                                |
 | `@emotion/react`     | ^11.14.0 | CSS-in-JS styling (Chakra UI dependency)                         |
 | `@react-oauth/google`| ^0.13.4  | Google OAuth2 authentication for React                           |
@@ -111,7 +112,7 @@ This fetches the schema from `https://localhost:5003/graphql` and generates type
 | `@graphql-codegen/cli`                            | GraphQL Code Generator CLI                    |
 | `@graphql-codegen/typescript`                     | TypeScript types generation                   |
 | `@graphql-codegen/typescript-operations`          | TypeScript operation types                    |
-| `@graphql-codegen/typescript-react-apollo`        | React Apollo hooks generation                 |
+| `@tanstack/react-query-devtools`                  | TanStack Query DevTools for debugging         |
 | `@types/node`, `@types/react`, `@types/react-dom` | TypeScript definitions                        |
 | `@vitejs/plugin-react`                            | Vite React plugin for Fast Refresh            |
 | `eslint`, `typescript-eslint`                     | Code linting                                  |
@@ -126,8 +127,10 @@ This fetches the schema from `https://localhost:5003/graphql` and generates type
 ```
 src/
 ├── graphql/                      # GraphQL layer
-│   ├── client.ts                 # Apollo Client configuration
-│   ├── ApolloProvider.tsx        # React provider wrapper
+│   ├── graphql-client.ts         # graphql-request client setup
+│   ├── query-client.ts          # TanStack QueryClient configuration
+│   ├── QueryProvider.tsx        # TanStack Query provider wrapper
+│   ├── query-keys.ts           # Query key factory for cache management
 │   ├── operations/               # GraphQL queries and mutations
 │   │   ├── persons.graphql
 │   │   ├── employments.graphql
@@ -140,10 +143,14 @@ src/
 │   ├── documents/                # Document-related components
 │   ├── layout/                   # Layout components (MainLayout, Sidebar, Header)
 │   └── ui/                       # UI utilities (color mode, AG Grid theme)
-├── hooks/                        # Custom React hooks
+├── hooks/                        # Custom React hooks (TanStack Query)
 │   ├── usePersons.ts
 │   ├── useEmployments.ts
 │   ├── useSchools.ts
+│   ├── usePositions.ts
+│   ├── useSalaryGrades.ts
+│   ├── useItems.ts
+│   ├── useDashboard.ts
 │   └── ...
 ├── pages/                        # Page components by feature
 │   ├── Dashboard.tsx
