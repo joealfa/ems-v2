@@ -18,7 +18,7 @@ export function useDashboardStats() {
 
   return {
     stats: query.data?.dashboardStats,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };

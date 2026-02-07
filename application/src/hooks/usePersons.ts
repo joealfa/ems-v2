@@ -47,7 +47,7 @@ export function usePersons(variables?: {
     pageNumber: query.data?.persons?.pageNumber ?? 1,
     pageSize: query.data?.persons?.pageSize ?? 10,
     totalPages: query.data?.persons?.totalPages ?? 0,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };
@@ -83,7 +83,7 @@ export function usePerson(displayId: number) {
 
   return {
     person: query.data?.person,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };

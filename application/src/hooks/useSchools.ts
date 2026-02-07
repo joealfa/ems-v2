@@ -43,7 +43,7 @@ export function useSchools(variables?: {
     pageNumber: query.data?.schools?.pageNumber ?? 1,
     pageSize: query.data?.schools?.pageSize ?? 10,
     totalPages: query.data?.schools?.totalPages ?? 0,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };
@@ -79,7 +79,7 @@ export function useSchool(displayId: number) {
 
   return {
     school: query.data?.school,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };

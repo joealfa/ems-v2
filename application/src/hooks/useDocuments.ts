@@ -98,7 +98,7 @@ export const usePersonDocuments = (
   return {
     documents: query.data?.personDocuments?.items ?? [],
     totalCount: query.data?.personDocuments?.totalCount ?? 0,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };
@@ -120,7 +120,7 @@ export const useDocument = (
 
   return {
     document: query.data?.document,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };
@@ -232,7 +232,7 @@ export const useProfileImageUrl = (personDisplayId: number) => {
 
   return {
     profileImageUrl: query.data?.profileImageUrl,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
   };
 };

@@ -43,7 +43,7 @@ export function useSalaryGrades(variables?: {
     pageNumber: query.data?.salaryGrades?.pageNumber ?? 1,
     pageSize: query.data?.salaryGrades?.pageSize ?? 10,
     totalPages: query.data?.salaryGrades?.totalPages ?? 0,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };
@@ -80,7 +80,7 @@ export function useSalaryGrade(displayId: number) {
 
   return {
     salaryGrade: query.data?.salaryGrade,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };

@@ -43,7 +43,7 @@ export function usePositions(variables?: {
     pageNumber: query.data?.positions?.pageNumber ?? 1,
     pageSize: query.data?.positions?.pageSize ?? 10,
     totalPages: query.data?.positions?.totalPages ?? 0,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };
@@ -80,7 +80,7 @@ export function usePosition(displayId: number) {
 
   return {
     position: query.data?.position,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };

@@ -146,7 +146,7 @@ export function useCurrentUser() {
 
   return {
     user: query.data?.currentUser,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };

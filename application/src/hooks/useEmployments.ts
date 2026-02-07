@@ -56,7 +56,7 @@ export function useEmployments(variables?: {
     pageNumber: query.data?.employments?.pageNumber ?? 1,
     pageSize: query.data?.employments?.pageSize ?? 10,
     totalPages: query.data?.employments?.totalPages ?? 0,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };
@@ -93,7 +93,7 @@ export function useEmployment(displayId: number) {
 
   return {
     employment: query.data?.employment,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };

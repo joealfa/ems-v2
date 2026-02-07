@@ -43,7 +43,7 @@ export function useItems(variables?: {
     pageNumber: query.data?.items?.pageNumber ?? 1,
     pageSize: query.data?.items?.pageSize ?? 10,
     totalPages: query.data?.items?.totalPages ?? 0,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };
@@ -79,7 +79,7 @@ export function useItem(displayId: number) {
 
   return {
     item: query.data?.item,
-    loading: query.isPending,
+    loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
   };
