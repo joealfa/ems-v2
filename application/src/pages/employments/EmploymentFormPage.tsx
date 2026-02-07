@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Heading,
@@ -41,6 +41,7 @@ import {
   EmploymentStatusOptions,
   EligibilityOptions,
 } from '../../utils/mapper';
+import { useToast } from '../../hooks';
 
 interface EmploymentFormData {
   depEdId: string;
@@ -98,6 +99,7 @@ const EmploymentFormPage = () => {
 
   const [formData, setFormData] = useState<EmploymentFormData>(initialFormData);
   const [error, setError] = useState<string | null>(null);
+  const { showSuccess, showError } = useToast();
   const [selectedPerson, setSelectedPerson] =
     useState<PersonListFieldsFragment | null>(null);
 
@@ -112,6 +114,9 @@ const EmploymentFormPage = () => {
     isActive: boolean;
   }
   const [schools, setSchools] = useState<SchoolAssignmentData[]>([]);
+
+  // Accordion state - track which items are expanded
+  const [expandedSchools, setExpandedSchools] = useState<string[]>([]);
 
   const loading = loadingEmployment || loadingPositions || loadingSalaryGrades;
   const saving = creating || updating;
@@ -160,12 +165,12 @@ const EmploymentFormPage = () => {
   }, [isEditMode, employment]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const handleChange = (
-    field: keyof EmploymentFormData,
-    value: string | number | boolean
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleChange = useCallback(
+    (field: keyof EmploymentFormData, value: string | number | boolean) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,6 +206,10 @@ const EmploymentFormPage = () => {
           schools: schoolDtos,
         };
         await updateEmployment(Number(displayId), updateDto);
+        showSuccess(
+          'Employment Updated',
+          `Employment record has been updated successfully.`
+        );
       } else {
         // Build school create DTOs for create mode
         const schoolDtos: CreateEmploymentSchoolInput[] = schools
@@ -229,45 +238,61 @@ const EmploymentFormPage = () => {
           schools: schoolDtos.length > 0 ? schoolDtos : undefined,
         };
         await createEmployment(createDto);
+        showSuccess(
+          'Employment Created',
+          `Employment record has been added successfully.`
+        );
       }
       navigate('/employments');
     } catch (err) {
       console.error('Error saving employment:', err);
-      setError('Failed to save employment');
+      const errorMessage = 'Failed to save employment';
+      setError(errorMessage);
+      showError('Operation Failed', errorMessage);
     }
   };
 
   // School handlers - inline editing like addresses
   const addSchool = () => {
-    setSchools((prev) => [
-      ...prev,
-      {
-        displayId: undefined,
-        schoolDisplayId: '',
-        schoolName: '',
-        startDate: '',
-        endDate: null,
-        isCurrent: true,
-        isActive: true,
-      },
-    ]);
+    setSchools((prev) => {
+      const newIndex = prev.length;
+      setExpandedSchools([`school-${newIndex}`]); // Expand only the new item
+      return [
+        ...prev,
+        {
+          displayId: undefined,
+          schoolDisplayId: '',
+          schoolName: '',
+          startDate: '',
+          endDate: null,
+          isCurrent: true,
+          isActive: true,
+        },
+      ];
+    });
   };
 
   const removeSchool = (index: number) => {
     setSchools((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const updateSchool = (
-    index: number,
-    field: keyof SchoolAssignmentData,
-    value: string | number | boolean | null
-  ) => {
-    setSchools((prev) =>
-      prev.map((school, i) =>
-        i === index ? { ...school, [field]: value } : school
-      )
+    setExpandedSchools((prev) =>
+      prev.filter((key) => key !== `school-${index}`)
     );
   };
+
+  const updateSchool = useCallback(
+    (
+      index: number,
+      field: keyof SchoolAssignmentData,
+      value: string | number | boolean | null
+    ) => {
+      setSchools((prev) =>
+        prev.map((school, i) =>
+          i === index ? { ...school, [field]: value } : school
+        )
+      );
+    },
+    []
+  );
 
   // Helper to get school summary for accordion header
   const getSchoolSummary = (school: SchoolAssignmentData, index: number) => {
@@ -284,7 +309,7 @@ const EmploymentFormPage = () => {
   }
 
   return (
-    <Box maxW="900px">
+    <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">
           {isEditMode ? 'Edit Employment' : 'Add New Employment'}
@@ -300,7 +325,7 @@ const EmploymentFormPage = () => {
         </Box>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <Stack gap={6}>
           {!isEditMode && (
             <Card.Root>
@@ -630,7 +655,8 @@ const EmploymentFormPage = () => {
               ) : (
                 <Accordion.Root
                   multiple
-                  defaultValue={schools.map((_, i) => `school-${i}`)}
+                  value={expandedSchools}
+                  onValueChange={(details) => setExpandedSchools(details.value)}
                 >
                   <Stack gap={3}>
                     {schools.map((school, index) => (

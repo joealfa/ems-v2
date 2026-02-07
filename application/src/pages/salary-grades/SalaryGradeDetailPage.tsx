@@ -15,7 +15,7 @@ import {
   useDeleteSalaryGrade,
 } from '../../hooks/useSalaryGrades';
 import { formatCurrency } from '../../utils/formatters';
-import { useConfirm } from '../../hooks';
+import { useConfirm, useToast } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
 
 const SalaryGradeDetailPage = () => {
@@ -25,6 +25,7 @@ const SalaryGradeDetailPage = () => {
 
   const { salaryGrade, loading, error } = useSalaryGrade(Number(displayId));
   const { deleteSalaryGrade, loading: deleting } = useDeleteSalaryGrade();
+  const { showSuccess, showError } = useToast();
 
   const handleDelete = async () => {
     if (!displayId) return;
@@ -41,9 +42,17 @@ const SalaryGradeDetailPage = () => {
 
     try {
       await deleteSalaryGrade(Number(displayId));
+      showSuccess(
+        'Salary Grade Deleted',
+        `${salaryGrade?.salaryGradeName || 'Salary grade'} has been deleted successfully.`
+      );
       navigate('/salary-grades');
     } catch (err) {
       console.error('Error deleting salary grade:', err);
+      showError(
+        'Delete Failed',
+        'Unable to delete salary grade. Please try again.'
+      );
     }
   };
 
@@ -69,7 +78,7 @@ const SalaryGradeDetailPage = () => {
   }
 
   return (
-    <Box maxW="800px">
+    <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">{salaryGrade.salaryGradeName}</Heading>
         <Flex gap={2}>

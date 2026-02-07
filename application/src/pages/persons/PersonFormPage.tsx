@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import {
   Box,
   Heading,
@@ -45,7 +45,7 @@ import {
   ProfileImageUpload,
 } from '../../components/documents';
 import { formatEnumLabel } from '../../utils/formatters';
-import { useConfirm } from '../../hooks';
+import { useConfirm, useToast } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
 
 // GraphQL enum values - used directly for both display and API calls
@@ -142,6 +142,7 @@ const PersonFormPage = () => {
   const accessToken = authContext?.accessToken ?? null;
   const isEditMode = displayId && displayId !== 'new';
   const { confirm, confirmDialog } = useConfirm();
+  const { showSuccess, showError } = useToast();
 
   const {
     person,
@@ -166,6 +167,10 @@ const PersonFormPage = () => {
   const [addresses, setAddresses] = useState<AddressFormData[]>([]);
   const [contacts, setContacts] = useState<ContactFormData[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Accordion state - track which items are expanded
+  const [expandedAddresses, setExpandedAddresses] = useState<string[]>([]);
+  const [expandedContacts, setExpandedContacts] = useState<string[]>([]);
 
   const loading = loadingPerson;
   const saving = creating || updating;
@@ -243,49 +248,66 @@ const PersonFormPage = () => {
   }, [person, displayId]);
   /* eslint-enable react-hooks/exhaustive-deps */
 
-  const handleChange = (field: keyof PersonFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleChange = useCallback(
+    (field: keyof PersonFormData, value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
   // Address handlers
   const addAddress = () => {
-    setAddresses((prev) => [...prev, { ...initialAddressData }]);
+    setAddresses((prev) => {
+      const newIndex = prev.length;
+      setExpandedAddresses([`address-${newIndex}`]); // Expand only the new item
+      return [...prev, { ...initialAddressData }];
+    });
   };
 
   const removeAddress = (index: number) => {
     setAddresses((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const updateAddress = (
-    index: number,
-    field: keyof AddressFormData,
-    value: string | boolean
-  ) => {
-    setAddresses((prev) =>
-      prev.map((addr, i) => (i === index ? { ...addr, [field]: value } : addr))
+    setExpandedAddresses((prev) =>
+      prev.filter((key) => key !== `address-${index}`)
     );
   };
 
+  const updateAddress = useCallback(
+    (index: number, field: keyof AddressFormData, value: string | boolean) => {
+      setAddresses((prev) =>
+        prev.map((addr, i) =>
+          i === index ? { ...addr, [field]: value } : addr
+        )
+      );
+    },
+    []
+  );
+
   // Contact handlers
   const addContact = () => {
-    setContacts((prev) => [...prev, { ...initialContactData }]);
+    setContacts((prev) => {
+      const newIndex = prev.length;
+      setExpandedContacts([`contact-${newIndex}`]); // Expand only the new item
+      return [...prev, { ...initialContactData }];
+    });
   };
 
   const removeContact = (index: number) => {
     setContacts((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const updateContact = (
-    index: number,
-    field: keyof ContactFormData,
-    value: string
-  ) => {
-    setContacts((prev) =>
-      prev.map((contact, i) =>
-        i === index ? { ...contact, [field]: value } : contact
-      )
+    setExpandedContacts((prev) =>
+      prev.filter((key) => key !== `contact-${index}`)
     );
   };
+
+  const updateContact = useCallback(
+    (index: number, field: keyof ContactFormData, value: string) => {
+      setContacts((prev) =>
+        prev.map((contact, i) =>
+          i === index ? { ...contact, [field]: value } : contact
+        )
+      );
+    },
+    []
+  );
 
   // Document handlers - using Gateway proxy
   const handleDocumentFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -294,6 +316,13 @@ const PersonFormPage = () => {
       setSelectedDocumentFiles(Array.from(files));
     }
   };
+
+  const handleDocumentDescriptionChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setDocumentDescription(e.target.value);
+    },
+    []
+  );
 
   const handleDocumentUpload = async () => {
     if (selectedDocumentFiles.length === 0 || !displayId || !accessToken)
@@ -320,12 +349,16 @@ const PersonFormPage = () => {
     }
 
     if (errors.length > 0) {
-      setError(
-        `Failed to upload ${errors.length} file(s). Check file types - only PDF, Word, Excel, PowerPoint, JPEG, PNG are allowed.`
-      );
+      const errorMsg = `Failed to upload ${errors.length} file(s). Check file types - only PDF, Word, Excel, PowerPoint, JPEG, PNG are allowed.`;
+      setError(errorMsg);
+      showError('Upload Failed', errorMsg);
     }
 
     if (successCount > 0) {
+      showSuccess(
+        'Documents Uploaded',
+        `Successfully uploaded ${successCount} document(s).`
+      );
       setSelectedDocumentFiles([]);
       setDocumentDescription('');
       if (documentInputRef.current) {
@@ -364,9 +397,15 @@ const PersonFormPage = () => {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
+      showSuccess(
+        'Download Complete',
+        `${fileName || 'Document'} downloaded successfully.`
+      );
     } catch (err) {
       console.error('Error downloading document:', err);
-      setError('Failed to download document');
+      const errorMsg = 'Failed to download document';
+      setError(errorMsg);
+      showError('Download Failed', errorMsg);
     }
   };
 
@@ -385,11 +424,16 @@ const PersonFormPage = () => {
 
     try {
       await deleteDocumentMutation(Number(displayId), documentDisplayId);
-
+      showSuccess(
+        'Document Deleted',
+        'Document has been deleted successfully.'
+      );
       await refetchDocuments();
     } catch (err) {
       console.error('Error deleting document:', err);
-      setError('Failed to delete document');
+      const errorMsg = 'Failed to delete document';
+      setError(errorMsg);
+      showError('Delete Failed', errorMsg);
     }
   };
 
@@ -440,6 +484,10 @@ const PersonFormPage = () => {
           contacts: upsertContactDtos,
         };
         await updatePerson(Number(displayId), updateDto);
+        showSuccess(
+          'Person Updated',
+          `${formData.firstName} ${formData.lastName} has been updated successfully.`
+        );
       } else {
         // For create mode, use CreateAddressInput/CreateContactInput
         const addressDtos: CreateAddressInput[] = addresses
@@ -480,11 +528,17 @@ const PersonFormPage = () => {
           contacts: contactDtos.length > 0 ? contactDtos : undefined,
         };
         await createPerson(createDto);
+        showSuccess(
+          'Person Created',
+          `${formData.firstName} ${formData.lastName} has been added successfully.`
+        );
       }
       navigate('/persons');
     } catch (err) {
       console.error('Error saving person:', err);
-      setError('Failed to save person');
+      const errorMessage = 'Failed to save person';
+      setError(errorMessage);
+      showError('Operation Failed', errorMessage);
     }
   };
 
@@ -526,7 +580,7 @@ const PersonFormPage = () => {
   }
 
   return (
-    <Box maxW="900px">
+    <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">
           {isEditMode ? 'Edit Person' : 'Add New Person'}
@@ -542,7 +596,7 @@ const PersonFormPage = () => {
         </Box>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <Stack gap={6}>
           {/* Personal Information with Profile Image */}
           <Card.Root>
@@ -558,6 +612,8 @@ const PersonFormPage = () => {
                       personDisplayId={Number(displayId)}
                       currentImageUrl={person?.profileImageUrl}
                       hasProfileImage={person?.hasProfileImage}
+                      firstName={formData.firstName || person?.firstName}
+                      lastName={formData.lastName || person?.lastName}
                       onImageUpdated={refetchPerson}
                     />
                   </Box>
@@ -675,7 +731,10 @@ const PersonFormPage = () => {
               ) : (
                 <Accordion.Root
                   multiple
-                  defaultValue={addresses.map((_, i) => `address-${i}`)}
+                  value={expandedAddresses}
+                  onValueChange={(details) =>
+                    setExpandedAddresses(details.value)
+                  }
                 >
                   <Stack gap={3}>
                     {addresses.map((address, index) => (
@@ -911,7 +970,10 @@ const PersonFormPage = () => {
               ) : (
                 <Accordion.Root
                   multiple
-                  defaultValue={contacts.map((_, i) => `contact-${i}`)}
+                  value={expandedContacts}
+                  onValueChange={(details) =>
+                    setExpandedContacts(details.value)
+                  }
                 >
                   <Stack gap={3}>
                     {contacts.map((contact, index) => (
@@ -1117,9 +1179,7 @@ const PersonFormPage = () => {
                         </Text>
                         <Input
                           value={documentDescription}
-                          onChange={(e) =>
-                            setDocumentDescription(e.target.value)
-                          }
+                          onChange={handleDocumentDescriptionChange}
                           placeholder="Enter description"
                           size="sm"
                         />

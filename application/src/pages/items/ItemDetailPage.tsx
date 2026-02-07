@@ -11,7 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useItem, useDeleteItem } from '../../hooks/useItems';
-import { useConfirm } from '../../hooks';
+import { useConfirm, useToast } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
 
 const ItemDetailPage = () => {
@@ -21,6 +21,7 @@ const ItemDetailPage = () => {
 
   const { item, loading, error } = useItem(Number(displayId));
   const { deleteItem, loading: deleting } = useDeleteItem();
+  const { showSuccess, showError } = useToast();
 
   const handleDelete = async () => {
     if (!displayId) return;
@@ -37,9 +38,14 @@ const ItemDetailPage = () => {
 
     try {
       await deleteItem(Number(displayId));
+      showSuccess(
+        'Item Deleted',
+        `${item?.itemName || 'Item'} has been deleted successfully.`
+      );
       navigate('/items');
     } catch (err) {
       console.error('Error deleting item:', err);
+      showError('Delete Failed', 'Unable to delete item. Please try again.');
     }
   };
 
@@ -63,7 +69,7 @@ const ItemDetailPage = () => {
   }
 
   return (
-    <Box maxW="800px">
+    <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">{item.itemName}</Heading>
         <Flex gap={2}>

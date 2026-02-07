@@ -8,11 +8,14 @@ import {
 } from '../../hooks/useDocuments';
 import { useConfirm } from '../../hooks';
 import { ConfirmDialog } from '../ui';
+import { getInitials } from '../../utils/helper';
 
 interface ProfileImageUploadProps {
   personDisplayId: number;
   currentImageUrl?: string | null;
   hasProfileImage?: boolean;
+  firstName?: string | null | undefined;
+  lastName?: string | null | undefined;
   onImageUpdated: () => void;
 }
 
@@ -20,6 +23,8 @@ const ProfileImageUpload = ({
   personDisplayId,
   currentImageUrl,
   hasProfileImage,
+  firstName,
+  lastName,
   onImageUpdated,
 }: ProfileImageUploadProps) => {
   const authContext = useContext(AuthContext);
@@ -180,9 +185,18 @@ const ProfileImageUpload = ({
               objectFit="cover"
             />
           ) : (
-            <Text fontSize="4xl" color="fg.muted">
-              👤
-            </Text>
+            <Flex
+              w="100%"
+              h="100%"
+              alignItems="center"
+              justifyContent="center"
+              bg="bg.muted"
+              color="fg"
+            >
+              <Text fontSize="5xl" fontWeight="bold">
+                {getInitials(firstName, lastName)}
+              </Text>
+            </Flex>
           )}
         </Box>
 

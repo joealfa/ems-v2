@@ -12,7 +12,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEmployment, useDeleteEmployment } from '../../hooks/useEmployments';
 import { formatCurrency } from '../../utils/formatters';
-import { useConfirm } from '../../hooks';
+import { useConfirm, useToast } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
 
 const EmploymentDetailPage = () => {
@@ -22,6 +22,7 @@ const EmploymentDetailPage = () => {
 
   const { employment, loading, error } = useEmployment(Number(displayId));
   const { deleteEmployment, loading: deleting } = useDeleteEmployment();
+  const { showSuccess, showError } = useToast();
 
   const handleDelete = async () => {
     if (!displayId) return;
@@ -38,9 +39,17 @@ const EmploymentDetailPage = () => {
 
     try {
       await deleteEmployment(Number(displayId));
+      showSuccess(
+        'Employment Deleted',
+        'Employment record has been deleted successfully.'
+      );
       navigate('/employments');
     } catch (err) {
       console.error('Error deleting employment:', err);
+      showError(
+        'Delete Failed',
+        'Unable to delete employment record. Please try again.'
+      );
     }
   };
 
@@ -64,7 +73,7 @@ const EmploymentDetailPage = () => {
   }
 
   return (
-    <Box maxW="900px">
+    <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Box>
           <Heading size="lg">

@@ -236,7 +236,6 @@ const PersonDocuments = ({ personDisplayId }: PersonDocumentsProps) => {
                   Description (optional)
                 </Text>
                 <Input
-                  value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Enter description"
                   size="sm"

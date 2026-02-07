@@ -15,3 +15,15 @@ export const getDocumentTypeColor = (type: string | undefined): string => {
       return 'gray';
   }
 };
+
+export const getInitials = (
+  firstName?: string | null | undefined,
+  lastName?: string | null | undefined
+): string => {
+  if (!firstName && !lastName) return '?';
+
+  const firstInitial = firstName?.charAt(0).toUpperCase() || '';
+  const lastInitial = lastName?.charAt(0).toUpperCase() || '';
+
+  return `${firstInitial}${lastInitial}`.trim() || '?';
+};

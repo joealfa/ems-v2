@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Heading,
@@ -31,6 +31,7 @@ import type {
   ContactType,
 } from '../../graphql/generated/graphql';
 import { formatEnumLabel } from '../../utils/formatters';
+import { useToast } from '../../hooks';
 
 // GraphQL enum values - used directly for both display and API calls
 const AddressTypeOptions: AddressType[] = ['Business', 'Home'];
@@ -105,7 +106,12 @@ const SchoolFormPage = () => {
   const [formData, setFormData] = useState<SchoolFormData>(initialFormData);
   const [addresses, setAddresses] = useState<AddressFormData[]>([]);
   const [contacts, setContacts] = useState<ContactFormData[]>([]);
+
+  // Accordion state - track which items are expanded
+  const [expandedAddresses, setExpandedAddresses] = useState<string[]>([]);
+  const [expandedContacts, setExpandedContacts] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { showSuccess, showError } = useToast();
 
   const loading = loadingSchool;
   const saving = creating || updating;
@@ -157,52 +163,66 @@ const SchoolFormPage = () => {
     }
   }, [isEditMode, school]);
 
-  const handleChange = (
-    field: keyof SchoolFormData,
-    value: string | boolean
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleChange = useCallback(
+    (field: keyof SchoolFormData, value: string | boolean) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
   // Address handlers
   const addAddress = () => {
-    setAddresses((prev) => [...prev, { ...initialAddressData }]);
+    setAddresses((prev) => {
+      const newIndex = prev.length;
+      setExpandedAddresses([`address-${newIndex}`]); // Expand only the new item
+      return [...prev, { ...initialAddressData }];
+    });
   };
 
   const removeAddress = (index: number) => {
     setAddresses((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const updateAddress = (
-    index: number,
-    field: keyof AddressFormData,
-    value: string | boolean
-  ) => {
-    setAddresses((prev) =>
-      prev.map((addr, i) => (i === index ? { ...addr, [field]: value } : addr))
+    setExpandedAddresses((prev) =>
+      prev.filter((key) => key !== `address-${index}`)
     );
   };
 
+  const updateAddress = useCallback(
+    (index: number, field: keyof AddressFormData, value: string | boolean) => {
+      setAddresses((prev) =>
+        prev.map((addr, i) =>
+          i === index ? { ...addr, [field]: value } : addr
+        )
+      );
+    },
+    []
+  );
+
   // Contact handlers
   const addContact = () => {
-    setContacts((prev) => [...prev, { ...initialContactData }]);
+    setContacts((prev) => {
+      const newIndex = prev.length;
+      setExpandedContacts([`contact-${newIndex}`]); // Expand only the new item
+      return [...prev, { ...initialContactData }];
+    });
   };
 
   const removeContact = (index: number) => {
     setContacts((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const updateContact = (
-    index: number,
-    field: keyof ContactFormData,
-    value: string
-  ) => {
-    setContacts((prev) =>
-      prev.map((contact, i) =>
-        i === index ? { ...contact, [field]: value } : contact
-      )
+    setExpandedContacts((prev) =>
+      prev.filter((key) => key !== `contact-${index}`)
     );
   };
+
+  const updateContact = useCallback(
+    (index: number, field: keyof ContactFormData, value: string) => {
+      setContacts((prev) =>
+        prev.map((contact, i) =>
+          i === index ? { ...contact, [field]: value } : contact
+        )
+      );
+    },
+    []
+  );
 
   // Generate address summary for accordion header
   const getAddressSummary = (address: AddressFormData, index: number) => {
@@ -275,6 +295,10 @@ const SchoolFormPage = () => {
           contacts: contactDtos.length > 0 ? contactDtos : [],
         };
         await updateSchool(Number(displayId), updateDto);
+        showSuccess(
+          'School Updated',
+          `${formData.schoolName} has been updated successfully.`
+        );
       } else {
         const addressDtos: CreateAddressInput[] = addresses
           .filter((addr) => addr.address1 && addr.city && addr.province)
@@ -309,11 +333,17 @@ const SchoolFormPage = () => {
           contacts: contactDtos.length > 0 ? contactDtos : null,
         };
         await createSchool(createDto);
+        showSuccess(
+          'School Created',
+          `${formData.schoolName} has been added successfully.`
+        );
       }
       navigate('/schools');
     } catch (err) {
       console.error('Error saving school:', err);
-      setError('Failed to save school');
+      const errorMessage = 'Failed to save school';
+      setError(errorMessage);
+      showError('Operation Failed', errorMessage);
     }
   };
 
@@ -326,7 +356,7 @@ const SchoolFormPage = () => {
   }
 
   return (
-    <Box maxW="900px">
+    <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">
           {isEditMode ? 'Edit School' : 'Add New School'}
@@ -342,7 +372,7 @@ const SchoolFormPage = () => {
         </Box>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <Stack gap={6}>
           {/* School Information */}
           <Card.Root>
@@ -394,7 +424,10 @@ const SchoolFormPage = () => {
               ) : (
                 <Accordion.Root
                   multiple
-                  defaultValue={addresses.map((_, i) => `address-${i}`)}
+                  value={expandedAddresses}
+                  onValueChange={(details) =>
+                    setExpandedAddresses(details.value)
+                  }
                 >
                   <Stack gap={3}>
                     {addresses.map((address, index) => (
@@ -636,7 +669,10 @@ const SchoolFormPage = () => {
               ) : (
                 <Accordion.Root
                   multiple
-                  defaultValue={contacts.map((_, i) => `contact-${i}`)}
+                  value={expandedContacts}
+                  onValueChange={(details) =>
+                    setExpandedContacts(details.value)
+                  }
                 >
                   <Stack gap={3}>
                     {contacts.map((contact, index) => (

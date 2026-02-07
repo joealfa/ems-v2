@@ -12,7 +12,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSchool, useDeleteSchool } from '../../hooks/useSchools';
 import { formatAddress } from '../../utils/formatters';
-import { useConfirm } from '../../hooks';
+import { useConfirm, useToast } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
 
 const SchoolDetailPage = () => {
@@ -22,6 +22,7 @@ const SchoolDetailPage = () => {
 
   const { school, loading, error } = useSchool(Number(displayId));
   const { deleteSchool, loading: deleting } = useDeleteSchool();
+  const { showSuccess, showError } = useToast();
 
   const handleDelete = async () => {
     if (!displayId) return;
@@ -38,9 +39,14 @@ const SchoolDetailPage = () => {
 
     try {
       await deleteSchool(Number(displayId));
+      showSuccess(
+        'School Deleted',
+        `${school?.schoolName || 'School'} has been deleted successfully.`
+      );
       navigate('/schools');
     } catch (err) {
       console.error('Error deleting school:', err);
+      showError('Delete Failed', 'Unable to delete school. Please try again.');
     }
   };
 
@@ -64,7 +70,7 @@ const SchoolDetailPage = () => {
   }
 
   return (
-    <Box maxW="800px">
+    <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">{school.schoolName}</Heading>
         <Flex gap={2}>

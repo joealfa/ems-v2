@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Heading,
@@ -19,6 +19,7 @@ import type {
   CreateItemInput,
   UpdateItemInput,
 } from '../../graphql/generated/graphql';
+import { useToast } from '../../hooks';
 
 interface ItemFormData {
   itemName: string;
@@ -45,6 +46,7 @@ const ItemFormPage = () => {
 
   const [formData, setFormData] = useState<ItemFormData>(initialFormData);
   const [error, setError] = useState<string | null>(null);
+  const { showSuccess, showError } = useToast();
 
   const loading = loadingItem;
   const saving = creating || updating;
@@ -60,9 +62,12 @@ const ItemFormPage = () => {
     }
   }, [isEditMode, item]);
 
-  const handleChange = (field: keyof ItemFormData, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleChange = useCallback(
+    (field: keyof ItemFormData, value: string | boolean) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,17 +81,27 @@ const ItemFormPage = () => {
           isActive: formData.isActive,
         };
         await updateItem(Number(displayId), updateDto);
+        showSuccess(
+          'Item Updated',
+          `${formData.itemName} has been updated successfully.`
+        );
       } else {
         const createDto: CreateItemInput = {
           itemName: formData.itemName,
           description: formData.description || null,
         };
         await createItem(createDto);
+        showSuccess(
+          'Item Created',
+          `${formData.itemName} has been added successfully.`
+        );
       }
       navigate('/items');
     } catch (err) {
       console.error('Error saving item:', err);
-      setError('Failed to save item');
+      const errorMessage = 'Failed to save item';
+      setError(errorMessage);
+      showError('Operation Failed', errorMessage);
     }
   };
 
@@ -99,7 +114,7 @@ const ItemFormPage = () => {
   }
 
   return (
-    <Box maxW="800px">
+    <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">{isEditMode ? 'Edit Item' : 'Add New Item'}</Heading>
         <Button variant="outline" onClick={() => navigate(-1)}>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Heading,
@@ -23,6 +23,7 @@ import type {
   CreatePositionInput,
   UpdatePositionInput,
 } from '../../graphql/generated/graphql';
+import { useToast } from '../../hooks';
 
 interface PositionFormData {
   titleName: string;
@@ -49,6 +50,7 @@ const PositionFormPage = () => {
 
   const [formData, setFormData] = useState<PositionFormData>(initialFormData);
   const [error, setError] = useState<string | null>(null);
+  const { showSuccess, showError } = useToast();
 
   const loading = loadingPosition;
   const saving = creating || updating;
@@ -64,12 +66,12 @@ const PositionFormPage = () => {
     }
   }, [isEditMode, position]);
 
-  const handleChange = (
-    field: keyof PositionFormData,
-    value: string | boolean
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleChange = useCallback(
+    (field: keyof PositionFormData, value: string | boolean) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,17 +85,27 @@ const PositionFormPage = () => {
           isActive: formData.isActive,
         };
         await updatePosition(Number(displayId), updateDto);
+        showSuccess(
+          'Position Updated',
+          `${formData.titleName} has been updated successfully.`
+        );
       } else {
         const createDto: CreatePositionInput = {
           titleName: formData.titleName,
           description: formData.description || null,
         };
         await createPosition(createDto);
+        showSuccess(
+          'Position Created',
+          `${formData.titleName} has been added successfully.`
+        );
       }
       navigate('/positions');
     } catch (err) {
       console.error('Error saving position:', err);
-      setError('Failed to save position');
+      const errorMessage = 'Failed to save position';
+      setError(errorMessage);
+      showError('Operation Failed', errorMessage);
     }
   };
 
@@ -106,7 +118,7 @@ const PositionFormPage = () => {
   }
 
   return (
-    <Box maxW="800px">
+    <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">
           {isEditMode ? 'Edit Position' : 'Add New Position'}

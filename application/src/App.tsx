@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { system } from './theme';
 import { ColorModeProvider } from './components/ui/color-mode';
+import { Toaster } from './components/ui';
 import { MainLayout } from './components/layout';
 import { AuthProvider } from './contexts/AuthContext';
 import { QueryProvider } from './graphql/QueryProvider';
@@ -80,6 +81,7 @@ const App = () => {
       <QueryProvider>
         <ChakraProvider value={system}>
           <ColorModeProvider>
+            <Toaster />
             <BrowserRouter>
               <AuthProvider>
                 <Suspense fallback={<PageLoader />}>

@@ -11,7 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePosition, useDeletePosition } from '../../hooks/usePositions';
-import { useConfirm } from '../../hooks';
+import { useConfirm, useToast } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
 
 const PositionDetailPage = () => {
@@ -21,6 +21,7 @@ const PositionDetailPage = () => {
 
   const { position, loading, error } = usePosition(Number(displayId));
   const { deletePosition, loading: deleting } = useDeletePosition();
+  const { showSuccess, showError } = useToast();
 
   const handleDelete = async () => {
     if (!displayId) return;
@@ -37,9 +38,17 @@ const PositionDetailPage = () => {
 
     try {
       await deletePosition(Number(displayId));
+      showSuccess(
+        'Position Deleted',
+        `${position?.titleName || 'Position'} has been deleted successfully.`
+      );
       navigate('/positions');
     } catch (err) {
       console.error('Error deleting position:', err);
+      showError(
+        'Delete Failed',
+        'Unable to delete position. Please try again.'
+      );
     }
   };
 
@@ -63,7 +72,7 @@ const PositionDetailPage = () => {
   }
 
   return (
-    <Box maxW="800px">
+    <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">{position.titleName}</Heading>
         <Flex gap={2}>

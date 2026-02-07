@@ -255,10 +255,11 @@ export const useUploadDocument = () => {
           uploadDocument(personDisplayId: $personDisplayId, file: $file, description: $description) {
             displayId
             fileName
-            fileSize
+            fileSizeBytes
             contentType
             description
-            uploadedAt
+            createdOn
+            createdBy
           }
         }`,
         { personDisplayId, description },

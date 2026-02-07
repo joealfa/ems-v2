@@ -16,7 +16,7 @@ import {
   ProfileImageUpload,
 } from '../../components/documents';
 import { formatAddress } from '../../utils/formatters';
-import { useConfirm } from '../../hooks';
+import { useConfirm, useToast } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
 
 const PersonDetailPage = () => {
@@ -26,6 +26,7 @@ const PersonDetailPage = () => {
 
   const { person, loading, error, refetch } = usePerson(Number(displayId));
   const { deletePerson, loading: deleting } = useDeletePerson();
+  const { showSuccess, showError } = useToast();
 
   const handleDelete = async () => {
     if (!displayId) return;
@@ -42,9 +43,14 @@ const PersonDetailPage = () => {
 
     try {
       await deletePerson(Number(displayId));
+      showSuccess(
+        'Person Deleted',
+        `${person?.fullName || 'Person'} has been deleted successfully.`
+      );
       navigate('/persons');
     } catch (err) {
       console.error('Error deleting person:', err);
+      showError('Delete Failed', 'Unable to delete person. Please try again.');
     }
   };
 
@@ -68,7 +74,7 @@ const PersonDetailPage = () => {
   }
 
   return (
-    <Box maxW="900px">
+    <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">{person.fullName}</Heading>
         <Flex gap={2}>
@@ -110,6 +116,8 @@ const PersonDetailPage = () => {
                   personDisplayId={Number(displayId)}
                   currentImageUrl={person.profileImageUrl}
                   hasProfileImage={person.hasProfileImage}
+                  firstName={person.firstName}
+                  lastName={person.lastName}
                   onImageUpdated={refetch}
                 />
               </Box>

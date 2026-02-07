@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Heading,
@@ -24,6 +24,7 @@ import type {
   CreateSalaryGradeInput,
   UpdateSalaryGradeInput,
 } from '../../graphql/generated/graphql';
+import { useToast } from '../../hooks';
 
 interface SalaryGradeFormData {
   salaryGradeName: string;
@@ -55,6 +56,7 @@ const SalaryGradeFormPage = () => {
   const [formData, setFormData] =
     useState<SalaryGradeFormData>(initialFormData);
   const [error, setError] = useState<string | null>(null);
+  const { showSuccess, showError } = useToast();
 
   const loading = loadingSalaryGrade;
   const saving = creating || updating;
@@ -72,12 +74,12 @@ const SalaryGradeFormPage = () => {
     }
   }, [isEditMode, salaryGrade]);
 
-  const handleChange = (
-    field: keyof SalaryGradeFormData,
-    value: string | number | boolean
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleChange = useCallback(
+    (field: keyof SalaryGradeFormData, value: string | number | boolean) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +95,10 @@ const SalaryGradeFormPage = () => {
           isActive: formData.isActive,
         };
         await updateSalaryGrade(Number(displayId), updateDto);
+        showSuccess(
+          'Salary Grade Updated',
+          `${formData.salaryGradeName} has been updated successfully.`
+        );
       } else {
         const createDto: CreateSalaryGradeInput = {
           salaryGradeName: formData.salaryGradeName,
@@ -101,11 +107,17 @@ const SalaryGradeFormPage = () => {
           monthlySalary: formData.monthlySalary,
         };
         await createSalaryGrade(createDto);
+        showSuccess(
+          'Salary Grade Created',
+          `${formData.salaryGradeName} has been added successfully.`
+        );
       }
       navigate('/salary-grades');
     } catch (err) {
       console.error('Error saving salary grade:', err);
-      setError('Failed to save salary grade');
+      const errorMessage = 'Failed to save salary grade';
+      setError(errorMessage);
+      showError('Operation Failed', errorMessage);
     }
   };
 
@@ -118,7 +130,7 @@ const SalaryGradeFormPage = () => {
   }
 
   return (
-    <Box maxW="800px">
+    <Box>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg">
           {isEditMode ? 'Edit Salary Grade' : 'Add New Salary Grade'}

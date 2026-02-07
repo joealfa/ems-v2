@@ -13,6 +13,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useEffect, useState } from 'react';
 import { useColorMode } from '../components/ui/color-mode';
 import { IconButton } from '@chakra-ui/react';
+import { useToast } from '../hooks';
 
 // Preview version of sidebar for background
 const SidebarPreview = () => {
@@ -152,6 +153,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState<string | null>(null);
+  const { showSuccess, showError } = useToast();
 
   const from =
     (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
@@ -167,6 +169,10 @@ const LoginPage = () => {
     if (response.credential) {
       try {
         await login(response.credential);
+        showSuccess(
+          'Login Successful',
+          'Welcome back to Employee Management System!'
+        );
         navigate(from, { replace: true });
       } catch (err: unknown) {
         console.error('Login error:', err);
@@ -178,18 +184,28 @@ const LoginPage = () => {
           const message = axiosError.response?.data?.message;
           const status = axiosError.response?.status;
           if (status === 401) {
-            setError('Invalid credentials. Please try again.');
+            const errorMsg = 'Invalid credentials. Please try again.';
+            setError(errorMsg);
+            showError('Authentication Failed', errorMsg);
           } else if (message) {
-            setError(`Login failed: ${message}`);
+            const errorMsg = `Login failed: ${message}`;
+            setError(errorMsg);
+            showError('Login Failed', message);
           } else {
-            setError('Login failed. Please try again.');
+            const errorMsg = 'Login failed. Please try again.';
+            setError(errorMsg);
+            showError('Login Failed', errorMsg);
           }
         } else {
-          setError('Login failed. Please try again.');
+          const errorMsg = 'Login failed. Please try again.';
+          setError(errorMsg);
+          showError('Login Failed', errorMsg);
         }
       }
     } else {
-      setError('No credential received from Google. Please try again.');
+      const errorMsg = 'No credential received from Google. Please try again.';
+      setError(errorMsg);
+      showError('Authentication Error', errorMsg);
     }
   };
 
@@ -197,7 +213,9 @@ const LoginPage = () => {
     console.error(
       'Google Sign-In error - check that your Google Client ID is configured correctly and localhost:5173 is in authorized origins'
     );
-    setError('Google sign-in failed. Check console for details.');
+    const errorMsg = 'Google sign-in failed. Please check your configuration.';
+    setError(errorMsg);
+    showError('Sign-In Error', errorMsg);
   };
 
   if (isLoading) {

@@ -1,5 +1,6 @@
 import { ClientError } from 'graphql-request';
 import { queryClient } from './query-client';
+import { toaster } from '../hooks/useToast';
 
 const isAuthError = (error: unknown): boolean => {
   if (error instanceof ClientError) {
@@ -25,9 +26,25 @@ export const handleGlobalError = (error: unknown): void => {
     localStorage.removeItem('user');
     queryClient.clear();
 
+    toaster.create({
+      title: 'Session Expired',
+      description: 'Your session has expired. Please login again.',
+      type: 'warning',
+      duration: 5000,
+    });
+
     if (!window.location.pathname.includes('/login')) {
       window.location.href = '/login';
     }
+  } else {
+    // Show generic error toast for non-auth errors
+    const errorMessage = getErrorMessage(error);
+    toaster.create({
+      title: 'Error',
+      description: errorMessage,
+      type: 'error',
+      duration: 7000,
+    });
   }
 };
 
