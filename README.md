@@ -178,6 +178,7 @@ The application uses a **GraphQL Gateway** pattern:
 ### Detailed Architecture Flow
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 graph TB
     subgraph Client["🖥️ Client Layer"]
         Browser["Web Browser<br/>(React + TypeScript + Vite)"]
