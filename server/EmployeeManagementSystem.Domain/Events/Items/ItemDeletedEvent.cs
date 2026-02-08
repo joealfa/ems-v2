@@ -1,15 +1,9 @@
 namespace EmployeeManagementSystem.Domain.Events.Items;
 
-public sealed class ItemDeletedEvent : DomainEvent
+public sealed class ItemDeletedEvent(Guid itemId, string itemName) : DomainEvent
 {
-    public ItemDeletedEvent(Guid itemId, string itemName)
-    {
-        ItemId = itemId;
-        ItemName = itemName;
-    }
-
-    public Guid ItemId { get; }
-    public string ItemName { get; }
+    public Guid ItemId { get; } = itemId;
+    public string ItemName { get; } = itemName;
 
     public override string EventType => "com.ems.item.deleted";
 }

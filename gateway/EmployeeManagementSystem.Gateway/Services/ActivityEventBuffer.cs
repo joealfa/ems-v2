@@ -1,5 +1,5 @@
-using System.Collections.Concurrent;
 using EmployeeManagementSystem.Gateway.Types;
+using System.Collections.Concurrent;
 
 namespace EmployeeManagementSystem.Gateway.Services;
 
@@ -7,20 +7,15 @@ namespace EmployeeManagementSystem.Gateway.Services;
 /// Thread-safe in-memory buffer for recent activity events.
 /// Maintains a circular buffer of the last N events.
 /// </summary>
-public class ActivityEventBuffer
+/// <remarks>
+/// Initializes a new instance of the <see cref="ActivityEventBuffer"/> class.
+/// </remarks>
+/// <param name="maxCapacity">Maximum number of events to keep in buffer (default: 50).</param>
+public class ActivityEventBuffer(int maxCapacity = 50)
 {
     private readonly ConcurrentQueue<ActivityEventDto> _events = new();
-    private readonly int _maxCapacity;
+    private readonly int _maxCapacity = maxCapacity;
     private readonly object _lock = new();
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ActivityEventBuffer"/> class.
-    /// </summary>
-    /// <param name="maxCapacity">Maximum number of events to keep in buffer (default: 50).</param>
-    public ActivityEventBuffer(int maxCapacity = 50)
-    {
-        _maxCapacity = maxCapacity;
-    }
 
     /// <summary>
     /// Adds a new event to the buffer. If capacity is exceeded, oldest events are removed.
@@ -35,7 +30,7 @@ public class ActivityEventBuffer
             // Remove oldest events if capacity exceeded
             while (_events.Count > _maxCapacity)
             {
-                _events.TryDequeue(out _);
+                _ = _events.TryDequeue(out _);
             }
         }
     }

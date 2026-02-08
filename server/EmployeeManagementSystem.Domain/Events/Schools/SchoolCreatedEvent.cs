@@ -1,17 +1,10 @@
 namespace EmployeeManagementSystem.Domain.Events.Schools;
 
-public sealed class SchoolCreatedEvent : DomainEvent
+public sealed class SchoolCreatedEvent(Guid schoolId, string schoolName, bool isActive) : DomainEvent
 {
-    public SchoolCreatedEvent(Guid schoolId, string schoolName, bool isActive)
-    {
-        SchoolId = schoolId;
-        SchoolName = schoolName;
-        IsActive = isActive;
-    }
-
-    public Guid SchoolId { get; }
-    public string SchoolName { get; }
-    public bool IsActive { get; }
+    public Guid SchoolId { get; } = schoolId;
+    public string SchoolName { get; } = schoolName;
+    public bool IsActive { get; } = isActive;
 
     public override string EventType => "com.ems.school.created";
 }

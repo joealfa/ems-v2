@@ -1,15 +1,9 @@
 namespace EmployeeManagementSystem.Domain.Events.Items;
 
-public sealed class ItemUpdatedEvent : DomainEvent
+public sealed class ItemUpdatedEvent(Guid itemId, Dictionary<string, object?> changes) : DomainEvent
 {
-    public ItemUpdatedEvent(Guid itemId, Dictionary<string, object?> changes)
-    {
-        ItemId = itemId;
-        Changes = changes;
-    }
-
-    public Guid ItemId { get; }
-    public Dictionary<string, object?> Changes { get; }
+    public Guid ItemId { get; } = itemId;
+    public Dictionary<string, object?> Changes { get; } = changes;
 
     public override string EventType => "com.ems.item.updated";
 }

@@ -3,6 +3,7 @@ using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Infrastructure.Data;
+using EmployeeManagementSystem.Infrastructure.Extensions;
 using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -33,12 +34,12 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
     /// <inheritdoc />
     public async Task<AuthResponseDto> AuthenticateWithGoogleAsync(string idToken, string ipAddress)
     {
-        _logger.LogDebug("Validating Google ID token from IP {IpAddress}", ipAddress);
+        _logger.LogIfEnabled(LogLevel.Debug, "Validating Google ID token from IP {IpAddress}", ipAddress);
 
         // Validate the Google ID token
         GoogleJsonWebSignature.Payload payload = await ValidateGoogleTokenAsync(idToken);
 
-        _logger.LogDebug("Google token validated for email {Email}", payload.Email);
+        _logger.LogIfEnabled(LogLevel.Debug, "Google token validated for email {Email}", payload.Email);
 
         // Find or create the user - use IgnoreQueryFilters to find soft-deleted users too
         User? user = await _context.Users
@@ -65,11 +66,11 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
             _ = _context.Users.Add(user);
             _ = await _context.SaveChangesAsync();
 
-            _logger.LogInformation("New user created: {UserId} ({Email}) from IP {IpAddress}", user.Id, user.Email, ipAddress);
+            _logger.LogIfEnabled(LogLevel.Information, "New user created: {UserId} ({Email}) from IP {IpAddress}", user.Id, user.Email, ipAddress);
         }
         else
         {
-            _logger.LogDebug("Existing user found: {UserId} ({Email}), updating login information", user.Id, user.Email);
+            _logger.LogIfEnabled(LogLevel.Debug, "Existing user found: {UserId} ({Email}), updating login information", user.Id, user.Email);
 
             // Update user directly in database using ExecuteUpdateAsync to bypass change tracking issues
             _ = await _context.Users
@@ -95,7 +96,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
 
             if (revokedCount > 0)
             {
-                _logger.LogInformation("Revoked {TokenCount} existing refresh tokens for user {UserId} on new login", revokedCount, user.Id);
+                _logger.LogIfEnabled(LogLevel.Information, "Revoked {TokenCount} existing refresh tokens for user {UserId} on new login", revokedCount, user.Id);
             }
 
             // Refresh user data after update
@@ -208,7 +209,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
     /// <inheritdoc />
     public async Task<AuthResponseDto?> RefreshTokenAsync(string refreshToken, string ipAddress)
     {
-        _logger.LogDebug("Attempting to refresh token from IP {IpAddress}", ipAddress);
+        _logger.LogIfEnabled(LogLevel.Debug, "Attempting to refresh token from IP {IpAddress}", ipAddress);
 
         User? user = await _context.Users
             .Include(u => u.RefreshTokens)
@@ -216,7 +217,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
 
         if (user == null)
         {
-            _logger.LogWarning("Refresh token not found for any user from IP {IpAddress}", ipAddress);
+            _logger.LogIfEnabled(LogLevel.Warning, "Refresh token not found for any user from IP {IpAddress}", ipAddress);
             return null;
         }
 
@@ -227,7 +228,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
             // Token has been revoked or expired - revoke all tokens for security
             if (existingToken.IsRevoked)
             {
-                _logger.LogWarning("Attempted reuse of revoked refresh token for user {UserId} from IP {IpAddress}. Revoking descendant tokens for security.",
+                _logger.LogIfEnabled(LogLevel.Warning, "Attempted reuse of revoked refresh token for user {UserId} from IP {IpAddress}. Revoking descendant tokens for security.",
                     user.Id, ipAddress);
 
                 // Potential token reuse - revoke all descendant tokens
@@ -235,7 +236,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
             }
             else
             {
-                _logger.LogDebug("Expired refresh token for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
+                _logger.LogIfEnabled(LogLevel.Debug, "Expired refresh token for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
             }
 
             return null;
@@ -253,7 +254,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
 
         _ = await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Refresh token rotated successfully for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
+        _logger.LogIfEnabled(LogLevel.Information, "Refresh token rotated successfully for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
 
         string accessToken = GenerateJwtToken(user);
 
@@ -269,7 +270,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
     /// <inheritdoc />
     public async Task<bool> RevokeTokenAsync(string refreshToken, string ipAddress)
     {
-        _logger.LogDebug("Attempting to revoke token from IP {IpAddress}", ipAddress);
+        _logger.LogIfEnabled(LogLevel.Debug, "Attempting to revoke token from IP {IpAddress}", ipAddress);
 
         User? user = await _context.Users
             .Include(u => u.RefreshTokens)
@@ -277,7 +278,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
 
         if (user == null)
         {
-            _logger.LogWarning("Token revoke failed - token not found for any user from IP {IpAddress}", ipAddress);
+            _logger.LogIfEnabled(LogLevel.Warning, "Token revoke failed - token not found for any user from IP {IpAddress}", ipAddress);
             return false;
         }
 
@@ -285,7 +286,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
 
         if (!token.IsActive)
         {
-            _logger.LogWarning("Token revoke failed - token already inactive for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
+            _logger.LogIfEnabled(LogLevel.Warning, "Token revoke failed - token already inactive for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
             return false;
         }
 
@@ -295,7 +296,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
 
         _ = await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Refresh token successfully revoked for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
+        _logger.LogIfEnabled(LogLevel.Information, "Refresh token successfully revoked for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
 
         return true;
     }
@@ -422,7 +423,7 @@ public class AuthService(ApplicationDbContext context, IConfiguration configurat
         if (!response.IsSuccessStatusCode)
         {
             string error = await response.Content.ReadAsStringAsync();
-            _logger.LogError("Failed to get user info from Google. Status: {StatusCode}, Error: {Error}",
+            _logger.LogIfEnabled(LogLevel.Error, "Failed to get user info from Google. Status: {StatusCode}, Error: {Error}",
                 response.StatusCode, error);
             throw new InvalidOperationException($"Failed to get user info from Google: {error}");
         }

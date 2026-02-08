@@ -1,17 +1,11 @@
 namespace EmployeeManagementSystem.Domain.Events.Persons;
 
-public sealed class PersonUpdatedEvent : DomainEvent
+public sealed class PersonUpdatedEvent(
+    int personId,
+    Dictionary<string, object?> changes) : DomainEvent
 {
-    public PersonUpdatedEvent(
-        int personId,
-        Dictionary<string, object?> changes)
-    {
-        PersonId = personId;
-        Changes = changes;
-    }
-
-    public int PersonId { get; }
-    public Dictionary<string, object?> Changes { get; }
+    public int PersonId { get; } = personId;
+    public Dictionary<string, object?> Changes { get; } = changes;
 
     public override string EventType => "com.ems.person.updated";
 }

@@ -1,32 +1,21 @@
 namespace EmployeeManagementSystem.Domain.Events.Persons;
 
-public sealed class PersonCreatedEvent : DomainEvent
+public sealed class PersonCreatedEvent(
+    int personId,
+    string firstName,
+    string lastName,
+    string? middleName,
+    DateOnly dateOfBirth,
+    string gender,
+    string civilStatus) : DomainEvent
 {
-    public PersonCreatedEvent(
-        int personId,
-        string firstName,
-        string lastName,
-        string? middleName,
-        DateOnly dateOfBirth,
-        string gender,
-        string civilStatus)
-    {
-        PersonId = personId;
-        FirstName = firstName;
-        LastName = lastName;
-        MiddleName = middleName;
-        DateOfBirth = dateOfBirth;
-        Gender = gender;
-        CivilStatus = civilStatus;
-    }
-
-    public int PersonId { get; }
-    public string FirstName { get; }
-    public string LastName { get; }
-    public string? MiddleName { get; }
-    public DateOnly DateOfBirth { get; }
-    public string Gender { get; }
-    public string CivilStatus { get; }
+    public int PersonId { get; } = personId;
+    public string FirstName { get; } = firstName;
+    public string LastName { get; } = lastName;
+    public string? MiddleName { get; } = middleName;
+    public DateOnly DateOfBirth { get; } = dateOfBirth;
+    public string Gender { get; } = gender;
+    public string CivilStatus { get; } = civilStatus;
 
     public override string EventType => "com.ems.person.created";
 }

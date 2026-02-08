@@ -2,6 +2,7 @@ using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Person;
 using EmployeeManagementSystem.Application.Events;
+using EmployeeManagementSystem.Application.Extensions;
 using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
@@ -133,7 +134,7 @@ public class PersonService(
     /// <inheritdoc />
     public async Task<Result<PersonResponseDto>> CreateAsync(CreatePersonDto dto, string createdBy, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Creating new person: {FirstName} {LastName} by user {CreatedBy}",
+        _logger.LogIfEnabled(LogLevel.Information, "Creating new person: {FirstName} {LastName} by user {CreatedBy}",
             dto.FirstName, dto.LastName, createdBy);
 
         Person person = new()
@@ -194,7 +195,7 @@ public class PersonService(
             }
         }
 
-        _logger.LogInformation("Person created successfully: DisplayId {DisplayId}, Name: {FullName} by user {CreatedBy}",
+        _logger.LogIfEnabled(LogLevel.Information, "Person created successfully: DisplayId {DisplayId}, Name: {FullName} by user {CreatedBy}",
             person.DisplayId, person.FullName, createdBy);
 
         // Publish domain event
@@ -206,7 +207,7 @@ public class PersonService(
     /// <inheritdoc />
     public async Task<Result<PersonResponseDto>> UpdateAsync(long displayId, UpdatePersonDto dto, string modifiedBy, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Updating person with DisplayId {DisplayId} by user {ModifiedBy}", displayId, modifiedBy);
+        _logger.LogIfEnabled(LogLevel.Debug, "Updating person with DisplayId {DisplayId} by user {ModifiedBy}", displayId, modifiedBy);
 
         Person? person = await _personRepository.Query()
             .Include(p => p.Addresses.Where(a => !a.IsDeleted))
@@ -215,7 +216,7 @@ public class PersonService(
 
         if (person == null)
         {
-            _logger.LogWarning("Person update failed - DisplayId {DisplayId} not found", displayId);
+            _logger.LogIfEnabled(LogLevel.Warning, "Person update failed - DisplayId {DisplayId} not found", displayId);
             return Result<PersonResponseDto>.NotFound("Person not found.");
         }
 
@@ -343,7 +344,7 @@ public class PersonService(
 
         await _personRepository.UpdateAsync(person, cancellationToken);
 
-        _logger.LogInformation("Person updated successfully: DisplayId {DisplayId}, Name: {FullName} by user {ModifiedBy}",
+        _logger.LogIfEnabled(LogLevel.Information, "Person updated successfully: DisplayId {DisplayId}, Name: {FullName} by user {ModifiedBy}",
             person.DisplayId, person.FullName, modifiedBy);
 
         // Publish domain event
@@ -364,7 +365,7 @@ public class PersonService(
     /// <inheritdoc />
     public async Task<Result> DeleteAsync(long displayId, string deletedBy, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Deleting person with DisplayId {DisplayId} by user {DeletedBy}", displayId, deletedBy);
+        _logger.LogIfEnabled(LogLevel.Information, "Deleting person with DisplayId {DisplayId} by user {DeletedBy}", displayId, deletedBy);
 
         Person? person = await _personRepository.Query()
             .Include(p => p.Addresses.Where(a => !a.IsDeleted))
@@ -374,7 +375,7 @@ public class PersonService(
 
         if (person == null)
         {
-            _logger.LogWarning("Person delete failed - DisplayId {DisplayId} not found", displayId);
+            _logger.LogIfEnabled(LogLevel.Warning, "Person delete failed - DisplayId {DisplayId} not found", displayId);
             return Result.NotFound("Person not found.");
         }
 
@@ -403,7 +404,7 @@ public class PersonService(
         person.ModifiedBy = deletedBy;
         await _personRepository.DeleteAsync(person, cancellationToken);
 
-        _logger.LogInformation("Person deleted successfully: DisplayId {DisplayId}, Name: {FullName} by user {DeletedBy}. " +
+        _logger.LogIfEnabled(LogLevel.Information, "Person deleted successfully: DisplayId {DisplayId}, Name: {FullName} by user {DeletedBy}. " +
             "Cascade deleted {AddressCount} addresses, {ContactCount} contacts, {DocumentCount} documents",
             person.DisplayId, person.FullName, deletedBy, person.Addresses.Count, person.Contacts.Count, person.Documents.Count);
 
@@ -438,11 +439,11 @@ public class PersonService(
                 metadata,
                 cancellationToken);
 
-            _logger.LogDebug("Published PersonCreatedEvent for DisplayId {DisplayId}", person.DisplayId);
+            _logger.LogIfEnabled(LogLevel.Debug, "Published PersonCreatedEvent for DisplayId {DisplayId}", person.DisplayId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to publish PersonCreatedEvent for DisplayId {DisplayId}", person.DisplayId);
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Failed to publish PersonCreatedEvent for DisplayId {DisplayId}", person.DisplayId);
             // Don't throw - we don't want event publishing failures to fail the main operation
         }
     }
@@ -469,11 +470,11 @@ public class PersonService(
                 metadata,
                 cancellationToken);
 
-            _logger.LogDebug("Published PersonUpdatedEvent for DisplayId {DisplayId}", person.DisplayId);
+            _logger.LogIfEnabled(LogLevel.Debug, "Published PersonUpdatedEvent for DisplayId {DisplayId}", person.DisplayId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to publish PersonUpdatedEvent for DisplayId {DisplayId}", person.DisplayId);
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Failed to publish PersonUpdatedEvent for DisplayId {DisplayId}", person.DisplayId);
         }
     }
 
@@ -495,11 +496,11 @@ public class PersonService(
                 metadata,
                 cancellationToken);
 
-            _logger.LogDebug("Published PersonDeletedEvent for DisplayId {DisplayId}", person.DisplayId);
+            _logger.LogIfEnabled(LogLevel.Debug, "Published PersonDeletedEvent for DisplayId {DisplayId}", person.DisplayId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to publish PersonDeletedEvent for DisplayId {DisplayId}", person.DisplayId);
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Failed to publish PersonDeletedEvent for DisplayId {DisplayId}", person.DisplayId);
         }
     }
 

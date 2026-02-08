@@ -20,7 +20,10 @@ public class Subscription
     /// <returns>An async enumerable stream of activity events.</returns>
     [Subscribe(With = nameof(SubscribeToActivityEventsAsync))]
     public ActivityEventDto SubscribeToActivityEvents(
-        [EventMessage] ActivityEventDto activityEvent) => activityEvent;
+        [EventMessage] ActivityEventDto activityEvent)
+    {
+        return activityEvent;
+    }
 
     /// <summary>
     /// Subscription setup: sends buffered events first, then subscribes to new events.
@@ -31,10 +34,10 @@ public class Subscription
         CancellationToken cancellationToken)
     {
         // Get buffered events
-        var bufferedEvents = buffer.GetRecentEvents();
+        IReadOnlyList<ActivityEventDto> bufferedEvents = buffer.GetRecentEvents();
 
         // Subscribe to new events
-        var stream = await receiver.SubscribeAsync<ActivityEventDto>("ActivityEvent", cancellationToken);
+        ISourceStream<ActivityEventDto> stream = await receiver.SubscribeAsync<ActivityEventDto>("ActivityEvent", cancellationToken);
 
         // Wrap the stream to prepend buffered events
         return new BufferedSourceStream(bufferedEvents, stream);
@@ -43,18 +46,12 @@ public class Subscription
     /// <summary>
     /// Custom source stream that yields buffered events before live events.
     /// </summary>
-    private class BufferedSourceStream : ISourceStream<ActivityEventDto>
+    private class BufferedSourceStream(
+        IReadOnlyList<ActivityEventDto> bufferedEvents,
+        ISourceStream<ActivityEventDto> liveStream) : ISourceStream<ActivityEventDto>
     {
-        private readonly IReadOnlyList<ActivityEventDto> _bufferedEvents;
-        private readonly ISourceStream<ActivityEventDto> _liveStream;
-
-        public BufferedSourceStream(
-            IReadOnlyList<ActivityEventDto> bufferedEvents,
-            ISourceStream<ActivityEventDto> liveStream)
-        {
-            _bufferedEvents = bufferedEvents;
-            _liveStream = liveStream;
-        }
+        private readonly IReadOnlyList<ActivityEventDto> _bufferedEvents = bufferedEvents;
+        private readonly ISourceStream<ActivityEventDto> _liveStream = liveStream;
 
         IAsyncEnumerable<ActivityEventDto> ISourceStream<ActivityEventDto>.ReadEventsAsync()
         {
@@ -69,13 +66,13 @@ public class Subscription
         private async IAsyncEnumerable<ActivityEventDto> ReadEventsInternalAsync()
         {
             // First, yield all buffered events
-            foreach (var bufferedEvent in _bufferedEvents)
+            foreach (ActivityEventDto bufferedEvent in _bufferedEvents)
             {
                 yield return bufferedEvent;
             }
 
             // Then, yield live events from the stream
-            await foreach (var liveEvent in _liveStream.ReadEventsAsync())
+            await foreach (ActivityEventDto liveEvent in _liveStream.ReadEventsAsync())
             {
                 yield return liveEvent;
             }
@@ -84,18 +81,21 @@ public class Subscription
         private async IAsyncEnumerable<object?> ReadEventsInternalAsObjectAsync()
         {
             // First, yield all buffered events
-            foreach (var bufferedEvent in _bufferedEvents)
+            foreach (ActivityEventDto bufferedEvent in _bufferedEvents)
             {
                 yield return bufferedEvent;
             }
 
             // Then, yield live events from the stream as base interface
-            await foreach (var liveEvent in ((ISourceStream)_liveStream).ReadEventsAsync())
+            await foreach (object? liveEvent in ((ISourceStream)_liveStream).ReadEventsAsync())
             {
                 yield return liveEvent;
             }
         }
 
-        public ValueTask DisposeAsync() => _liveStream.DisposeAsync();
+        public ValueTask DisposeAsync()
+        {
+            return _liveStream.DisposeAsync();
+        }
     }
 }

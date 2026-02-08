@@ -1,15 +1,9 @@
 namespace EmployeeManagementSystem.Domain.Events.Employees;
 
-public sealed class EmploymentDeletedEvent : DomainEvent
+public sealed class EmploymentDeletedEvent(Guid employmentId, Guid personId) : DomainEvent
 {
-    public EmploymentDeletedEvent(Guid employmentId, Guid personId)
-    {
-        EmploymentId = employmentId;
-        PersonId = personId;
-    }
-
-    public Guid EmploymentId { get; }
-    public Guid PersonId { get; }
+    public Guid EmploymentId { get; } = employmentId;
+    public Guid PersonId { get; } = personId;
 
     public override string EventType => "com.ems.employee.deleted";
 }

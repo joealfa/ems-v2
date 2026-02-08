@@ -1,32 +1,21 @@
 namespace EmployeeManagementSystem.Domain.Events.Employees;
 
-public sealed class EmploymentCreatedEvent : DomainEvent
+public sealed class EmploymentCreatedEvent(
+    Guid employmentId,
+    Guid personId,
+    Guid positionId,
+    Guid salaryGradeId,
+    Guid itemId,
+    string appointmentStatus,
+    string employmentStatus) : DomainEvent
 {
-    public EmploymentCreatedEvent(
-        Guid employmentId,
-        Guid personId,
-        Guid positionId,
-        Guid salaryGradeId,
-        Guid itemId,
-        string appointmentStatus,
-        string employmentStatus)
-    {
-        EmploymentId = employmentId;
-        PersonId = personId;
-        PositionId = positionId;
-        SalaryGradeId = salaryGradeId;
-        ItemId = itemId;
-        AppointmentStatus = appointmentStatus;
-        EmploymentStatus = employmentStatus;
-    }
-
-    public Guid EmploymentId { get; }
-    public Guid PersonId { get; }
-    public Guid PositionId { get; }
-    public Guid SalaryGradeId { get; }
-    public Guid ItemId { get; }
-    public string AppointmentStatus { get; }
-    public string EmploymentStatus { get; }
+    public Guid EmploymentId { get; } = employmentId;
+    public Guid PersonId { get; } = personId;
+    public Guid PositionId { get; } = positionId;
+    public Guid SalaryGradeId { get; } = salaryGradeId;
+    public Guid ItemId { get; } = itemId;
+    public string AppointmentStatus { get; } = appointmentStatus;
+    public string EmploymentStatus { get; } = employmentStatus;
 
     public override string EventType => "com.ems.employee.created";
 }

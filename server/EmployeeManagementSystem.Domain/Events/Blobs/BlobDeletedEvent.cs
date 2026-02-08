@@ -1,26 +1,17 @@
 namespace EmployeeManagementSystem.Domain.Events.Blobs;
 
-public sealed class BlobDeletedEvent : DomainEvent
+public sealed class BlobDeletedEvent(
+    string blobName,
+    string containerName,
+    string contentType,
+    string relatedEntityType,
+    string relatedEntityId) : DomainEvent
 {
-    public BlobDeletedEvent(
-        string blobName,
-        string containerName,
-        string contentType,
-        string relatedEntityType,
-        string relatedEntityId)
-    {
-        BlobName = blobName;
-        ContainerName = containerName;
-        ContentType = contentType;
-        RelatedEntityType = relatedEntityType;
-        RelatedEntityId = relatedEntityId;
-    }
-
-    public string BlobName { get; }
-    public string ContainerName { get; }
-    public string ContentType { get; }
-    public string RelatedEntityType { get; }
-    public string RelatedEntityId { get; }
+    public string BlobName { get; } = blobName;
+    public string ContainerName { get; } = containerName;
+    public string ContentType { get; } = contentType;
+    public string RelatedEntityType { get; } = relatedEntityType;
+    public string RelatedEntityId { get; } = relatedEntityId;
 
     public override string EventType =>
         ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)

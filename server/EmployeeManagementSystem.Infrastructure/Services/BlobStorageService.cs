@@ -5,6 +5,7 @@ using Azure.Storage.Sas;
 using EmployeeManagementSystem.Application.Events;
 using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Domain.Events.Blobs;
+using EmployeeManagementSystem.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -54,7 +55,7 @@ public class BlobStorageService : IBlobStorageService
         CancellationToken cancellationToken = default)
     {
         long sizeBytes = content.Length;
-        _logger.LogDebug("Uploading blob {BlobName} to container {ContainerName}, Size: {Size} bytes, ContentType: {ContentType}",
+        _logger.LogIfEnabled(LogLevel.Debug, "Uploading blob {BlobName} to container {ContainerName}, Size: {Size} bytes, ContentType: {ContentType}",
             blobName, containerName, sizeBytes, contentType);
 
         try
@@ -76,7 +77,7 @@ public class BlobStorageService : IBlobStorageService
 
             string url = blobClient.Uri.ToString();
 
-            _logger.LogInformation("Blob uploaded successfully: {BlobName} in container {ContainerName}", blobName, containerName);
+            _logger.LogIfEnabled(LogLevel.Information, "Blob uploaded successfully: {BlobName} in container {ContainerName}", blobName, containerName);
 
             // Publish domain event if entity context is provided
             if (!string.IsNullOrEmpty(relatedEntityType) && !string.IsNullOrEmpty(relatedEntityId))
@@ -96,7 +97,7 @@ public class BlobStorageService : IBlobStorageService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to upload blob {BlobName} to container {ContainerName}", blobName, containerName);
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Failed to upload blob {BlobName} to container {ContainerName}", blobName, containerName);
             throw;
         }
     }
@@ -107,7 +108,7 @@ public class BlobStorageService : IBlobStorageService
         string blobName,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Downloading blob {BlobName} from container {ContainerName}", blobName, containerName);
+        _logger.LogIfEnabled(LogLevel.Debug, "Downloading blob {BlobName} from container {ContainerName}", blobName, containerName);
 
         try
         {
@@ -116,13 +117,13 @@ public class BlobStorageService : IBlobStorageService
 
             Response<BlobDownloadStreamingResult> response = await blobClient.DownloadStreamingAsync(cancellationToken: cancellationToken);
 
-            _logger.LogInformation("Blob downloaded successfully: {BlobName} from container {ContainerName}", blobName, containerName);
+            _logger.LogIfEnabled(LogLevel.Information, "Blob downloaded successfully: {BlobName} from container {ContainerName}", blobName, containerName);
 
             return response.Value.Content;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to download blob {BlobName} from container {ContainerName}", blobName, containerName);
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Failed to download blob {BlobName} from container {ContainerName}", blobName, containerName);
             throw;
         }
     }
@@ -136,7 +137,7 @@ public class BlobStorageService : IBlobStorageService
         string? relatedEntityId = null,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Deleting blob {BlobName} from container {ContainerName}", blobName, containerName);
+        _logger.LogIfEnabled(LogLevel.Debug, "Deleting blob {BlobName} from container {ContainerName}", blobName, containerName);
 
         try
         {
@@ -147,7 +148,7 @@ public class BlobStorageService : IBlobStorageService
 
             if (response.Value)
             {
-                _logger.LogInformation("Blob deleted successfully: {BlobName} from container {ContainerName}", blobName, containerName);
+                _logger.LogIfEnabled(LogLevel.Information, "Blob deleted successfully: {BlobName} from container {ContainerName}", blobName, containerName);
 
                 // Publish domain event if entity context is provided
                 if (!string.IsNullOrEmpty(contentType) && !string.IsNullOrEmpty(relatedEntityType) && !string.IsNullOrEmpty(relatedEntityId))
@@ -163,14 +164,14 @@ public class BlobStorageService : IBlobStorageService
             }
             else
             {
-                _logger.LogWarning("Blob not found for deletion: {BlobName} in container {ContainerName}", blobName, containerName);
+                _logger.LogIfEnabled(LogLevel.Warning, "Blob not found for deletion: {BlobName} in container {ContainerName}", blobName, containerName);
             }
 
             return response.Value;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to delete blob {BlobName} from container {ContainerName}", blobName, containerName);
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Failed to delete blob {BlobName} from container {ContainerName}", blobName, containerName);
             throw;
         }
     }
@@ -253,7 +254,7 @@ public class BlobStorageService : IBlobStorageService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to publish BlobUploadedEvent for {BlobName}", blobName);
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Failed to publish BlobUploadedEvent for {BlobName}", blobName);
         }
     }
 
@@ -287,7 +288,7 @@ public class BlobStorageService : IBlobStorageService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to publish BlobDeletedEvent for {BlobName}", blobName);
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Failed to publish BlobDeletedEvent for {BlobName}", blobName);
         }
     }
 

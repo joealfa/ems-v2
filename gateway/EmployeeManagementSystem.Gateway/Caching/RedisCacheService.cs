@@ -1,3 +1,4 @@
+using EmployeeManagementSystem.Gateway.Extensions;
 using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis;
 using System.Text.Json;
@@ -17,12 +18,12 @@ public class RedisCacheService : IRedisCacheService
 {
     private readonly IDistributedCache _cache;
     private readonly ILogger<RedisCacheService> _logger;
-    private readonly StackExchange.Redis.IConnectionMultiplexer _redis;
+    private readonly IConnectionMultiplexer _redis;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public RedisCacheService(
         IDistributedCache cache,
-        StackExchange.Redis.IConnectionMultiplexer redis,
+        IConnectionMultiplexer redis,
         ILogger<RedisCacheService> logger)
     {
         _cache = cache;
@@ -44,7 +45,7 @@ public class RedisCacheService : IRedisCacheService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to get cache key {Key}", key);
+            _logger.LogIfEnabled(LogLevel.Warning, ex, "Failed to get cache key {Key}", key);
             return null;
         }
     }
@@ -62,7 +63,7 @@ public class RedisCacheService : IRedisCacheService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to set cache key {Key}", key);
+            _logger.LogIfEnabled(LogLevel.Warning, ex, "Failed to set cache key {Key}", key);
         }
     }
 
@@ -74,7 +75,7 @@ public class RedisCacheService : IRedisCacheService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to remove cache key {Key}", key);
+            _logger.LogIfEnabled(LogLevel.Warning, ex, "Failed to remove cache key {Key}", key);
         }
     }
 
@@ -92,7 +93,7 @@ public class RedisCacheService : IRedisCacheService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to remove cache keys with prefix {Prefix}", prefix);
+            _logger.LogIfEnabled(LogLevel.Warning, ex, "Failed to remove cache keys with prefix {Prefix}", prefix);
         }
     }
 
@@ -101,11 +102,11 @@ public class RedisCacheService : IRedisCacheService
         T? cached = await GetAsync<T>(key, ct);
         if (cached is not null)
         {
-            _logger.LogDebug("Cache hit for key {Key}", key);
+            _logger.LogIfEnabled(LogLevel.Debug, "Cache hit for key {Key}", key);
             return cached;
         }
 
-        _logger.LogDebug("Cache miss for key {Key}", key);
+        _logger.LogIfEnabled(LogLevel.Debug, "Cache miss for key {Key}", key);
         T? value = await factory(ct);
 
         if (value is not null)

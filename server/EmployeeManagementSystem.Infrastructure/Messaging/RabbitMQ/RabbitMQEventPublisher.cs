@@ -1,6 +1,7 @@
 using EmployeeManagementSystem.Application.Events;
 using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Domain.Events;
+using EmployeeManagementSystem.Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
@@ -32,7 +33,7 @@ public sealed class RabbitMQEventPublisher : IEventPublisher, IDisposable
 
         if (!_settings.Enabled)
         {
-            _logger.LogWarning("RabbitMQ event publishing is disabled");
+            _logger.LogIfEnabled(LogLevel.Warning, "RabbitMQ event publishing is disabled");
             return;
         }
 
@@ -70,11 +71,11 @@ public sealed class RabbitMQEventPublisher : IEventPublisher, IDisposable
                 durable: true,
                 autoDelete: false);
 
-            _logger.LogInformation("RabbitMQ connection established successfully");
+            _logger.LogIfEnabled(LogLevel.Information, "RabbitMQ connection established successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to initialize RabbitMQ connection");
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Failed to initialize RabbitMQ connection");
             throw;
         }
 
@@ -87,7 +88,7 @@ public sealed class RabbitMQEventPublisher : IEventPublisher, IDisposable
                 BackoffType = DelayBackoffType.Exponential,
                 OnRetry = args =>
                 {
-                    _logger.LogWarning(
+                    _logger.LogIfEnabled(LogLevel.Warning,
                         "Retry {Attempt} after {Delay}ms due to {Exception}",
                         args.AttemptNumber,
                         args.RetryDelay.TotalMilliseconds,
@@ -108,7 +109,7 @@ public sealed class RabbitMQEventPublisher : IEventPublisher, IDisposable
     {
         if (!_settings.Enabled || _channel == null)
         {
-            _logger.LogDebug("RabbitMQ publishing disabled, skipping event {EventType}", domainEvent.EventType);
+            _logger.LogIfEnabled(LogLevel.Debug, "RabbitMQ publishing disabled, skipping event {EventType}", domainEvent.EventType);
             return;
         }
 
@@ -118,20 +119,20 @@ public sealed class RabbitMQEventPublisher : IEventPublisher, IDisposable
             CloudEvent<EventMessage> cloudEvent = CreateCloudEvent(domainEvent, userId, correlationId, metadata);
             string routingKey = domainEvent.EventType;
 
-            await _retryPipeline.ExecuteAsync(async ct =>
+            await _retryPipeline!.ExecuteAsync(async ct =>
             {
                 PublishEvent(cloudEvent, routingKey);
                 await Task.CompletedTask;
             }, cancellationToken);
 
-            _logger.LogInformation(
+            _logger.LogIfEnabled(LogLevel.Information,
                 "Published event {EventType} with ID {EventId}",
                 domainEvent.EventType,
                 domainEvent.EventId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
+            _logger.LogIfEnabled(LogLevel.Error, ex,
                 "Failed to publish event {EventType} with ID {EventId}",
                 domainEvent.EventType,
                 domainEvent.EventId);
@@ -152,7 +153,7 @@ public sealed class RabbitMQEventPublisher : IEventPublisher, IDisposable
     {
         if (!_settings.Enabled || _channel == null)
         {
-            _logger.LogDebug("RabbitMQ publishing disabled, skipping batch events");
+            _logger.LogIfEnabled(LogLevel.Debug, "RabbitMQ publishing disabled, skipping batch events");
             return;
         }
 
@@ -177,13 +178,13 @@ public sealed class RabbitMQEventPublisher : IEventPublisher, IDisposable
 
             batch.Publish();
 
-            _logger.LogInformation(
+            _logger.LogIfEnabled(LogLevel.Information,
                 "Published batch of {Count} events",
                 domainEvents.Count());
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to publish event batch");
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Failed to publish event batch");
             throw;
         }
         finally
@@ -288,17 +289,11 @@ public sealed class RabbitMQEventPublisher : IEventPublisher, IDisposable
         string[] parts = domainEvent.EventType.Split('.');
         string lastPart = parts[^1].ToUpperInvariant();
 
-        if (lastPart.Contains("CREATED"))
-        {
-            return "CREATE";
-        }
-
-        if (lastPart.Contains("UPDATED"))
-        {
-            return "UPDATE";
-        }
-
-        return lastPart.Contains("DELETED")
+        return lastPart.Contains("CREATED")
+            ? "CREATE"
+            : lastPart.Contains("UPDATED")
+            ? "UPDATE"
+            : lastPart.Contains("DELETED")
             ? "DELETE"
             : lastPart.Contains("ASSIGNED")
             ? "ASSIGN"
@@ -346,7 +341,7 @@ public sealed class RabbitMQEventPublisher : IEventPublisher, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error while disposing RabbitMQ connection");
+            _logger.LogIfEnabled(LogLevel.Warning, ex, "Error while disposing RabbitMQ connection");
         }
     }
 }

@@ -1,4 +1,5 @@
 using EmployeeManagementSystem.Gateway.Caching;
+using EmployeeManagementSystem.Gateway.Extensions;
 using EmployeeManagementSystem.Gateway.Services;
 using EmployeeManagementSystem.Gateway.Types;
 using HotChocolate.Subscriptions;
@@ -55,7 +56,7 @@ public sealed class RabbitMQEventConsumer : IDisposable
                     BackoffType = DelayBackoffType.Exponential,
                     OnRetry = args =>
                     {
-                        _logger.LogWarning("Retry attempt {Attempt} for RabbitMQ operation", args.AttemptNumber);
+                        _logger.LogIfEnabled(LogLevel.Warning, "Retry attempt {Attempt} for RabbitMQ operation", args.AttemptNumber);
                         return ValueTask.CompletedTask;
                     }
                 })
@@ -70,7 +71,7 @@ public sealed class RabbitMQEventConsumer : IDisposable
     {
         if (!_settings.Enabled)
         {
-            _logger.LogInformation("RabbitMQ event consumer is disabled");
+            _logger.LogIfEnabled(LogLevel.Information, "RabbitMQ event consumer is disabled");
             return;
         }
 
@@ -82,11 +83,11 @@ public sealed class RabbitMQEventConsumer : IDisposable
                 await Task.CompletedTask;
             }, cancellationToken);
 
-            _logger.LogInformation("RabbitMQ event consumer started successfully. Listening on queue: {QueueName}", _settings.QueueName);
+            _logger.LogIfEnabled(LogLevel.Information, "RabbitMQ event consumer started successfully. Listening on queue: {QueueName}", _settings.QueueName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to start RabbitMQ event consumer");
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Failed to start RabbitMQ event consumer");
             throw;
         }
     }
@@ -96,7 +97,7 @@ public sealed class RabbitMQEventConsumer : IDisposable
     /// </summary>
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Stopping RabbitMQ event consumer");
+        _logger.LogIfEnabled(LogLevel.Information, "Stopping RabbitMQ event consumer");
 
         try
         {
@@ -105,7 +106,7 @@ public sealed class RabbitMQEventConsumer : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error while stopping RabbitMQ consumer");
+            _logger.LogIfEnabled(LogLevel.Warning, ex, "Error while stopping RabbitMQ consumer");
         }
 
         return Task.CompletedTask;
@@ -173,7 +174,7 @@ public sealed class RabbitMQEventConsumer : IDisposable
             autoAck: true, // Auto-acknowledge for simplicity
             consumer: consumer);
 
-        _logger.LogInformation("RabbitMQ connection established. Queue: {QueueName}, Exchange: {ExchangeName}",
+        _logger.LogIfEnabled(LogLevel.Information, "RabbitMQ connection established. Queue: {QueueName}, Exchange: {ExchangeName}",
             _settings.QueueName, _settings.ExchangeName);
     }
 
@@ -184,14 +185,14 @@ public sealed class RabbitMQEventConsumer : IDisposable
             string body = Encoding.UTF8.GetString(ea.Body.ToArray());
             string routingKey = ea.RoutingKey;
 
-            _logger.LogDebug("Received event with routing key: {RoutingKey}", routingKey);
+            _logger.LogIfEnabled(LogLevel.Debug, "Received event with routing key: {RoutingKey}", routingKey);
 
             // Deserialize CloudEvent
             CloudEvent<EventMessage>? cloudEvent = JsonSerializer.Deserialize<CloudEvent<EventMessage>>(body);
 
             if (cloudEvent?.Data == null)
             {
-                _logger.LogWarning("Received invalid CloudEvent format");
+                _logger.LogIfEnabled(LogLevel.Warning, "Received invalid CloudEvent format");
                 return;
             }
 
@@ -201,12 +202,12 @@ public sealed class RabbitMQEventConsumer : IDisposable
             // Publish to GraphQL subscriptions and buffer
             await PublishActivityEventAsync(cloudEvent);
 
-            _logger.LogInformation("✅ Processed event {EventType} for {EntityType}:{EntityId}",
+            _logger.LogIfEnabled(LogLevel.Information, "✅ Processed event {EventType} for {EntityType}:{EntityId}",
                 cloudEvent.Type, cloudEvent.Data.EntityType, cloudEvent.Data.EntityId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing RabbitMQ message with routing key {RoutingKey}", ea.RoutingKey);
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Error processing RabbitMQ message with routing key {RoutingKey}", ea.RoutingKey);
             // Message is already ack'd, so it won't be redelivered
         }
     }
@@ -217,14 +218,14 @@ public sealed class RabbitMQEventConsumer : IDisposable
         string[] parts = eventType.Split('.');
         if (parts.Length < 3)
         {
-            _logger.LogWarning("Invalid event type format: {EventType}", eventType);
+            _logger.LogIfEnabled(LogLevel.Warning, "Invalid event type format: {EventType}", eventType);
             return;
         }
 
         string entityType = parts[2]; // person, school, item, etc.
         string operation = parts.Length > 3 ? parts[3] : "unknown"; // created, updated, deleted
 
-        _logger.LogDebug("Invalidating cache for {EntityType} operation {Operation}", entityType, operation);
+        _logger.LogIfEnabled(LogLevel.Debug, "Invalidating cache for {EntityType} operation {Operation}", entityType, operation);
 
         // Create a scope to get the scoped cache service
         using IServiceScope scope = _serviceProvider.CreateScope();
@@ -261,7 +262,7 @@ public sealed class RabbitMQEventConsumer : IDisposable
                 break;
 
             default:
-                _logger.LogWarning("Unknown entity type for cache invalidation: {EntityType}", entityType);
+                _logger.LogIfEnabled(LogLevel.Warning, "Unknown entity type for cache invalidation: {EntityType}", entityType);
                 break;
         }
 
@@ -279,7 +280,7 @@ public sealed class RabbitMQEventConsumer : IDisposable
         // Also invalidate employment lists since they reference person data
         await cacheService.RemoveByPrefixAsync(CacheKeys.EmploymentsListPrefix);
 
-        _logger.LogDebug("Invalidated person and employment list caches");
+        _logger.LogIfEnabled(LogLevel.Debug, "Invalidated person and employment list caches");
     }
 
     private async Task InvalidateSchoolCacheAsync(IRedisCacheService cacheService, EventMessage eventData, string operation)
@@ -287,14 +288,14 @@ public sealed class RabbitMQEventConsumer : IDisposable
         await cacheService.RemoveByPrefixAsync(CacheKeys.SchoolsListPrefix);
         await cacheService.RemoveByPrefixAsync(CacheKeys.EmploymentsListPrefix);
 
-        _logger.LogDebug("Invalidated school and employment list caches");
+        _logger.LogIfEnabled(LogLevel.Debug, "Invalidated school and employment list caches");
     }
 
     private async Task InvalidateItemCacheAsync(IRedisCacheService cacheService, EventMessage eventData, string operation)
     {
         await cacheService.RemoveByPrefixAsync(CacheKeys.ItemsListPrefix);
 
-        _logger.LogDebug("Invalidated item list caches");
+        _logger.LogIfEnabled(LogLevel.Debug, "Invalidated item list caches");
     }
 
     private async Task InvalidatePositionCacheAsync(IRedisCacheService cacheService, EventMessage eventData, string operation)
@@ -302,7 +303,7 @@ public sealed class RabbitMQEventConsumer : IDisposable
         await cacheService.RemoveByPrefixAsync(CacheKeys.PositionsListPrefix);
         await cacheService.RemoveByPrefixAsync(CacheKeys.EmploymentsListPrefix);
 
-        _logger.LogDebug("Invalidated position and employment list caches");
+        _logger.LogIfEnabled(LogLevel.Debug, "Invalidated position and employment list caches");
     }
 
     private async Task InvalidateSalaryGradeCacheAsync(IRedisCacheService cacheService, EventMessage eventData, string operation)
@@ -310,14 +311,14 @@ public sealed class RabbitMQEventConsumer : IDisposable
         await cacheService.RemoveByPrefixAsync(CacheKeys.SalaryGradesListPrefix);
         await cacheService.RemoveByPrefixAsync(CacheKeys.EmploymentsListPrefix);
 
-        _logger.LogDebug("Invalidated salary grade and employment list caches");
+        _logger.LogIfEnabled(LogLevel.Debug, "Invalidated salary grade and employment list caches");
     }
 
     private async Task InvalidateEmploymentCacheAsync(IRedisCacheService cacheService, EventMessage eventData, string operation)
     {
         await cacheService.RemoveByPrefixAsync(CacheKeys.EmploymentsListPrefix);
 
-        _logger.LogDebug("Invalidated employment list caches");
+        _logger.LogIfEnabled(LogLevel.Debug, "Invalidated employment list caches");
     }
 
     private async Task InvalidateBlobRelatedCacheAsync(IRedisCacheService cacheService, EventMessage eventData, string operation)
@@ -330,7 +331,7 @@ public sealed class RabbitMQEventConsumer : IDisposable
             {
                 await cacheService.RemoveByPrefixAsync(CacheKeys.PersonsListPrefix);
                 await cacheService.RemoveByPrefixAsync(CacheKeys.EmploymentsListPrefix);
-                _logger.LogDebug("Invalidated person caches due to blob change");
+                _logger.LogIfEnabled(LogLevel.Debug, "Invalidated person caches due to blob change");
             }
         }
     }
@@ -347,11 +348,11 @@ public sealed class RabbitMQEventConsumer : IDisposable
             // Publish to GraphQL subscriptions
             await _eventSender.SendAsync("ActivityEvent", activityEvent);
 
-            _logger.LogDebug("Published activity event: {Message}", activityEvent.Message);
+            _logger.LogIfEnabled(LogLevel.Debug, "Published activity event: {Message}", activityEvent.Message);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to publish activity event for {EventType}", cloudEvent.Type);
+            _logger.LogIfEnabled(LogLevel.Error, ex, "Failed to publish activity event for {EventType}", cloudEvent.Type);
         }
     }
 
@@ -370,9 +371,7 @@ public sealed class RabbitMQEventConsumer : IDisposable
             Timestamp = data.Timestamp,
             UserId = data.UserId,
             Message = message,
-            Metadata = data.Metadata != null
-                ? data.Metadata.Where(kv => kv.Value != null).ToDictionary(kv => kv.Key, kv => kv.Value!)
-                : null
+            Metadata = data.Metadata?.Where(kv => kv.Value != null).ToDictionary(kv => kv.Key, kv => kv.Value!)
         };
     }
 
@@ -384,40 +383,46 @@ public sealed class RabbitMQEventConsumer : IDisposable
         // Try to extract entity-specific details from payload
         string? identifier = GetEntityIdentifier(entityType, payload);
 
-        if (!string.IsNullOrEmpty(identifier))
-        {
-            return $"{entityName} '{identifier}' was {actionVerb}";
-        }
-
-        return $"A {entityName.ToLower()} was {actionVerb}";
+        return !string.IsNullOrEmpty(identifier)
+            ? $"{entityName} '{identifier}' was {actionVerb}"
+            : $"A {entityName.ToLower()} was {actionVerb}";
     }
 
-    private string GetEntityDisplayName(string entityType) => entityType.ToLowerInvariant() switch
+    private string GetEntityDisplayName(string entityType)
     {
-        "person" => "Person",
-        "school" => "School",
-        "employee" => "Employment",
-        "item" => "Item",
-        "position" => "Position",
-        "salarygrade" => "Salary Grade",
-        "blob" => "File",
-        _ => entityType
-    };
+        return entityType.ToLowerInvariant() switch
+        {
+            "person" => "Person",
+            "school" => "School",
+            "employee" => "Employment",
+            "item" => "Item",
+            "position" => "Position",
+            "salarygrade" => "Salary Grade",
+            "blob" => "File",
+            _ => entityType
+        };
+    }
 
-    private string GetActionVerb(string operation) => operation.ToUpperInvariant() switch
+    private string GetActionVerb(string operation)
     {
-        "CREATE" => "created",
-        "UPDATE" => "updated",
-        "DELETE" => "deleted",
-        "ASSIGN" => "assigned",
-        "REMOVE" => "removed",
-        "UPLOAD" => "uploaded",
-        _ => operation.ToLower()
-    };
+        return operation.ToUpperInvariant() switch
+        {
+            "CREATE" => "created",
+            "UPDATE" => "updated",
+            "DELETE" => "deleted",
+            "ASSIGN" => "assigned",
+            "REMOVE" => "removed",
+            "UPLOAD" => "uploaded",
+            _ => operation.ToLower()
+        };
+    }
 
     private string? GetEntityIdentifier(string entityType, Dictionary<string, object?>? payload)
     {
-        if (payload == null) return null;
+        if (payload == null)
+        {
+            return null;
+        }
 
         try
         {
@@ -444,11 +449,9 @@ public sealed class RabbitMQEventConsumer : IDisposable
         if (payload.TryGetValue(key, out object? value))
         {
             // Handle JsonElement conversion
-            if (value is JsonElement jsonElement)
-            {
-                return jsonElement.ValueKind == JsonValueKind.String ? jsonElement.GetString() : jsonElement.ToString();
-            }
-            return value?.ToString();
+            return value is JsonElement jsonElement
+                ? jsonElement.ValueKind == JsonValueKind.String ? jsonElement.GetString() : jsonElement.ToString()
+                : (value?.ToString());
         }
         return null;
     }

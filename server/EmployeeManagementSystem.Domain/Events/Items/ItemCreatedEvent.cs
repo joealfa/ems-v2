@@ -1,19 +1,11 @@
 namespace EmployeeManagementSystem.Domain.Events.Items;
 
-public sealed class ItemCreatedEvent : DomainEvent
+public sealed class ItemCreatedEvent(Guid itemId, string itemName, string? description, bool isActive) : DomainEvent
 {
-    public ItemCreatedEvent(Guid itemId, string itemName, string? description, bool isActive)
-    {
-        ItemId = itemId;
-        ItemName = itemName;
-        Description = description;
-        IsActive = isActive;
-    }
-
-    public Guid ItemId { get; }
-    public string ItemName { get; }
-    public string? Description { get; }
-    public bool IsActive { get; }
+    public Guid ItemId { get; } = itemId;
+    public string ItemName { get; } = itemName;
+    public string? Description { get; } = description;
+    public bool IsActive { get; } = isActive;
 
     public override string EventType => "com.ems.item.created";
 }

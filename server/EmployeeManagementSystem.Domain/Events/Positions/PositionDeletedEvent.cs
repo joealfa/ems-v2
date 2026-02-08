@@ -1,15 +1,9 @@
 namespace EmployeeManagementSystem.Domain.Events.Positions;
 
-public sealed class PositionDeletedEvent : DomainEvent
+public sealed class PositionDeletedEvent(Guid positionId, string titleName) : DomainEvent
 {
-    public PositionDeletedEvent(Guid positionId, string titleName)
-    {
-        PositionId = positionId;
-        TitleName = titleName;
-    }
-
-    public Guid PositionId { get; }
-    public string TitleName { get; }
+    public Guid PositionId { get; } = positionId;
+    public string TitleName { get; } = titleName;
 
     public override string EventType => "com.ems.position.deleted";
 }

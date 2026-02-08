@@ -1,15 +1,9 @@
 namespace EmployeeManagementSystem.Domain.Events.SalaryGrades;
 
-public sealed class SalaryGradeUpdatedEvent : DomainEvent
+public sealed class SalaryGradeUpdatedEvent(Guid salaryGradeId, Dictionary<string, object?> changes) : DomainEvent
 {
-    public SalaryGradeUpdatedEvent(Guid salaryGradeId, Dictionary<string, object?> changes)
-    {
-        SalaryGradeId = salaryGradeId;
-        Changes = changes;
-    }
-
-    public Guid SalaryGradeId { get; }
-    public Dictionary<string, object?> Changes { get; }
+    public Guid SalaryGradeId { get; } = salaryGradeId;
+    public Dictionary<string, object?> Changes { get; } = changes;
 
     public override string EventType => "com.ems.salarygrade.updated";
 }
