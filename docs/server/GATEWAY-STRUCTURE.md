@@ -29,6 +29,11 @@ gateway/EmployeeManagementSystem.Gateway/
 │   └── ServiceCollectionExtensions.cs  # DI configuration
 ├── Mappings/                           # GraphQL input to DTO mappings
 │   └── InputMappingExtensions.cs       # Extension methods for mapping inputs
+├── Messaging/                          # RabbitMQ event consumer
+│   ├── RabbitMQEventConsumer.cs        # Event consumer (cache invalidation)
+│   ├── RabbitMQBackgroundService.cs    # Background service lifecycle
+│   ├── RabbitMQSettings.cs             # RabbitMQ configuration
+│   └── CloudEvent.cs                   # CloudEvents message model
 ├── Types/                              # GraphQL type definitions
 │   ├── Query.cs                        # All GraphQL queries
 │   ├── Mutation.cs                     # All GraphQL mutations (with logging)
@@ -127,6 +132,7 @@ The Gateway uses **Serilog** for structured logging with the following component
 - **DataLoaders**: Entity fetch failures
 - **ApiExceptionErrorFilter**: GraphQL API exceptions with status codes
 - **ProfileImageController**: Profile image proxy operations
+- **RabbitMQEventConsumer**: Event consumption and cache invalidation
 - **Request Logging**: All HTTP requests with response times, status codes, user IDs
 
 **Log Destinations**:
@@ -134,6 +140,53 @@ The Gateway uses **Serilog** for structured logging with the following component
 - **Seq**: Centralized log aggregation at `http://localhost:5341`
 
 See [Logging Documentation](./LOGGING.md) for detailed information.
+
+---
+
+## RabbitMQ Event Consumer
+
+The Gateway includes a RabbitMQ consumer for event-driven cache invalidation.
+
+### Components
+
+- **RabbitMQEventConsumer**: Listens on `ems.gateway.cache-invalidation` queue
+- **RabbitMQBackgroundService**: Manages consumer lifecycle
+- **Cache Invalidation**: Automatically invalidates Redis cache based on event type
+
+### Event Types Handled
+
+| Event Pattern | Cache Invalidated |
+|---------------|-------------------|
+| `com.ems.person.*` | `persons:list:*`, `employments:list:*` |
+| `com.ems.school.*` | `schools:list:*`, `employments:list:*` |
+| `com.ems.item.*` | `items:list:*` |
+| `com.ems.position.*` | `positions:list:*`, `employments:list:*` |
+| `com.ems.salarygrade.*` | `salarygrades:list:*`, `employments:list:*` |
+| `com.ems.employee.*` | `employments:list:*` |
+| `com.ems.blob.*` | Depends on `relatedEntityType` |
+
+All events also invalidate the dashboard stats cache.
+
+### Configuration
+
+```json
+{
+  "RabbitMQ": {
+    "HostName": "localhost",
+    "Port": 5672,
+    "VirtualHost": "ems",
+    "UserName": "emsadmin",
+    "Password": "${RABBITMQ_PASSWORD}",
+    "ExchangeName": "ems.events",
+    "QueueName": "ems.gateway.cache-invalidation",
+    "Enabled": true
+  }
+}
+```
+
+See [RabbitMQ Events Documentation](../TESTING_RABBITMQ_EVENTS.md) for complete details.
+
+---
 
 ## Benefits
 

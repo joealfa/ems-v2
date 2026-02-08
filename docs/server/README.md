@@ -94,6 +94,8 @@ Swagger UI includes OAuth2 integration for testing authenticated endpoints.
 | **Entity Framework Core** | ORM and data access    |
 | **SQL Server**            | Relational database    |
 | **Azure Blob Storage**    | File storage           |
+| **RabbitMQ**              | Event messaging (Producer) |
+| **Serilog + Seq**         | Logging and monitoring |
 | **Swagger/OpenAPI**       | API documentation      |
 | **xUnit**                 | Unit testing framework |
 

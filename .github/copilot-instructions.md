@@ -15,6 +15,8 @@
 - **Swagger/OpenAPI** - API documentation
 - **Entity Framework Core** - SQL database
 - **Azure Blob Storage** - File storage
+- **RabbitMQ** - Event publishing (Producer)
+- **Serilog + Seq** - Structured logging
 - **xUnit** - Testing framework
 
 **Frontend**:
@@ -31,6 +33,8 @@
 **Gateway**:
 - **HotChocolate** - GraphQL server for .NET
 - **Redis** - Caching layer
+- **RabbitMQ** - Event consumption (Consumer) for cache invalidation
+- **Serilog + Seq** - Structured logging
 
 
 ### Folder Structure
@@ -40,13 +44,18 @@ ems-v2/
 ├── server/                                         # Backend API (ASP.NET Core)
 │   ├── EmployeeManagementSystem.Domain/            # Entities and domain logic
 │   ├── EmployeeManagementSystem.Application/       # Business logic and DTOs
-│   ├── EmployeeManagementSystem.Infrastructure/    # Data access and external services
+│   ├── EmployeeManagementSystem.Infrastructure/    # Data access, external services, RabbitMQ publisher
+│   │   └── Messaging/RabbitMQ/                     # RabbitMQ event publisher (Producer)
 │   ├── EmployeeManagementSystem.Api/               # API controllers and middleware
 │   │   ├── v1/                                     # Version 1 of the API
 │   │   ├── v2/                                     # Version 2 of the API
 │   ├── EmployeeManagementSystem.ApiClient/         # NSwag-generated API client for Gateway
 │   │   ├── Generated/                              # Auto-generated client code (DO NOT EDIT)
 │   │   └── nswag.json                              # NSwag configuration
+│   ├── scripts/                                    # SQL and setup scripts
+│   │   ├── create-database.sql                     # Database creation script
+│   │   ├── seed-data.sql                           # Mock data seed (5,000 persons)
+│   │   └── setup-rabbitmq-queues.ps1               # RabbitMQ setup script
 │   └── tests/
 │       ├── EmployeeManagementSystem.Tests/         # Unit and integration tests
 ├── gateway/                                        # GraphQL Gateway (HotChocolate)
@@ -55,6 +64,7 @@ ems-v2/
 │       ├── Controllers/                            # REST proxy controllers for file operations
 │       ├── Caching/                                # Redis caching service and keys
 │       ├── DataLoaders/                            # HotChocolate DataLoaders for batching
+│       ├── Messaging/                              # RabbitMQ event consumer (Consumer)
 │       └── Mappings/                               # Input type to DTO mappings
 ├── application/                                    # Frontend Application (React/TypeScript/Vite/Chakra-UI)
 │   └── src/                                        # Source code
@@ -270,10 +280,27 @@ string cacheKey = CacheKeys.PersonsList(
 // 3. Returns prefix + first 16 chars of hash
 ```
 
-**Cache Invalidation:**
-- After mutations (create/update/delete), invalidate related cache entries
+**Cache Invalidation (Event-Driven):**
+- RabbitMQ consumer listens for domain events from the Backend
+- Events are published in CloudEvents format: `com.ems.{entity}.{operation}`
+- Gateway automatically invalidates cache when events arrive
+- No need for explicit cache invalidation in mutations - it's handled by the event consumer
 - Use `RemoveByPrefixAsync()` for list caches
 - Use `RemoveAsync()` for individual entity caches
+
+**RabbitMQ Event Consumer** (`gateway/.../Messaging/`):
+- `RabbitMQEventConsumer.cs` - Listens for domain events and invalidates cache
+- `RabbitMQBackgroundService.cs` - Background service lifecycle management
+- Events invalidate related caches (e.g., person events → persons:list:*, employments:list:*)
+- Dashboard stats are always invalidated on any entity change
+
+**Event Types:**
+| Event Pattern | Cache Invalidated |
+|---------------|-------------------|
+| `com.ems.person.*` | `persons:list:*`, `employments:list:*` |
+| `com.ems.school.*` | `schools:list:*`, `employments:list:*` |
+| `com.ems.item.*` | `items:list:*` |
+| `com.ems.position.*` | `positions:list:*`, `employments:list:*` |
 
 
 ### UI guidelines
@@ -341,3 +368,7 @@ This project follows security best practices:
 - [AG Grid Documentation](https://www.ag-grid.com/react-data-grid/getting-started/)
 - [NSwag Documentation](https://github.com/RicoSuter/NSwag)
 - [StackExchange.Redis Documentation](https://stackexchange.github.io/StackExchange.Redis/)
+- [RabbitMQ .NET Client Documentation](https://www.rabbitmq.com/dotnet.html)
+- [CloudEvents Specification](https://cloudevents.io/)
+- [Serilog Documentation](https://serilog.net/)
+- [Seq Documentation](https://datalust.co/seq)

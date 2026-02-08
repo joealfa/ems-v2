@@ -9,9 +9,10 @@
 6. [Frontend Deployment](#frontend-deployment)
 7. [Redis Setup](#redis-setup)
 8. [Azure Blob Storage](#azure-blob-storage)
-9. [Post-Deployment](#post-deployment)
-10. [Monitoring & Logging](#monitoring--logging)
-11. [Troubleshooting](#troubleshooting)
+9. [RabbitMQ Setup](#rabbitmq-setup)
+10. [Post-Deployment](#post-deployment)
+11. [Monitoring & Logging](#monitoring--logging)
+12. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -21,6 +22,7 @@
 - **.NET 10 SDK** - Required for building backend and gateway
 - **Node.js 18+** - Required for frontend build
 - **Redis** - For caching layer
+- **RabbitMQ** - For event-driven cache invalidation
 - **SQL Server** - For database (or Azure SQL Database)
 
 ### Azure Resources (Production)
@@ -58,6 +60,15 @@
     "ConnectionString": "[FROM USER SECRETS]",
     "ContainerName": "documents"
   },
+  "RabbitMQ": {
+    "HostName": "localhost",
+    "Port": 5672,
+    "UserName": "guest",
+    "Password": "guest",
+    "VirtualHost": "ems",
+    "ExchangeName": "ems.events",
+    "ExchangeType": "topic"
+  },
   "Cors": {
     "AllowedOrigins": [
       "http://localhost:5173",
@@ -87,6 +98,15 @@
     "ConnectionString": "[FROM ENVIRONMENT VARIABLES]",
     "ContainerName": "documents-prod"
   },
+  "RabbitMQ": {
+    "HostName": "[FROM ENVIRONMENT VARIABLES]",
+    "Port": 5672,
+    "UserName": "[FROM ENVIRONMENT VARIABLES]",
+    "Password": "[FROM ENVIRONMENT VARIABLES]",
+    "VirtualHost": "ems",
+    "ExchangeName": "ems.events",
+    "ExchangeType": "topic"
+  },
   "Cors": {
     "AllowedOrigins": [
       "https://yourdomain.com"
@@ -114,6 +134,15 @@
     "ConnectionString": "localhost:6379",
     "InstanceName": "EmsGateway_Dev:"
   },
+  "RabbitMQ": {
+    "HostName": "localhost",
+    "Port": 5672,
+    "UserName": "guest",
+    "Password": "guest",
+    "VirtualHost": "ems",
+    "ExchangeName": "ems.events",
+    "QueueName": "ems.gateway.cache-invalidation"
+  },
   "Caching": {
     "DefaultTtlMinutes": 1,
     "EntityTtlMinutes": 2,
@@ -136,6 +165,15 @@
   "Redis": {
     "ConnectionString": "your-redis.redis.cache.windows.net:6380,password=your-password,ssl=True,abortConnect=False",
     "InstanceName": "EmsGateway_Prod:"
+  },
+  "RabbitMQ": {
+    "HostName": "[FROM ENVIRONMENT VARIABLES]",
+    "Port": 5672,
+    "UserName": "[FROM ENVIRONMENT VARIABLES]",
+    "Password": "[FROM ENVIRONMENT VARIABLES]",
+    "VirtualHost": "ems",
+    "ExchangeName": "ems.events",
+    "QueueName": "ems.gateway.cache-invalidation"
   },
   "Caching": {
     "DefaultTtlMinutes": 5,
@@ -558,6 +596,187 @@ redis-cli
 
 ---
 
+## RabbitMQ Setup
+
+The Employee Management System uses RabbitMQ for event-driven cache invalidation:
+- **Backend API (Producer)**: Publishes domain events when entities are created, updated, or deleted
+- **Gateway (Consumer)**: Listens for events and invalidates Redis cache accordingly
+
+### Local Development
+
+**Using Docker:**
+```bash
+docker run -d \
+  --name rabbitmq \
+  -p 5672:5672 \
+  -p 15672:15672 \
+  rabbitmq:management
+```
+
+**Access Management UI:**
+- URL: http://localhost:15672
+- Username: `guest`
+- Password: `guest`
+
+**Run Setup Script:**
+```powershell
+# Create vhost, exchange, queue, and bindings
+cd server/scripts
+.\setup-rabbitmq-queues.ps1
+```
+
+The setup script creates:
+- **Virtual Host**: `ems`
+- **Exchange**: `ems.events` (topic exchange, durable)
+- **Queue**: `ems.gateway.cache-invalidation` (durable, 24h TTL, 10K max messages)
+- **Binding**: Routes `com.ems.#` events to the queue
+
+### Production Options
+
+#### Option 1: CloudAMQP (Managed RabbitMQ)
+
+1. **Create Account**: Sign up at [cloudamqp.com](https://www.cloudamqp.com/)
+
+2. **Create Instance**: Choose region close to your Azure resources
+
+3. **Get Connection String**: Format:
+   ```
+   amqps://user:password@host.cloudamqp.com/vhost
+   ```
+
+4. **Configure Both API and Gateway:**
+   ```json
+   {
+     "RabbitMQ": {
+       "HostName": "host.cloudamqp.com",
+       "Port": 5671,
+       "UserName": "your-username",
+       "Password": "your-password",
+       "VirtualHost": "your-vhost",
+       "UseSsl": true
+     }
+   }
+   ```
+
+#### Option 2: Azure Service Bus (Alternative)
+
+For production, you may consider Azure Service Bus as an alternative to RabbitMQ. However, this would require code changes to use the Azure Service Bus SDK.
+
+**Create Service Bus:**
+```bash
+az servicebus namespace create \
+  --name ems-servicebus \
+  --resource-group ems-rg \
+  --location eastus \
+  --sku Standard
+
+az servicebus topic create \
+  --name ems-events \
+  --namespace-name ems-servicebus \
+  --resource-group ems-rg
+
+az servicebus topic subscription create \
+  --name gateway-cache-invalidation \
+  --topic-name ems-events \
+  --namespace-name ems-servicebus \
+  --resource-group ems-rg
+```
+
+#### Option 3: Self-Hosted RabbitMQ on Azure VM
+
+1. **Create VM:**
+   ```bash
+   az vm create \
+     --resource-group ems-rg \
+     --name ems-rabbitmq \
+     --image Ubuntu2204 \
+     --size Standard_B2s \
+     --admin-username azureuser \
+     --generate-ssh-keys
+   ```
+
+2. **Install RabbitMQ:**
+   ```bash
+   # SSH into VM
+   ssh azureuser@<vm-ip>
+
+   # Install RabbitMQ
+   sudo apt-get update
+   sudo apt-get install -y rabbitmq-server
+   sudo rabbitmq-plugins enable rabbitmq_management
+   sudo systemctl enable rabbitmq-server
+   sudo systemctl start rabbitmq-server
+   ```
+
+3. **Configure Users:**
+   ```bash
+   sudo rabbitmqctl add_user ems_admin 'StrongPassword123!'
+   sudo rabbitmqctl set_user_tags ems_admin administrator
+   sudo rabbitmqctl add_vhost ems
+   sudo rabbitmqctl set_permissions -p ems ems_admin ".*" ".*" ".*"
+   sudo rabbitmqctl delete_user guest
+   ```
+
+4. **Configure SSL** (recommended for production):
+   Follow [RabbitMQ TLS documentation](https://www.rabbitmq.com/ssl.html)
+
+### Configuration
+
+**Backend API (`appsettings.json`):**
+```json
+{
+  "RabbitMQ": {
+    "HostName": "your-rabbitmq-host",
+    "Port": 5672,
+    "UserName": "your-username",
+    "Password": "[FROM ENVIRONMENT VARIABLES]",
+    "VirtualHost": "ems",
+    "ExchangeName": "ems.events",
+    "ExchangeType": "topic"
+  }
+}
+```
+
+**Gateway (`appsettings.json`):**
+```json
+{
+  "RabbitMQ": {
+    "HostName": "your-rabbitmq-host",
+    "Port": 5672,
+    "UserName": "your-username",
+    "Password": "[FROM ENVIRONMENT VARIABLES]",
+    "VirtualHost": "ems",
+    "ExchangeName": "ems.events",
+    "QueueName": "ems.gateway.cache-invalidation"
+  }
+}
+```
+
+### Verify RabbitMQ Connection
+
+**Check Queue Status:**
+```bash
+# Using RabbitMQ Management API
+curl -u admin:password http://rabbitmq-host:15672/api/queues/ems/ems.gateway.cache-invalidation
+```
+
+**Test Event Publishing:**
+1. Create or update an entity via the API
+2. Check the queue in Management UI for pending messages
+3. Verify Gateway logs show message consumption
+4. Verify Redis cache was invalidated
+
+### Troubleshooting RabbitMQ
+
+| Issue | Solution |
+|-------|----------|
+| Connection refused | Verify firewall allows port 5672 (or 5671 for SSL) |
+| Authentication failed | Check username/password and vhost permissions |
+| Messages not consumed | Verify Gateway is running and queue binding exists |
+| SSL handshake failed | Verify certificates and TLS version compatibility |
+
+---
+
 ## Post-Deployment
 
 ### 1. Verify Services
@@ -857,3 +1076,6 @@ npm update
 - [Azure Cache for Redis Documentation](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/)
 - [Azure Static Web Apps Documentation](https://learn.microsoft.com/en-us/azure/static-web-apps/)
 - [ASP.NET Core Deployment](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/)
+- [RabbitMQ Documentation](https://www.rabbitmq.com/documentation.html)
+- [CloudAMQP Documentation](https://www.cloudamqp.com/docs/)
+- [Azure Service Bus Documentation](https://learn.microsoft.com/en-us/azure/service-bus-messaging/)

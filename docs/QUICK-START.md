@@ -8,7 +8,7 @@ Get the Employee Management System running locally in minutes.
 
 - [ ] .NET 10 SDK installed
 - [ ] Node.js 18+ and npm installed
-- [ ] Docker installed (for Redis and Seq)
+- [ ] Docker installed (for Redis, Seq, and RabbitMQ)
 - [ ] SQL Server (LocalDB or SQL Server Express)
 - [ ] Azure Storage Account (or Azurite emulator)
 - [ ] Google OAuth2 Client ID
@@ -36,9 +36,26 @@ docker run -d --name redis -p 6379:6379 redis
 docker run -d --name seq -e ACCEPT_EULA=Y -p 5341:80 datalust/seq:latest
 ```
 
+### Start RabbitMQ (Event Messaging)
+```bash
+docker run -d --name rabbitmq \
+  -p 5672:5672 \
+  -p 15672:15672 \
+  -e RABBITMQ_DEFAULT_USER=admin \
+  -e RABBITMQ_DEFAULT_PASS=your-password \
+  rabbitmq:management
+```
+
+### Setup RabbitMQ Infrastructure
+```powershell
+cd server/scripts
+.\setup-rabbitmq-queues.ps1
+```
+
 **Verify Services**:
 - Redis: Running on port 6379
 - Seq UI: http://localhost:5341
+- RabbitMQ Management: http://localhost:15672
 
 ---
 
@@ -62,13 +79,24 @@ dotnet user-secrets set "Jwt:Secret" "your-super-secret-key-min-32-chars-long"
 dotnet user-secrets set "Google:ClientId" "your-google-client-id.apps.googleusercontent.com"
 
 # Seq API Key
-dotnet user-secrets set "Serilog:WriteTo:1:Args:configure:0:Args:apiKey" "eNbAoVON73DB9XV3ygAO"
+dotnet user-secrets set "Serilog:WriteTo:1:Args:configure:0:Args:apiKey" "your-seq-api-key"
+
+# RabbitMQ Password
+dotnet user-secrets set "RabbitMQ:Password" "your-rabbitmq-password"
 ```
 
 ### Run Database Migrations
 
 ```bash
 dotnet ef database update
+```
+
+### Seed Database (Optional)
+
+Run the seed script in SQL Server Management Studio or via sqlcmd:
+
+```bash
+sqlcmd -S "(localdb)\mssqllocaldb" -d EmsDb -i "..\scripts\seed-data.sql"
 ```
 
 ### Start Backend API
@@ -90,7 +118,10 @@ dotnet run
 cd ../../gateway/EmployeeManagementSystem.Gateway
 
 # Seq API Key
-dotnet user-secrets set "Serilog:WriteTo:1:Args:configure:0:Args:apiKey" "0irSuiu7B4ZPuKkSTHMf"
+dotnet user-secrets set "Serilog:WriteTo:1:Args:configure:0:Args:apiKey" "your-seq-api-key"
+
+# RabbitMQ Password
+dotnet user-secrets set "RabbitMQ:Password" "your-rabbitmq-password"
 ```
 
 ### Start Gateway
@@ -152,6 +183,7 @@ npm run dev
 | Gateway GraphQL | https://localhost:5003/graphql | GraphQL playground opens |
 | Backend Swagger | https://localhost:7166/swagger | Swagger UI loads |
 | Seq Logs | http://localhost:5341 | Seq UI shows recent logs |
+| RabbitMQ | http://localhost:15672 | Management UI loads |
 | Redis | localhost:6379 | Connection accepted |
 
 ### Test Login
@@ -223,6 +255,21 @@ docker ps | grep redis
 docker start redis
 ```
 
+### RabbitMQ connection failed
+
+**Issue**: RabbitMQ not running or not configured
+```bash
+# Check RabbitMQ is running
+docker ps | grep rabbitmq
+
+# Start RabbitMQ if needed
+docker start rabbitmq
+
+# Re-run setup script if needed
+cd server/scripts
+.\setup-rabbitmq-queues.ps1
+```
+
 ---
 
 ## Next Steps
@@ -289,7 +336,7 @@ dotnet ef database update PreviousMigrationName
 
 ```bash
 # Stop Docker containers
-docker stop redis seq
+docker stop redis seq rabbitmq
 
 # Stop running processes
 # Ctrl+C in each terminal running dotnet/npm

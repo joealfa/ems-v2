@@ -51,6 +51,7 @@ The backend follows Clean Architecture with the following layers:
 ### Infrastructure Layer (`EmployeeManagementSystem.Infrastructure`)
 - Implements data access using Entity Framework Core
 - Implements external service integrations
+- Implements RabbitMQ event publishing
 - Depends on Application layer
 
 **Components:**
@@ -58,7 +59,7 @@ The backend follows Clean Architecture with the following layers:
 - `Repository<T>` - Generic repository implementation
 - `AuthService` - JWT authentication
 - `BlobStorageService` - Azure Blob Storage integration
-- `DataSeeder` - Database seeding
+- `RabbitMQEventPublisher` - Domain event publishing to RabbitMQ
 
 ### API Layer (`EmployeeManagementSystem.Api`)
 - Contains controllers and middleware
@@ -93,16 +94,19 @@ The backend follows Clean Architecture with the following layers:
 server/
 ├── EmployeeManagementSystem.Domain/
 │   ├── Entities/           # Domain entities
-│   └── Enums/              # Domain enumerations
+│   ├── Enums/              # Domain enumerations
+│   └── Events/             # Domain event definitions
 ├── EmployeeManagementSystem.Application/
 │   ├── Common/             # Shared utilities (Result pattern)
 │   ├── DTOs/               # Data transfer objects
+│   ├── Events/             # Event message definitions
 │   ├── Interfaces/         # Service interfaces
 │   ├── Mappings/           # Entity to DTO mapping extensions
 │   └── Services/           # Business logic services
 ├── EmployeeManagementSystem.Infrastructure/
-│   ├── Data/               # DbContext and seeding
+│   ├── Data/               # DbContext
 │   ├── Migrations/         # EF Core migrations
+│   ├── Messaging/RabbitMQ/ # RabbitMQ event publisher
 │   ├── Repositories/       # Repository implementations
 │   └── Services/           # External service implementations
 ├── EmployeeManagementSystem.Api/
@@ -113,6 +117,11 @@ server/
 ├── EmployeeManagementSystem.ApiClient/
 │   ├── Generated/          # NSwag-generated client (DO NOT EDIT)
 │   └── nswag.json          # NSwag configuration
+├── scripts/                # SQL and setup scripts
+│   ├── create-database.sql # Database creation script
+│   ├── seed-data.sql       # Mock data seed (5,000 persons)
+│   ├── setup-rabbitmq-queues.ps1 # RabbitMQ setup
+│   └── generate-api-client.ps1   # API client generation
 └── tests/
     └── EmployeeManagementSystem.Tests/
 ```
@@ -149,6 +158,8 @@ Once running, access Swagger UI at: `https://localhost:5001/swagger`
 - **Swashbuckle.AspNetCore** - Swagger documentation
 - **Microsoft.EntityFrameworkCore** - ORM
 - **NSwag.ApiDescription.Client** - API client generation
+- **RabbitMQ.Client** - RabbitMQ messaging
+- **Polly** - Resilience and retry policies
 - **Serilog.AspNetCore** - Structured logging framework
 - **Serilog.Sinks.Seq** - Seq sink for centralized log monitoring
 - **Serilog.Sinks.Async** - Async logging for better performance

@@ -9,15 +9,22 @@ ems-v2/
 ├── server/                                          # Backend API (ASP.NET Core with Clean Architecture)
 │   ├── EmployeeManagementSystem.Domain/             # Entities and domain logic
 │   ├── EmployeeManagementSystem.Application/        # Business logic and DTOs
-│   ├── EmployeeManagementSystem.Infrastructure/     # Data access and external services
+│   ├── EmployeeManagementSystem.Infrastructure/     # Data access, external services, RabbitMQ publisher
+│   │   └── Messaging/RabbitMQ/                      # RabbitMQ event publisher (Producer)
 │   ├── EmployeeManagementSystem.Api/                # API controllers (v1, v2)
 │   ├── EmployeeManagementSystem.ApiClient/          # NSwag-generated API client for Gateway
+│   ├── scripts/                                     # SQL scripts and setup scripts
+│   │   ├── create-database.sql                      # Database creation script
+│   │   ├── seed-data.sql                            # Mock data seed script (5,000 persons)
+│   │   └── setup-rabbitmq-queues.ps1                # RabbitMQ setup script
 │   └── tests/                                       # Unit and integration tests
 ├── gateway/                                         # GraphQL Gateway (HotChocolate)
 │   └── EmployeeManagementSystem.Gateway/            # GraphQL types, queries, mutations
 │       ├── Types/                                   # Query.cs, Mutation.cs
 │       ├── Controllers/                             # REST proxy for file operations
-│       └── Caching/                                 # Redis caching
+│       ├── Caching/                                 # Redis caching
+│       ├── Messaging/                               # RabbitMQ event consumer (Consumer)
+│       └── DataLoaders/                             # HotChocolate DataLoaders
 ├── application/                                     # Frontend Application (React/TypeScript/Vite)
 │   └── src/
 │       ├── graphql/                                 # GraphQL operations and generated types
@@ -41,6 +48,7 @@ ems-v2/
 - **Azure Blob Storage** - File storage for documents
 - **JWT Authentication** - Secure API authentication with refresh token rotation
 - **AspNetCoreRateLimit** - Rate limiting for API protection
+- **RabbitMQ** - Event publishing (Producer) for domain events
 - **Serilog + Seq** - Structured logging and centralized monitoring
 - **Swagger/OpenAPI** - API documentation
 - **xUnit** - Testing framework
@@ -48,6 +56,7 @@ ems-v2/
 ### GraphQL Gateway (.NET 10)
 - **HotChocolate 15** - GraphQL server for .NET
 - **Redis** - Caching layer with hash-based key generation
+- **RabbitMQ** - Event consumption (Consumer) for cache invalidation
 - **Serilog + Seq** - Structured logging and centralized monitoring
 
 ### Frontend (React 19)
@@ -82,7 +91,7 @@ ems-v2/
 - Node.js 18+ and npm
 - SQL Server (LocalDB or SQL Server Express)
 - Azure Storage Account (for blob storage)
-- Docker (for Redis and Seq) or Redis/Seq installed locally
+- Docker (for Redis, Seq, and RabbitMQ) or installed locally
 
 ### Backend Setup
 
@@ -98,13 +107,16 @@ The API will be available at `https://localhost:7166` with Swagger UI at `https:
 
 ### Gateway Setup
 
-First, ensure Redis and Seq are running:
+First, ensure Redis, Seq, and RabbitMQ are running:
 ```bash
 # Redis for caching
 docker run -d --name redis -p 6379:6379 redis
 
 # Seq for centralized logging
 docker run -d --name seq -e ACCEPT_EULA=Y -p 5341:80 datalust/seq:latest
+
+# RabbitMQ for event messaging
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:management
 ```
 
 Then start the Gateway:
@@ -116,6 +128,7 @@ dotnet run
 The GraphQL Gateway will be available at `https://localhost:5003/graphql`
 
 Access Seq UI for logs: `http://localhost:5341`
+Access RabbitMQ Management UI: `http://localhost:15672`
 
 ### Frontend Setup
 
@@ -145,11 +158,13 @@ npm run codegen
 
 ## Architecture
 
-The application uses a **GraphQL Gateway** pattern:
+The application uses a **GraphQL Gateway** pattern with **event-driven cache invalidation**:
 - **Frontend** communicates with the **GraphQL Gateway** (HotChocolate) for most operations
 - **Frontend** uses Gateway **REST endpoints** for file upload/download operations
 - **Gateway** uses the **NSwag-generated API client** to communicate with the Backend
 - **Backend** handles business logic, data persistence, and file storage
+- **Backend** publishes domain events to **RabbitMQ** (Producer)
+- **Gateway** consumes events from **RabbitMQ** to invalidate cache (Consumer)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -165,13 +180,17 @@ The application uses a **GraphQL Gateway** pattern:
 │  │  GraphQL (Query/Mutation) │    │  REST Controllers (Documents) │  │
 │  └───────────────────────────┘    └───────────────────────────────┘  │
 │               │ Uses NSwag ApiClient             │                   │
+│  ┌───────────────────────────────────────────────────────────────┐   │
+│  │           RabbitMQ Consumer (Cache Invalidation)              │   │
+│  └───────────────────────────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────────────────────────┘
-                │                                  │
-                ▼                                  ▼
+                │                                  ▲
+                ▼                                  │ Events
 ┌─────────────────────────────────────────────────────────────────────┐
 │                      Backend API (ASP.NET Core)                     │
 │           Controllers → Services → EF Core → SQL Database           │
-│                                 └──→ Azure Blob Storage             │
+│                      ↓           └──→ Azure Blob Storage            │
+│           RabbitMQ Producer (Domain Events)                         │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -189,6 +208,7 @@ graph TB
         DataLoaders["DataLoaders<br/>(Batch + Dedup)"]
         RestProxy["REST Controllers<br/>(File Operations)"]
         CacheService["Cache Service"]
+        RabbitConsumer["RabbitMQ Consumer<br/>(Cache Invalidation)"]
     end
 
     subgraph Backend["⚙️ Backend API Layer - Port 7166"]
@@ -197,12 +217,17 @@ graph TB
         Services["Application Services"]
         Domain["Domain Models"]
         Infrastructure["Infrastructure Layer"]
+        RabbitPublisher["RabbitMQ Publisher<br/>(Domain Events)"]
     end
 
     subgraph Data["💾 Data & Storage Layer"]
         SQL[(SQL Server<br/>Database)]
         Blob[("Azure Blob<br/>Storage")]
         Redis[("Redis<br/>Cache")]
+    end
+
+    subgraph Messaging["📬 Message Broker"]
+        RabbitMQ[("RabbitMQ<br/>(CloudEvents)")]
     end
 
     subgraph Monitoring["📊 Monitoring & Logging"]
@@ -235,27 +260,39 @@ graph TB
     Infrastructure -->|"Entity Framework Core"| SQL
     Infrastructure -->|"Azure SDK"| Blob
 
+    %% Event publishing
+    Services -->|"Publish Events"| RabbitPublisher
+    RabbitPublisher -->|"CloudEvents"| RabbitMQ
+    RabbitMQ -->|"Consume Events"| RabbitConsumer
+    RabbitConsumer -->|"Invalidate Cache"| CacheService
+
     %% Logging
     Browser -.->|"Serilog"| Seq
     GQL -.->|"Serilog"| Seq
     API -.->|"Serilog"| Seq
     Services -.->|"Serilog"| Seq
+    RabbitConsumer -.->|"Serilog"| Seq
 
     %% Styling
     classDef clientStyle fill:#e1f5ff,stroke:#01579b,stroke-width:2px
     classDef gatewayStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef backendStyle fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
     classDef dataStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef messagingStyle fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
     classDef monitorStyle fill:#fce4ec,stroke:#880e4f,stroke-width:2px
 
     class Browser clientStyle
-    class GQL,DataLoaders,RestProxy,CacheService gatewayStyle
-    class API,Controllers,Services,Domain,Infrastructure backendStyle
+    class GQL,DataLoaders,RestProxy,CacheService,RabbitConsumer gatewayStyle
+    class API,Controllers,Services,Domain,Infrastructure,RabbitPublisher backendStyle
     class SQL,Blob,Redis dataStyle
+    class RabbitMQ messagingStyle
     class Seq monitorStyle
 ```
 
 **Key Components:**
+- **RabbitMQ**: Event messaging using CloudEvents format for decoupled communication between Backend and Gateway
+- **Event Publisher (Backend)**: Publishes domain events (person.created, person.updated, etc.) after data mutations
+- **Event Consumer (Gateway)**: Listens for domain events and automatically invalidates related Redis cache entries
 - **Redis Cache**: Used by the Gateway for caching GraphQL queries and responses with hash-based key generation
 - **Seq (Datalust)**: Centralized logging platform for structured logs from all layers (accessible at `http://localhost:5341`)
 - **SQL Server**: Primary database for persisting entities using Entity Framework Core

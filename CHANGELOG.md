@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - 2026-02-08
+
+#### RabbitMQ Event-Driven Architecture
+
+- **Backend Event Publisher (Producer)** - Domain events published to RabbitMQ
+  - `RabbitMQEventPublisher` in Infrastructure layer
+  - CloudEvents message format (CNCF standard)
+  - Events: person.created, person.updated, person.deleted, school.*, item.*, position.*, salarygrade.*, employee.*, blob.*
+  - Polly retry policies with exponential backoff
+  - Automatic connection recovery
+  - SSL/TLS support
+
+- **Gateway Event Consumer** - Cache invalidation via RabbitMQ
+  - `RabbitMQEventConsumer` background service in Gateway
+  - `RabbitMQBackgroundService` for lifecycle management
+  - Automatic cache invalidation based on event type
+  - Entity-specific cache invalidation (persons, schools, items, positions, salary grades, employments)
+  - Dashboard stats cache automatically invalidated on any entity change
+
+- **RabbitMQ Configuration**
+  - Topic exchange: `ems.events`
+  - Queue: `ems.gateway.cache-invalidation`
+  - Routing key pattern: `com.ems.{entity}.{operation}`
+  - Virtual host: `ems`
+  - 24-hour message TTL
+  - Max queue length: 10,000 messages
+
+- **Setup Scripts**
+  - `server/scripts/setup-rabbitmq-queues.ps1` - Automated RabbitMQ setup (vhost, exchange, queue, bindings)
+
+#### SQL Scripts for Data Management
+
+- **Database Creation Script** - `server/scripts/create-database.sql`
+  - Creates EMS database with proper settings
+  - Safe to run multiple times
+
+- **Data Seed Script** - `server/scripts/seed-data.sql`
+  - Generates 5,000 mock persons with related data
+  - Includes schools, positions, salary grades, items
+  - Replaces code-based DataSeeder for faster seeding
+  - Transaction-wrapped with error handling
+  - Safety check: only seeds empty databases
+
 ### Added - 2026-02-06
 
 #### Logging and Monitoring Infrastructure
