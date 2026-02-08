@@ -16,7 +16,7 @@ try
     WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     // Add Serilog to the application
-    builder.Host.UseSerilog((context, services, configuration) => configuration
+    _ = builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
         .Enrich.FromLogContext()
@@ -25,23 +25,23 @@ try
         .Enrich.WithEnvironmentName());
 
     // Add HTTP context accessor for token forwarding in GraphQL mutations
-    builder.Services.AddHttpContextAccessor();
+    _ = builder.Services.AddHttpContextAccessor();
 
     // Add HttpClient for REST proxy controllers
-    builder.Services.AddHttpClient();
+    _ = builder.Services.AddHttpClient();
 
     // Add controllers for REST endpoints (profile images, file downloads)
-    builder.Services.AddControllers();
+    _ = builder.Services.AddControllers();
 
     // Add gateway services (Redis, ApiClient, GraphQL)
-    builder.Services.AddGatewayServices(builder.Configuration);
+    _ = builder.Services.AddGatewayServices(builder.Configuration);
 
     // Get CORS configuration
     string[] allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
         ?? throw new InvalidOperationException("Cors:AllowedOrigins is not configured");
 
     // Configure CORS
-    builder.Services.AddCors(options =>
+    _ = builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowHost", policy =>
         {
@@ -55,10 +55,10 @@ try
 
     WebApplication app = builder.Build();
 
-    app.UseCors("AllowHost");
+    _ = app.UseCors("AllowHost");
 
     // Add Serilog request logging - replaces default logging with structured logging
-    app.UseSerilogRequestLogging(options =>
+    _ = app.UseSerilogRequestLogging(options =>
     {
         options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
         options.GetLevel = (httpContext, elapsed, ex) => ex != null
@@ -83,13 +83,13 @@ try
     });
 
     // Map REST controllers for file operations
-    app.MapControllers();
+    _ = app.MapControllers();
 
     // Map GraphQL endpoint
-    app.MapGraphQL();
+    _ = app.MapGraphQL();
 
     // Health check endpoint
-    app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+    _ = app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
     Log.Information("Employee Management System Gateway started successfully");
     app.Run();

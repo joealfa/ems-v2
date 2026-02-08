@@ -2,7 +2,10 @@ using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
+using EmployeeManagementSystem.Application.Events;
 using EmployeeManagementSystem.Application.Interfaces;
+using EmployeeManagementSystem.Domain.Events.Blobs;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -15,18 +18,28 @@ public class BlobStorageService : IBlobStorageService
 {
     private readonly BlobServiceClient _blobServiceClient;
     private readonly string _connectionString;
+    private readonly IEventPublisher _eventPublisher;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<BlobStorageService> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BlobStorageService"/> class.
     /// </summary>
     /// <param name="configuration">The application configuration.</param>
+    /// <param name="eventPublisher">The event publisher for domain events.</param>
+    /// <param name="httpContextAccessor">The HTTP context accessor for metadata.</param>
     /// <param name="logger">The logger instance.</param>
-    public BlobStorageService(IConfiguration configuration, ILogger<BlobStorageService> logger)
+    public BlobStorageService(
+        IConfiguration configuration,
+        IEventPublisher eventPublisher,
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<BlobStorageService> logger)
     {
         _connectionString = configuration.GetConnectionString("BlobStorage")
             ?? throw new InvalidOperationException("BlobStorage connection string is not configured.");
         _blobServiceClient = new BlobServiceClient(_connectionString);
+        _eventPublisher = eventPublisher;
+        _httpContextAccessor = httpContextAccessor;
         _logger = logger;
     }
 
@@ -36,10 +49,13 @@ public class BlobStorageService : IBlobStorageService
         string blobName,
         Stream content,
         string contentType,
+        string? relatedEntityType = null,
+        string? relatedEntityId = null,
         CancellationToken cancellationToken = default)
     {
+        long sizeBytes = content.Length;
         _logger.LogDebug("Uploading blob {BlobName} to container {ContainerName}, Size: {Size} bytes, ContentType: {ContentType}",
-            blobName, containerName, content.Length, contentType);
+            blobName, containerName, sizeBytes, contentType);
 
         try
         {
@@ -58,9 +74,25 @@ public class BlobStorageService : IBlobStorageService
                 HttpHeaders = blobHttpHeaders
             }, cancellationToken);
 
+            string url = blobClient.Uri.ToString();
+
             _logger.LogInformation("Blob uploaded successfully: {BlobName} in container {ContainerName}", blobName, containerName);
 
-            return blobClient.Uri.ToString();
+            // Publish domain event if entity context is provided
+            if (!string.IsNullOrEmpty(relatedEntityType) && !string.IsNullOrEmpty(relatedEntityId))
+            {
+                await PublishBlobUploadedEventAsync(
+                    blobName,
+                    containerName,
+                    contentType,
+                    sizeBytes,
+                    url,
+                    relatedEntityType,
+                    relatedEntityId,
+                    cancellationToken);
+            }
+
+            return url;
         }
         catch (Exception ex)
         {
@@ -99,6 +131,9 @@ public class BlobStorageService : IBlobStorageService
     public async Task<bool> DeleteAsync(
         string containerName,
         string blobName,
+        string? contentType = null,
+        string? relatedEntityType = null,
+        string? relatedEntityId = null,
         CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Deleting blob {BlobName} from container {ContainerName}", blobName, containerName);
@@ -113,6 +148,18 @@ public class BlobStorageService : IBlobStorageService
             if (response.Value)
             {
                 _logger.LogInformation("Blob deleted successfully: {BlobName} from container {ContainerName}", blobName, containerName);
+
+                // Publish domain event if entity context is provided
+                if (!string.IsNullOrEmpty(contentType) && !string.IsNullOrEmpty(relatedEntityType) && !string.IsNullOrEmpty(relatedEntityId))
+                {
+                    await PublishBlobDeletedEventAsync(
+                        blobName,
+                        containerName,
+                        contentType,
+                        relatedEntityType,
+                        relatedEntityId,
+                        cancellationToken);
+                }
             }
             else
             {
@@ -169,4 +216,93 @@ public class BlobStorageService : IBlobStorageService
 
         return blobClient.GenerateSasUri(sasBuilder).ToString();
     }
+
+    #region Event Publishing Helpers
+
+    private async Task PublishBlobUploadedEventAsync(
+        string blobName,
+        string containerName,
+        string contentType,
+        long sizeBytes,
+        string url,
+        string relatedEntityType,
+        string relatedEntityId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            BlobUploadedEvent domainEvent = new(
+                blobName: blobName,
+                containerName: containerName,
+                contentType: contentType,
+                sizeBytes: sizeBytes,
+                url: url,
+                relatedEntityType: relatedEntityType,
+                relatedEntityId: relatedEntityId
+            );
+
+            EventMetadata metadata = CreateEventMetadata();
+            string userId = _httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "system";
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish BlobUploadedEvent for {BlobName}", blobName);
+        }
+    }
+
+    private async Task PublishBlobDeletedEventAsync(
+        string blobName,
+        string containerName,
+        string contentType,
+        string relatedEntityType,
+        string relatedEntityId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            BlobDeletedEvent domainEvent = new(
+                blobName: blobName,
+                containerName: containerName,
+                contentType: contentType,
+                relatedEntityType: relatedEntityType,
+                relatedEntityId: relatedEntityId
+            );
+
+            EventMetadata metadata = CreateEventMetadata();
+            string userId = _httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "system";
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish BlobDeletedEvent for {BlobName}", blobName);
+        }
+    }
+
+    private EventMetadata CreateEventMetadata()
+    {
+        HttpContext httpContext = _httpContextAccessor.HttpContext;
+        return httpContext == null
+            ? new EventMetadata()
+            : new EventMetadata
+            {
+                IpAddress = httpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = httpContext.Request.Headers["User-Agent"].ToString(),
+                Source = "BlobStorageService"
+            };
+    }
+
+    #endregion
 }

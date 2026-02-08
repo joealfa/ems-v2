@@ -1,6 +1,6 @@
 using EmployeeManagementSystem.ApiClient.Generated;
 
-namespace EmployeeManagementSystem.Gateway.Types;
+namespace EmployeeManagementSystem.Gateway.Types.Extensions;
 
 /// <summary>
 /// GraphQL type extensions for NSwag-generated DTOs to properly expose fields
@@ -39,13 +39,13 @@ public class PersonResponseDtoExtensions
 
         // Return Gateway proxy URL for CORS handling
         string gatewayBaseUrl = configuration["Gateway:BaseUrl"] ?? "https://localhost:5003";
-        
+
         // Ensure the base URL has a protocol
         if (!gatewayBaseUrl.StartsWith("http://") && !gatewayBaseUrl.StartsWith("https://"))
         {
             gatewayBaseUrl = $"https://{gatewayBaseUrl}";
         }
-        
+
         return $"{gatewayBaseUrl}/api/persons/{person.DisplayId}/profile-image";
     }
 }
@@ -78,13 +78,13 @@ public class PersonListDtoExtensions
 
         // Return Gateway proxy URL for CORS handling
         string gatewayBaseUrl = configuration["Gateway:BaseUrl"] ?? "https://localhost:5003";
-        
+
         // Ensure the base URL has a protocol
         if (!gatewayBaseUrl.StartsWith("http://") && !gatewayBaseUrl.StartsWith("https://"))
         {
             gatewayBaseUrl = $"https://{gatewayBaseUrl}";
         }
-        
+
         return $"{gatewayBaseUrl}/api/persons/{person.DisplayId}/profile-image";
     }
 }

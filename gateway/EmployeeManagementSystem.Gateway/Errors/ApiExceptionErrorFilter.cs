@@ -1,5 +1,4 @@
 using EmployeeManagementSystem.ApiClient.Generated;
-using HotChocolate;
 
 namespace EmployeeManagementSystem.Gateway.Errors;
 

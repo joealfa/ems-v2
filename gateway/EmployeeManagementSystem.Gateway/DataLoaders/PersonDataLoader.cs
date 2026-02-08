@@ -1,6 +1,5 @@
 using EmployeeManagementSystem.ApiClient.Generated;
 using EmployeeManagementSystem.Gateway.Caching;
-using Microsoft.Extensions.Configuration;
 
 namespace EmployeeManagementSystem.Gateway.DataLoaders;
 
@@ -47,13 +46,13 @@ public class PersonDataLoader(
             try
             {
                 PersonResponseDto? person = await client.PersonsGET2Async(key, ct);
-                
+
                 // Transform profileImageUrl to Gateway proxy URL
                 if (person is not null && person.HasProfileImage)
                 {
                     person.ProfileImageUrl = $"{gatewayBaseUrl}/api/persons/{person.DisplayId}/profile-image";
                 }
-                
+
                 results[key] = person;
 
                 if (person is not null)

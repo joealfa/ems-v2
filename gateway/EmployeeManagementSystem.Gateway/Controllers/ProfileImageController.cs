@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 
 namespace EmployeeManagementSystem.Gateway.Controllers;
 
@@ -22,34 +23,34 @@ public class ProfileImageController(
         try
         {
             // Create HTTP client and forward the request to the backend API
-            using var client = httpClientFactory.CreateClient();
+            using HttpClient client = httpClientFactory.CreateClient();
             string apiBaseUrl = configuration["ApiClient:BaseUrl"] ?? "https://localhost:7166";
             string requestUrl = $"{apiBaseUrl}/api/v1/Persons/{personDisplayId}/Documents/profile-image";
-            
+
             // Forward the authorization header if present
-            using var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-            if (Request.Headers.TryGetValue("Authorization", out var authHeader))
+            using HttpRequestMessage request = new(HttpMethod.Get, requestUrl);
+            if (Request.Headers.TryGetValue("Authorization", out StringValues authHeader))
             {
                 request.Headers.Add("Authorization", authHeader.ToString());
             }
-            
-            var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
-            
+
+            HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
                     return NotFound();
                 }
-                
-                logger.LogWarning("Failed to fetch profile image for person {PersonDisplayId}: {StatusCode}", 
+
+                logger.LogWarning("Failed to fetch profile image for person {PersonDisplayId}: {StatusCode}",
                     personDisplayId, response.StatusCode);
                 return StatusCode((int)response.StatusCode);
             }
-            
-            var stream = await response.Content.ReadAsStreamAsync(ct);
-            var contentType = response.Content.Headers.ContentType?.ToString() ?? "image/jpeg";
-            
+
+            Stream stream = await response.Content.ReadAsStreamAsync(ct);
+            string contentType = response.Content.Headers.ContentType?.ToString() ?? "image/jpeg";
+
             return File(stream, contentType);
         }
         catch (HttpRequestException ex)

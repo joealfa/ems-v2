@@ -1,9 +1,12 @@
 using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.School;
+using EmployeeManagementSystem.Application.Events;
 using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
+using EmployeeManagementSystem.Domain.Events.Schools;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeManagementSystem.Application.Services;
@@ -18,12 +21,16 @@ public class SchoolService(
     IRepository<School> schoolRepository,
     IRepository<Address> addressRepository,
     IRepository<Contact> contactRepository,
-    IRepository<EmploymentSchool> employmentSchoolRepository) : ISchoolService
+    IRepository<EmploymentSchool> employmentSchoolRepository,
+    IEventPublisher eventPublisher,
+    IHttpContextAccessor httpContextAccessor) : ISchoolService
 {
     private readonly IRepository<School> _schoolRepository = schoolRepository;
     private readonly IRepository<Address> _addressRepository = addressRepository;
     private readonly IRepository<Contact> _contactRepository = contactRepository;
     private readonly IRepository<EmploymentSchool> _employmentSchoolRepository = employmentSchoolRepository;
+    private readonly IEventPublisher _eventPublisher = eventPublisher;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
     /// <inheritdoc />
     public async Task<Result<SchoolResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
@@ -134,6 +141,9 @@ public class SchoolService(
                 school.Contacts.Add(contact);
             }
         }
+
+        // Publish domain event
+        await PublishSchoolCreatedEventAsync(school, createdBy, cancellationToken);
 
         return Result<SchoolResponseDto>.Success(school.ToResponseDto());
     }
@@ -273,6 +283,14 @@ public class SchoolService(
 
         await _schoolRepository.UpdateAsync(school, cancellationToken);
 
+        // Publish domain event
+        Dictionary<string, object?> changes = new()
+        {
+            ["SchoolName"] = dto.SchoolName,
+            ["IsActive"] = dto.IsActive
+        };
+        await PublishSchoolUpdatedEventAsync(school, changes, modifiedBy, cancellationToken);
+
         return Result<SchoolResponseDto>.Success(school.ToResponseDto());
     }
 
@@ -314,6 +332,97 @@ public class SchoolService(
         // Soft delete the school
         school.ModifiedBy = deletedBy;
         await _schoolRepository.DeleteAsync(school, cancellationToken);
+
+        // Publish domain event
+        await PublishSchoolDeletedEventAsync(school, deletedBy, cancellationToken);
+
         return Result.Success();
     }
+
+    #region Event Publishing Helpers
+
+    private async Task PublishSchoolCreatedEventAsync(School school, string userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            SchoolCreatedEvent domainEvent = new(
+                schoolId: school.Id,
+                schoolName: school.SchoolName,
+                isActive: school.IsActive
+            );
+
+            EventMetadata metadata = CreateEventMetadata();
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't throw - event publishing failures should not fail the main operation
+            Console.WriteLine($"Failed to publish SchoolCreatedEvent: {ex.Message}");
+        }
+    }
+
+    private async Task PublishSchoolUpdatedEventAsync(
+        School school,
+        Dictionary<string, object?> changes,
+        string userId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            SchoolUpdatedEvent domainEvent = new(school.Id, changes);
+            EventMetadata metadata = CreateEventMetadata();
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to publish SchoolUpdatedEvent: {ex.Message}");
+        }
+    }
+
+    private async Task PublishSchoolDeletedEventAsync(School school, string userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            SchoolDeletedEvent domainEvent = new(school.Id, school.SchoolName);
+            EventMetadata metadata = CreateEventMetadata();
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to publish SchoolDeletedEvent: {ex.Message}");
+        }
+    }
+
+    private EventMetadata CreateEventMetadata()
+    {
+        HttpContext httpContext = _httpContextAccessor.HttpContext;
+        return httpContext == null
+            ? new EventMetadata()
+            : new EventMetadata
+            {
+                IpAddress = httpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = httpContext.Request.Headers["User-Agent"].ToString(),
+                Source = "SchoolService"
+            };
+    }
+
+    #endregion
 }

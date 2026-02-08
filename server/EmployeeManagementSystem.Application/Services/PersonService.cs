@@ -1,9 +1,12 @@
 using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Person;
+using EmployeeManagementSystem.Application.Events;
 using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
+using EmployeeManagementSystem.Domain.Events.Persons;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -20,12 +23,16 @@ public class PersonService(
     IRepository<Address> addressRepository,
     IRepository<Contact> contactRepository,
     IRepository<Document> documentRepository,
+    IEventPublisher eventPublisher,
+    IHttpContextAccessor httpContextAccessor,
     ILogger<PersonService> logger) : IPersonService
 {
     private readonly IRepository<Person> _personRepository = personRepository;
     private readonly IRepository<Address> _addressRepository = addressRepository;
     private readonly IRepository<Contact> _contactRepository = contactRepository;
     private readonly IRepository<Document> _documentRepository = documentRepository;
+    private readonly IEventPublisher _eventPublisher = eventPublisher;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<PersonService> _logger = logger;
 
     /// <inheritdoc />
@@ -190,6 +197,9 @@ public class PersonService(
         _logger.LogInformation("Person created successfully: DisplayId {DisplayId}, Name: {FullName} by user {CreatedBy}",
             person.DisplayId, person.FullName, createdBy);
 
+        // Publish domain event
+        await PublishPersonCreatedEventAsync(person, createdBy, cancellationToken);
+
         return Result<PersonResponseDto>.Success(person.ToResponseDto());
     }
 
@@ -336,6 +346,18 @@ public class PersonService(
         _logger.LogInformation("Person updated successfully: DisplayId {DisplayId}, Name: {FullName} by user {ModifiedBy}",
             person.DisplayId, person.FullName, modifiedBy);
 
+        // Publish domain event
+        Dictionary<string, object?> changes = new()
+        {
+            ["FirstName"] = dto.FirstName,
+            ["LastName"] = dto.LastName,
+            ["MiddleName"] = dto.MiddleName,
+            ["DateOfBirth"] = dto.DateOfBirth,
+            ["Gender"] = dto.Gender,
+            ["CivilStatus"] = dto.CivilStatus
+        };
+        await PublishPersonUpdatedEventAsync(person, changes, modifiedBy, cancellationToken);
+
         return Result<PersonResponseDto>.Success(person.ToResponseDto());
     }
 
@@ -385,6 +407,114 @@ public class PersonService(
             "Cascade deleted {AddressCount} addresses, {ContactCount} contacts, {DocumentCount} documents",
             person.DisplayId, person.FullName, deletedBy, person.Addresses.Count, person.Contacts.Count, person.Documents.Count);
 
+        // Publish domain event
+        await PublishPersonDeletedEventAsync(person, deletedBy, cancellationToken);
+
         return Result.Success();
     }
+
+    #region Event Publishing Helpers
+
+    private async Task PublishPersonCreatedEventAsync(Person person, string userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            PersonCreatedEvent domainEvent = new(
+                personId: (int)person.DisplayId,
+                firstName: person.FirstName,
+                lastName: person.LastName,
+                middleName: person.MiddleName,
+                dateOfBirth: person.DateOfBirth,
+                gender: person.Gender.ToString(),
+                civilStatus: person.CivilStatus.ToString()
+            );
+
+            EventMetadata metadata = CreateEventMetadata();
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+
+            _logger.LogDebug("Published PersonCreatedEvent for DisplayId {DisplayId}", person.DisplayId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish PersonCreatedEvent for DisplayId {DisplayId}", person.DisplayId);
+            // Don't throw - we don't want event publishing failures to fail the main operation
+        }
+    }
+
+    private async Task PublishPersonUpdatedEventAsync(
+        Person person,
+        Dictionary<string, object?> changes,
+        string userId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            PersonUpdatedEvent domainEvent = new(
+                personId: (int)person.DisplayId,
+                changes: changes
+            );
+
+            EventMetadata metadata = CreateEventMetadata();
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+
+            _logger.LogDebug("Published PersonUpdatedEvent for DisplayId {DisplayId}", person.DisplayId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish PersonUpdatedEvent for DisplayId {DisplayId}", person.DisplayId);
+        }
+    }
+
+    private async Task PublishPersonDeletedEventAsync(Person person, string userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            PersonDeletedEvent domainEvent = new(
+                personId: (int)person.DisplayId,
+                fullName: person.FullName
+            );
+
+            EventMetadata metadata = CreateEventMetadata();
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+
+            _logger.LogDebug("Published PersonDeletedEvent for DisplayId {DisplayId}", person.DisplayId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish PersonDeletedEvent for DisplayId {DisplayId}", person.DisplayId);
+        }
+    }
+
+    private EventMetadata CreateEventMetadata()
+    {
+        HttpContext httpContext = _httpContextAccessor.HttpContext;
+        return httpContext == null
+            ? new EventMetadata()
+            : new EventMetadata
+            {
+                IpAddress = httpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = httpContext.Request.Headers["User-Agent"].ToString(),
+                Source = "PersonService"
+            };
+    }
+
+    #endregion
 }

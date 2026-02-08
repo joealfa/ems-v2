@@ -1,9 +1,12 @@
 using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.SalaryGrade;
+using EmployeeManagementSystem.Application.Events;
 using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
+using EmployeeManagementSystem.Domain.Events.SalaryGrades;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeManagementSystem.Application.Services;
@@ -14,9 +17,14 @@ namespace EmployeeManagementSystem.Application.Services;
 /// <remarks>
 /// Initializes a new instance of the <see cref="SalaryGradeService"/> class.
 /// </remarks>
-public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) : ISalaryGradeService
+public class SalaryGradeService(
+    IRepository<SalaryGrade> salaryGradeRepository,
+    IEventPublisher eventPublisher,
+    IHttpContextAccessor httpContextAccessor) : ISalaryGradeService
 {
     private readonly IRepository<SalaryGrade> _salaryGradeRepository = salaryGradeRepository;
+    private readonly IEventPublisher _eventPublisher = eventPublisher;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
     /// <inheritdoc />
     public async Task<Result<SalaryGradeResponseDto>> GetByDisplayIdAsync(long displayId, CancellationToken cancellationToken = default)
@@ -87,6 +95,9 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
 
         _ = await _salaryGradeRepository.AddAsync(salaryGrade, cancellationToken);
 
+        // Publish domain event
+        await PublishSalaryGradeCreatedEventAsync(salaryGrade, createdBy, cancellationToken);
+
         return Result<SalaryGradeResponseDto>.Success(salaryGrade.ToResponseDto());
     }
 
@@ -108,6 +119,17 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
 
         await _salaryGradeRepository.UpdateAsync(salaryGrade, cancellationToken);
 
+        // Publish domain event
+        Dictionary<string, object?> changes = new()
+        {
+            ["SalaryGradeName"] = dto.SalaryGradeName,
+            ["Description"] = dto.Description,
+            ["Step"] = dto.Step,
+            ["MonthlySalary"] = dto.MonthlySalary,
+            ["IsActive"] = dto.IsActive
+        };
+        await PublishSalaryGradeUpdatedEventAsync(salaryGrade, changes, modifiedBy, cancellationToken);
+
         return Result<SalaryGradeResponseDto>.Success(salaryGrade.ToResponseDto());
     }
 
@@ -122,6 +144,99 @@ public class SalaryGradeService(IRepository<SalaryGrade> salaryGradeRepository) 
 
         salaryGrade.ModifiedBy = deletedBy;
         await _salaryGradeRepository.DeleteAsync(salaryGrade, cancellationToken);
+
+        // Publish domain event
+        await PublishSalaryGradeDeletedEventAsync(salaryGrade, deletedBy, cancellationToken);
+
         return Result.Success();
     }
+
+    #region Event Publishing Helpers
+
+    private async Task PublishSalaryGradeCreatedEventAsync(SalaryGrade salaryGrade, string userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            SalaryGradeCreatedEvent domainEvent = new(
+                salaryGradeId: salaryGrade.Id,
+                salaryGradeName: salaryGrade.SalaryGradeName,
+                step: salaryGrade.Step,
+                monthlySalary: salaryGrade.MonthlySalary,
+                isActive: salaryGrade.IsActive
+            );
+
+            EventMetadata metadata = CreateEventMetadata();
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't throw - event publishing failures should not fail the main operation
+            Console.WriteLine($"Failed to publish SalaryGradeCreatedEvent: {ex.Message}");
+        }
+    }
+
+    private async Task PublishSalaryGradeUpdatedEventAsync(
+        SalaryGrade salaryGrade,
+        Dictionary<string, object?> changes,
+        string userId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            SalaryGradeUpdatedEvent domainEvent = new(salaryGrade.Id, changes);
+            EventMetadata metadata = CreateEventMetadata();
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to publish SalaryGradeUpdatedEvent: {ex.Message}");
+        }
+    }
+
+    private async Task PublishSalaryGradeDeletedEventAsync(SalaryGrade salaryGrade, string userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            SalaryGradeDeletedEvent domainEvent = new(salaryGrade.Id, salaryGrade.SalaryGradeName);
+            EventMetadata metadata = CreateEventMetadata();
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to publish SalaryGradeDeletedEvent: {ex.Message}");
+        }
+    }
+
+    private EventMetadata CreateEventMetadata()
+    {
+        HttpContext httpContext = _httpContextAccessor.HttpContext;
+        return httpContext == null
+            ? new EventMetadata()
+            : new EventMetadata
+            {
+                IpAddress = httpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = httpContext.Request.Headers["User-Agent"].ToString(),
+                Source = "SalaryGradeService"
+            };
+    }
+
+    #endregion
 }

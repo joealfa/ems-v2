@@ -371,13 +371,13 @@ public class Query
         // Return Gateway proxy URL instead of direct backend URL
         // This ensures proper CORS handling and consistent API access
         string gatewayBaseUrl = configuration["Gateway:BaseUrl"] ?? "https://localhost:5003";
-        
+
         // Ensure the base URL has a protocol
         if (!gatewayBaseUrl.StartsWith("http://") && !gatewayBaseUrl.StartsWith("https://"))
         {
             gatewayBaseUrl = $"https://localhost{gatewayBaseUrl}";
         }
-        
+
         return $"{gatewayBaseUrl}/api/persons/{personDisplayId}/profile-image";
     }
 

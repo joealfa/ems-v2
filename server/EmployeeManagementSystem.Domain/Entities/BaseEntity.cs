@@ -1,4 +1,5 @@
 using EmployeeManagementSystem.Domain.Common;
+using EmployeeManagementSystem.Domain.Events;
 using System.ComponentModel.DataAnnotations;
 
 namespace EmployeeManagementSystem.Domain.Entities;
@@ -35,6 +36,13 @@ public abstract class BaseEntity : AuditableEntity
     [Required]
     public DateTime CreatedOn { get; set; }
 
+    private readonly List<IDomainEvent> _domainEvents = [];
+
+    /// <summary>
+    /// Gets the domain events for this entity.
+    /// </summary>
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseEntity"/> class.
     /// </summary>
@@ -52,5 +60,21 @@ public abstract class BaseEntity : AuditableEntity
     public void RegenerateDisplayId()
     {
         DisplayId = SnowflakeIdGenerator.GenerateId();
+    }
+
+    /// <summary>
+    /// Adds a domain event to this entity.
+    /// </summary>
+    public void AddDomainEvent(IDomainEvent domainEvent)
+    {
+        _domainEvents.Add(domainEvent);
+    }
+
+    /// <summary>
+    /// Clears all domain events from this entity.
+    /// </summary>
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
     }
 }

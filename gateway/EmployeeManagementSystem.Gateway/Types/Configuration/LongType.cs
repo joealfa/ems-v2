@@ -1,6 +1,6 @@
 using HotChocolate.Language;
 
-namespace EmployeeManagementSystem.Gateway.Types;
+namespace EmployeeManagementSystem.Gateway.Types.Configuration;
 
 /// <summary>
 /// Custom Long scalar type that accepts both string and integer input values.

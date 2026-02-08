@@ -454,7 +454,7 @@ public class Mutation
             documentDisplayId,
             new UpdateDocumentDto { Description = input.Description },
             ct);
-        
+
         await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
         return result;
     }
@@ -522,7 +522,7 @@ public class Mutation
         // Invalidate both individual person cache and persons list cache
         await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
         await cache.RemoveByPrefixAsync(CacheKeys.PersonsListPrefix, ct);
-        
+
         return result.Trim('"');
     }
 
@@ -637,7 +637,7 @@ public class Mutation
             logger.LogInformation("Logout successful - tokens revoked");
             return true;
         }
-        catch (ApiException ex) when (ex.StatusCode == 400 || ex.StatusCode == 401)
+        catch (ApiException ex) when (ex.StatusCode is 400 or 401)
         {
             logger.LogDebug("Logout completed - token was already invalid/expired");
             // If the token is already invalid/expired, consider logout successful.

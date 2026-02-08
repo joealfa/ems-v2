@@ -1,7 +1,7 @@
 using EmployeeManagementSystem.ApiClient.Extensions;
-using EmployeeManagementSystem.ApiClient.Generated;
 using EmployeeManagementSystem.Gateway.Caching;
 using EmployeeManagementSystem.Gateway.DataLoaders;
+using EmployeeManagementSystem.Gateway.Messaging;
 using HotChocolate.Types.Descriptors;
 using StackExchange.Redis;
 
@@ -24,6 +24,9 @@ public static class ServiceCollectionExtensions
         {
             // Configure Redis
             _ = services.AddRedisServices(configuration);
+
+            // Configure RabbitMQ event consumer
+            _ = services.AddRabbitMQServices(configuration);
 
             // Register HttpContextAccessor for token forwarding
             _ = services.AddHttpContextAccessor();
@@ -71,13 +74,32 @@ public static class ServiceCollectionExtensions
         }
 
         /// <summary>
+        /// Adds RabbitMQ event consumer services to the service collection.
+        /// </summary>
+        /// <param name="configuration">The application configuration.</param>
+        /// <returns>The service collection for chaining.</returns>
+        private IServiceCollection AddRabbitMQServices(IConfiguration configuration)
+        {
+            // Configure RabbitMQ settings
+            _ = services.Configure<RabbitMQSettings>(configuration.GetSection(RabbitMQSettings.SectionName));
+
+            // Register RabbitMQ event consumer as singleton (single instance for the app)
+            _ = services.AddSingleton<RabbitMQEventConsumer>();
+
+            // Register background service to run the consumer
+            _ = services.AddHostedService<RabbitMQBackgroundService>();
+
+            return services;
+        }
+
+        /// <summary>
         /// Adds GraphQL services to the service collection.
         /// </summary>
         /// <returns>The service collection for chaining.</returns>
         private IServiceCollection AddGraphQLServices()
         {
             // Register custom naming convention for PascalCase enum values
-            _ = services.AddSingleton<INamingConventions, Types.PascalCaseNamingConventions>();
+            _ = services.AddSingleton<INamingConventions, Types.Configuration.PascalCaseNamingConventions>();
 
             _ = services
                 .AddGraphQLServer()
@@ -86,33 +108,33 @@ public static class ServiceCollectionExtensions
                 .AddMutationType<Types.Mutation>()
                 .AddType<UploadType>()
                 // Register custom Long scalar that accepts both string and numeric input
-                .AddType<Types.LongType>()
-                .AddTypeExtension<Types.PersonResponseDtoExtensions>()
-                .AddTypeExtension<Types.PersonListDtoExtensions>()
-                .AddTypeExtension<Types.PagedResultOfPersonListDtoExtensions>()
-                .AddTypeExtension<Types.PagedResultOfDocumentListDtoExtensions>()
-                .AddTypeExtension<Types.EmploymentResponseDtoExtensions>()
-                .AddTypeExtension<Types.EmploymentListDtoExtensions>()
-                .AddTypeExtension<Types.EmploymentPersonDtoExtensions>()
-                .AddTypeExtension<Types.EmploymentPositionDtoExtensions>()
-                .AddTypeExtension<Types.EmploymentSalaryGradeDtoExtensions>()
-                .AddTypeExtension<Types.EmploymentItemDtoExtensions>()
-                .AddTypeExtension<Types.EmploymentSchoolResponseDtoExtensions>()
-                .AddTypeExtension<Types.PagedResultOfEmploymentListDtoExtensions>()
-                .AddTypeExtension<Types.SchoolResponseDtoExtensions>()
-                .AddTypeExtension<Types.SchoolListDtoExtensions>()
-                .AddTypeExtension<Types.PagedResultOfSchoolListDtoExtensions>()
-                .AddTypeExtension<Types.PositionResponseDtoExtensions>()
-                .AddTypeExtension<Types.PagedResultOfPositionResponseDtoExtensions>()
-                .AddTypeExtension<Types.SalaryGradeResponseDtoExtensions>()
-                .AddTypeExtension<Types.PagedResultOfSalaryGradeResponseDtoExtensions>()
-                .AddTypeExtension<Types.ItemResponseDtoExtensions>()
-                .AddTypeExtension<Types.PagedResultOfItemResponseDtoExtensions>()
-                .AddTypeExtension<Types.AddressResponseDtoExtensions>()
-                .AddTypeExtension<Types.ContactResponseDtoExtensions>()
-                .AddTypeExtension<Types.DocumentListDtoExtensions>()
-                .AddTypeExtension<Types.DocumentResponseDtoExtensions>()
-                .AddTypeExtension<Types.DashboardStatsDtoExtensions>()
+                .AddType<Types.Configuration.LongType>()
+                .AddTypeExtension<Types.Extensions.PersonResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.PersonListDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.PagedResultOfPersonListDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.PagedResultOfDocumentListDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.EmploymentResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.EmploymentListDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.EmploymentPersonDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.EmploymentPositionDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.EmploymentSalaryGradeDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.EmploymentItemDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.EmploymentSchoolResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.PagedResultOfEmploymentListDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.SchoolResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.SchoolListDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.PagedResultOfSchoolListDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.PositionResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.PagedResultOfPositionResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.SalaryGradeResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.PagedResultOfSalaryGradeResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.ItemResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.PagedResultOfItemResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.AddressResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.ContactResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.DocumentListDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.DocumentResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.DashboardStatsDtoExtensions>()
                 .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
                 .AddFiltering()
                 .AddSorting()

@@ -1,7 +1,6 @@
-using HotChocolate;
 using HotChocolate.Types.Descriptors;
 
-namespace EmployeeManagementSystem.Gateway.Types;
+namespace EmployeeManagementSystem.Gateway.Types.Configuration;
 
 /// <summary>
 /// Custom naming convention that preserves PascalCase for enum values

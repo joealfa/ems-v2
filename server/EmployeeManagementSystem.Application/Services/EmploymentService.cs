@@ -1,9 +1,12 @@
 using EmployeeManagementSystem.Application.Common;
 using EmployeeManagementSystem.Application.DTOs;
 using EmployeeManagementSystem.Application.DTOs.Employment;
+using EmployeeManagementSystem.Application.Events;
 using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Mappings;
 using EmployeeManagementSystem.Domain.Entities;
+using EmployeeManagementSystem.Domain.Events.Employees;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -23,6 +26,8 @@ public class EmploymentService(
     IRepository<SalaryGrade> salaryGradeRepository,
     IRepository<Item> itemRepository,
     IRepository<School> schoolRepository,
+    IEventPublisher eventPublisher,
+    IHttpContextAccessor httpContextAccessor,
     ILogger<EmploymentService> logger) : IEmploymentService
 {
     private readonly IRepository<Employment> _employmentRepository = employmentRepository;
@@ -32,6 +37,8 @@ public class EmploymentService(
     private readonly IRepository<SalaryGrade> _salaryGradeRepository = salaryGradeRepository;
     private readonly IRepository<Item> _itemRepository = itemRepository;
     private readonly IRepository<School> _schoolRepository = schoolRepository;
+    private readonly IEventPublisher _eventPublisher = eventPublisher;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<EmploymentService> _logger = logger;
 
     /// <inheritdoc />
@@ -236,6 +243,9 @@ public class EmploymentService(
         _logger.LogInformation("Employment created successfully: DisplayId {EmploymentDisplayId}, Person: {PersonName}, Position: {PositionTitle}, Schools: {SchoolCount}",
             employment.DisplayId, person.FullName, position.TitleName, employment.EmploymentSchools.Count);
 
+        // Publish domain event
+        await PublishEmploymentCreatedEventAsync(employment, createdBy, cancellationToken);
+
         return Result<EmploymentResponseDto>.Success(employment.ToResponseDto());
     }
 
@@ -359,6 +369,18 @@ public class EmploymentService(
         _logger.LogInformation("Employment updated successfully: DisplayId {EmploymentDisplayId}, Person: {PersonName}, Position: {PositionTitle}",
             displayId, employment.Person.FullName, position.TitleName);
 
+        // Publish domain event
+        Dictionary<string, object?> changes = new()
+        {
+            ["DepEdId"] = dto.DepEdId,
+            ["PositionId"] = position.Id,
+            ["SalaryGradeId"] = salaryGrade.Id,
+            ["ItemId"] = item.Id,
+            ["EmploymentStatus"] = dto.EmploymentStatus,
+            ["IsActive"] = dto.IsActive
+        };
+        await PublishEmploymentUpdatedEventAsync(employment, changes, modifiedBy, cancellationToken);
+
         return Result<EmploymentResponseDto>.Success(employment.ToResponseDto());
     }
 
@@ -390,6 +412,9 @@ public class EmploymentService(
 
         _logger.LogInformation("Employment deleted successfully: DisplayId {EmploymentDisplayId}, DepEdId: {DepEdId}, School assignments: {SchoolCount}",
             displayId, employment.DepEdId, employment.EmploymentSchools.Count);
+
+        // Publish domain event
+        await PublishEmploymentDeletedEventAsync(employment, deletedBy, cancellationToken);
 
         return Result.Success();
     }
@@ -440,4 +465,94 @@ public class EmploymentService(
         await _employmentSchoolRepository.DeleteAsync(employmentSchool, cancellationToken);
         return Result.Success();
     }
+
+    #region Event Publishing Helpers
+
+    private async Task PublishEmploymentCreatedEventAsync(Employment employment, string userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            EmploymentCreatedEvent domainEvent = new(
+                employmentId: employment.Id,
+                personId: employment.PersonId,
+                positionId: employment.PositionId,
+                salaryGradeId: employment.SalaryGradeId,
+                itemId: employment.ItemId,
+                appointmentStatus: employment.AppointmentStatus.ToString(),
+                employmentStatus: employment.EmploymentStatus.ToString()
+            );
+
+            EventMetadata metadata = CreateEventMetadata();
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish EmploymentCreatedEvent for Employment {EmploymentId}", employment.Id);
+        }
+    }
+
+    private async Task PublishEmploymentUpdatedEventAsync(
+        Employment employment,
+        Dictionary<string, object?> changes,
+        string userId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            EmploymentUpdatedEvent domainEvent = new(employment.Id, changes);
+            EventMetadata metadata = CreateEventMetadata();
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish EmploymentUpdatedEvent for Employment {EmploymentId}", employment.Id);
+        }
+    }
+
+    private async Task PublishEmploymentDeletedEventAsync(Employment employment, string userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            EmploymentDeletedEvent domainEvent = new(employment.Id, employment.PersonId);
+            EventMetadata metadata = CreateEventMetadata();
+
+            await _eventPublisher.PublishAsync(
+                domainEvent,
+                userId,
+                _httpContextAccessor.HttpContext?.TraceIdentifier,
+                metadata,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish EmploymentDeletedEvent for Employment {EmploymentId}", employment.Id);
+        }
+    }
+
+    private EventMetadata CreateEventMetadata()
+    {
+        HttpContext httpContext = _httpContextAccessor.HttpContext;
+        return httpContext == null
+            ? new EventMetadata()
+            : new EventMetadata
+            {
+                IpAddress = httpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = httpContext.Request.Headers["User-Agent"].ToString(),
+                Source = "EmploymentService"
+            };
+    }
+
+    #endregion
 }

@@ -174,6 +174,8 @@ public class DocumentService(
             blobName,
             dto.FileStream,
             dto.ContentType,
+            "Document",
+            person.Id.ToString(),
             cancellationToken);
 
         Document document = new()
@@ -340,7 +342,7 @@ public class DocumentService(
         if (!string.IsNullOrEmpty(person.ProfileImageUrl))
         {
             string existingBlobName = $"{person.Id}/profile{Path.GetExtension(person.ProfileImageUrl)}";
-            _ = await _blobStorageService.DeleteAsync(ProfileImagesContainer, existingBlobName, cancellationToken);
+            _ = await _blobStorageService.DeleteAsync(ProfileImagesContainer, existingBlobName, "image/jpeg", "Person", person.Id.ToString(), cancellationToken);
             _logger.LogDebug("Deleted existing profile image for person {PersonDisplayId}", personDisplayId);
         }
 
@@ -351,6 +353,8 @@ public class DocumentService(
             blobName,
             dto.FileStream,
             dto.ContentType,
+            "Person",
+            person.Id.ToString(),
             cancellationToken);
 
         person.ProfileImageUrl = blobUrl;
@@ -386,7 +390,7 @@ public class DocumentService(
         string extension = Path.GetExtension(person.ProfileImageUrl);
         string blobName = $"{person.Id}/profile{extension}";
 
-        _ = await _blobStorageService.DeleteAsync(ProfileImagesContainer, blobName, cancellationToken);
+        _ = await _blobStorageService.DeleteAsync(ProfileImagesContainer, blobName, "image/jpeg", "Person", person.Id.ToString(), cancellationToken);
 
         person.ProfileImageUrl = null;
         person.HasProfileImage = false;

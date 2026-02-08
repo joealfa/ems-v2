@@ -714,6 +714,15 @@ const EmploymentFormPage = () => {
                                     );
                                   }}
                                   placeholder="Search schools by name..."
+                                  initialSchool={
+                                    school.schoolDisplayId &&
+                                    school.schoolName
+                                      ? {
+                                          displayId: school.schoolDisplayId as number,
+                                          schoolName: school.schoolName,
+                                        }
+                                      : null
+                                  }
                                 />
                               </Field.Root>
                               <Flex gap={4}>

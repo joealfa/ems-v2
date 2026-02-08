@@ -10,7 +10,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
+            _ = migrationBuilder.AddColumn<bool>(
                 name: "HasProfileImage",
                 table: "Persons",
                 type: "bit",
@@ -18,7 +18,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
                 defaultValue: false);
 
             // Update existing persons with profile images
-            migrationBuilder.Sql(
+            _ = migrationBuilder.Sql(
                 @"UPDATE Persons 
                   SET HasProfileImage = 1 
                   WHERE ProfileImageUrl IS NOT NULL AND ProfileImageUrl != ''");
@@ -27,7 +27,7 @@ namespace EmployeeManagementSystem.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
+            _ = migrationBuilder.DropColumn(
                 name: "HasProfileImage",
                 table: "Persons");
         }

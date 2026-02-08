@@ -12,6 +12,8 @@ public interface IBlobStorageService
     /// <param name="blobName">The blob name (path).</param>
     /// <param name="content">The file content stream.</param>
     /// <param name="contentType">The content type (MIME type).</param>
+    /// <param name="relatedEntityType">Optional related entity type (e.g., "Person", "Document").</param>
+    /// <param name="relatedEntityId">Optional related entity ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The URL of the uploaded blob.</returns>
     Task<string> UploadAsync(
@@ -19,6 +21,8 @@ public interface IBlobStorageService
         string blobName,
         Stream content,
         string contentType,
+        string? relatedEntityType = null,
+        string? relatedEntityId = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -38,11 +42,17 @@ public interface IBlobStorageService
     /// </summary>
     /// <param name="containerName">The container name.</param>
     /// <param name="blobName">The blob name (path).</param>
+    /// <param name="contentType">Optional content type for event publishing.</param>
+    /// <param name="relatedEntityType">Optional related entity type (e.g., "Person", "Document").</param>
+    /// <param name="relatedEntityId">Optional related entity ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if deleted successfully, false otherwise.</returns>
     Task<bool> DeleteAsync(
         string containerName,
         string blobName,
+        string? contentType = null,
+        string? relatedEntityType = null,
+        string? relatedEntityId = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

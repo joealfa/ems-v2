@@ -2,6 +2,7 @@ using AspNetCoreRateLimit;
 using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Infrastructure.Data;
+using EmployeeManagementSystem.Infrastructure.Extensions;
 using EmployeeManagementSystem.Infrastructure.Repositories;
 using EmployeeManagementSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,7 +28,7 @@ try
     WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     // Add Serilog to the application
-    builder.Host.UseSerilog((context, services, configuration) => configuration
+    _ = builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
         .Enrich.FromLogContext()
@@ -47,7 +48,7 @@ try
     string googleClientSecret = googleConfig["ClientSecret"] ?? throw new InvalidOperationException("Authentication:Google:ClientSecret is not configured");
 
     // Configure JWT Bearer Authentication
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    _ = builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -75,16 +76,18 @@ try
         };
     });
 
-    builder.Services.AddAuthorization();
+    _ = builder.Services.AddAuthorization();
 
     // Configure IP Rate Limiting
-    builder.Services.AddMemoryCache();
-    builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
-    builder.Services.AddInMemoryRateLimiting();
-    builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+    _ = builder.Services.AddMemoryCache();
+    _ = builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+    _ = builder.Services.AddInMemoryRateLimiting();
+    _ = builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
     // Add services to the container.
-    builder.Services.AddControllers()
+    _ = builder.Services.AddHttpContextAccessor();
+
+    _ = builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
             // Use string enum values for better compatibility with Gateway and Frontend
@@ -93,8 +96,8 @@ try
         });
 
     // Configure OpenAPI with JWT Bearer and Google OAuth2 Authorization
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddOpenApi(options =>
+    _ = builder.Services.AddEndpointsApiExplorer();
+    _ = builder.Services.AddOpenApi(options =>
     {
         // Use OpenAPI 3.1 specification
         options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_1;
@@ -204,32 +207,35 @@ try
     });
 
     // Configure Entity Framework Core with SQL Server
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    _ = builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(
             builder.Configuration.GetConnectionString("DefaultConnection"),
             b => b.MigrationsAssembly("EmployeeManagementSystem.Infrastructure")));
 
     // Register Repositories
-    builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+    _ = builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
     // Register Services
-    builder.Services.AddScoped<IPersonService, PersonService>();
-    builder.Services.AddScoped<ISchoolService, SchoolService>();
-    builder.Services.AddScoped<IItemService, ItemService>();
-    builder.Services.AddScoped<IPositionService, PositionService>();
-    builder.Services.AddScoped<ISalaryGradeService, SalaryGradeService>();
-    builder.Services.AddScoped<IEmploymentService, EmploymentService>();
-    builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
-    builder.Services.AddScoped<IDocumentService, DocumentService>();
-    builder.Services.AddScoped<IReportsService, ReportsService>();
-    builder.Services.AddScoped<IAuthService, AuthService>();
+    _ = builder.Services.AddScoped<IPersonService, PersonService>();
+    _ = builder.Services.AddScoped<ISchoolService, SchoolService>();
+    _ = builder.Services.AddScoped<IItemService, ItemService>();
+    _ = builder.Services.AddScoped<IPositionService, PositionService>();
+    _ = builder.Services.AddScoped<ISalaryGradeService, SalaryGradeService>();
+    _ = builder.Services.AddScoped<IEmploymentService, EmploymentService>();
+    _ = builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+    _ = builder.Services.AddScoped<IDocumentService, DocumentService>();
+    _ = builder.Services.AddScoped<IReportsService, ReportsService>();
+    _ = builder.Services.AddScoped<IAuthService, AuthService>();
+
+    // Register RabbitMQ Messaging
+    _ = builder.Services.AddRabbitMQMessaging(builder.Configuration);
 
     // Get CORS configuration
     string[] allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
         ?? throw new InvalidOperationException("Cors:AllowedOrigins is not configured");
 
     // Configure CORS
-    builder.Services.AddCors(options =>
+    _ = builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowHost", policy =>
         {
@@ -245,7 +251,7 @@ try
     // Configure the HTTP request pipeline.
 
     // Add Serilog request logging - replaces default logging with structured logging
-    app.UseSerilogRequestLogging(options =>
+    _ = app.UseSerilogRequestLogging(options =>
     {
         // Customize the message template
         options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
@@ -294,14 +300,13 @@ try
         using IServiceScope scope = app.Services.CreateScope();
         ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await dbContext.Database.MigrateAsync();
-        await DataSeeder.SeedAsync(dbContext);
     }
 
     // CORS must be before HttpsRedirection to handle preflight requests
-    app.UseCors("AllowHost");
+    _ = app.UseCors("AllowHost");
 
     // Use IP Rate Limiting
-    app.UseIpRateLimiting();
+    _ = app.UseIpRateLimiting();
 
     // OpenAPI should be accessible via HTTP in development
     if (app.Environment.IsDevelopment())
@@ -309,10 +314,10 @@ try
         _ = app.MapOpenApi();
     }
 
-    app.UseHttpsRedirection();
-    app.UseAuthentication();
-    app.UseAuthorization();
-    app.MapControllers();
+    _ = app.UseHttpsRedirection();
+    _ = app.UseAuthentication();
+    _ = app.UseAuthorization();
+    _ = app.MapControllers();
 
     Log.Information("Employee Management System API started successfully");
     app.Run();
