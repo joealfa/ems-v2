@@ -1,0 +1,16 @@
+subscription OnActivityEvent {
+  subscribeToActivityEvents {
+    id
+    eventType
+    entityType
+    entityId
+    operation
+    timestamp
+    userId
+    message
+    metadata {
+      key
+      value
+    }
+  }
+}

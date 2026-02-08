@@ -11,7 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSchool, useDeleteSchool } from '../../hooks/useSchools';
-import { formatAddress } from '../../utils/formatters';
+import { formatAddress } from '../../utils';
 import { useConfirm, useToast } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
 

@@ -135,7 +135,102 @@ async function fetchPersons() {
 - `useLogout()` - Logout user
 - `useCurrentUser()` - Get current user info
 
+### Subscriptions (Real-time Updates)
+- `useRecentActivities()` - Subscribe to real-time activity feed via WebSocket
+  - Returns `{ activities, isConnected, error }`
+  - Maintains local buffer of last 50 events
+  - Automatic reconnection on connection loss
+  - Connection status indicator
+
 ## TanStack Query Features
+
+### WebSocket Subscriptions
+
+The application uses GraphQL subscriptions over WebSocket for real-time activity updates.
+
+#### Using the Activity Feed
+
+```tsx
+import { useRecentActivities } from '../hooks/useRecentActivities';
+import { formatTimestamp, getActivityIcon } from '../utils';
+
+function Dashboard() {
+  const { activities, isConnected, error } = useRecentActivities();
+
+  return (
+    <div>
+      {/* Connection indicator */}
+      {isConnected && (
+        <Badge colorScheme="green">Live</Badge>
+      )}
+
+      {/* Error handling */}
+      {error && (
+        <Alert status="error">
+          Connection error: {error.message}
+        </Alert>
+      )}
+
+      {/* Activity list */}
+      {activities.map(activity => (
+        <div key={activity.id}>
+          <Text>
+            {getActivityIcon(activity.entityType)} {activity.message}
+          </Text>
+          <Text fontSize="xs" color="gray.500">
+            {formatTimestamp(activity.timestamp)}
+          </Text>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+#### Subscription Features
+
+- **Real-time Updates**: Receives events instantly via WebSocket
+- **Buffered History**: New subscribers get last 50 events immediately
+- **Auto-reconnection**: Reconnects automatically if connection is lost
+- **Connection Status**: Track connection state with `isConnected`
+- **Error Handling**: Provides error details via `error` property
+- **Local Buffer**: Maintains local copy of last 50 events for resilience
+
+#### Activity Event Structure
+
+```typessubscription-client.ts # graphql-ws WebSocket client
+│   ├── query-client.ts        # TanStack QueryClient configuration
+│   ├── QueryProvider.tsx      # TanStack Query provider wrapper
+│   ├── query-keys.ts         # Query key factory for cache management
+│   ├── error-handler.ts      # Global error handling utilities
+│   ├── types.ts              # Shared pagination types
+│   ├── index.ts              # Barrel exports
+│   ├── operations/            # GraphQL queries/mutations/subscriptions (.graphql files)
+│   │   ├── auth.graphql       # Authentication mutations
+│   │   ├── dashboard.graphql  # Dashboard statistics query
+│   │   ├── documents.graphql  # Document queries and mutations
+│   │   ├── employments.graphql
+│   │   ├── items.graphql
+│   │   ├── persons.graphql
+│   │   ├── positions.graphql
+│   │   ├── salary-grades.graphql
+│   │   ├── schools.graphql
+│   │   └── subscriptions.graphql  # Real-time subscription operations
+│   └── generated/             # Auto-generated types (DO NOT EDIT)
+│       ├── gql.ts             # Document exports
+│       └── graphql.ts         # Types and operations
+└── hooks/
+    ├── index.ts               # Barrel export file
+    ├── useAuth.ts             # Authentication hook
+    ├── useAuthMutations.ts    # Auth mutations (login, logout)
+    ├── useDashboard.ts        # Dashboard statistics hook
+    ├── useDebounce.ts         # Debounce utility hook
+    ├── useDocuments.ts        # Document operations and helpers
+    ├── useEmployments.ts      # Employment CRUD hooks
+    ├── useItems.ts            # Item CRUD hooks
+    ├── usePersons.ts          # Person CRUD hooks
+    ├── usePositions.ts        # Position CRUD hooks
+    ├── useRecentActivities.ts # Real-time activity subscription hook
 
 ### Automatic Caching
 TanStack Query caches query results using query keys. Data is considered fresh for a configurable `staleTime`, then automatically refetched in the background:
@@ -229,6 +324,8 @@ src/
 
 1. **Always use custom hooks** - They provide better error handling and TypeScript support
 2. **Don't edit generated files** - They're overwritten by codegen
+6. **Use subscriptions for real-time updates** - Leverage WebSocket for activity feeds
+7. **Centralize utilities** - Import utils from `@/utils` for consistency
 3. **Use query key factory** - Keep cache keys consistent via `query-keys.ts`
 4. **Invalidate on mutation** - Use `onSuccess` to invalidate related query keys
 5. **Handle loading/error states** - Always show feedback to users
@@ -249,8 +346,14 @@ onSuccess: () => {
 ```
 
 ### Network errors
+Check that: and `VITE_GRAPHQL_WS_URL`
+3. Authentication token is valid
+
+### Subscription not connecting
 Check that:
-1. Gateway is running on `https://localhost:5003`
+1. WebSocket URL is correct in `.env`: `VITE_GRAPHQL_WS_URL=wss://localhost:5003/graphql`
+2. Gateway has WebSocket support enabled (check Program.cs for `app.UseWebSockets()`)
+3. Browser console for WebSocket connection errors//localhost:5003`
 2. `.env` has correct `VITE_GRAPHQL_URL`
 3. Authentication token is valid
 

@@ -85,7 +85,10 @@ try
     // Map REST controllers for file operations
     _ = app.MapControllers();
 
-    // Map GraphQL endpoint
+    // Enable WebSockets for GraphQL subscriptions
+    _ = app.UseWebSockets();
+
+    // Map GraphQL endpoint with subscriptions enabled
     _ = app.MapGraphQL();
 
     // Health check endpoint

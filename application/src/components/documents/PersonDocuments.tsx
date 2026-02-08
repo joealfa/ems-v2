@@ -10,7 +10,7 @@ import {
   Spinner,
 } from '@chakra-ui/react';
 import DocumentsTable from './DocumentsTable';
-import { formatFileSize } from '../../utils/formatters';
+import { formatFileSize } from '../../utils';
 import {
   usePersonDocuments,
   useUploadDocument,

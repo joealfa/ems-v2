@@ -2,6 +2,7 @@ using EmployeeManagementSystem.ApiClient.Extensions;
 using EmployeeManagementSystem.Gateway.Caching;
 using EmployeeManagementSystem.Gateway.DataLoaders;
 using EmployeeManagementSystem.Gateway.Messaging;
+using EmployeeManagementSystem.Gateway.Services;
 using HotChocolate.Types.Descriptors;
 using StackExchange.Redis;
 
@@ -27,6 +28,9 @@ public static class ServiceCollectionExtensions
 
             // Configure RabbitMQ event consumer
             _ = services.AddRabbitMQServices(configuration);
+
+            // Register ActivityEventBuffer for subscription history
+            _ = services.AddSingleton<ActivityEventBuffer>();
 
             // Register HttpContextAccessor for token forwarding
             _ = services.AddHttpContextAccessor();
@@ -106,6 +110,8 @@ public static class ServiceCollectionExtensions
                 .AddErrorFilter<Errors.ApiExceptionErrorFilter>()
                 .AddQueryType<Types.Query>()
                 .AddMutationType<Types.Mutation>()
+                .AddSubscriptionType<Types.Subscription>()
+                .AddInMemorySubscriptions()
                 .AddType<UploadType>()
                 // Register custom Long scalar that accepts both string and numeric input
                 .AddType<Types.Configuration.LongType>()

@@ -11,7 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEmployment, useDeleteEmployment } from '../../hooks/useEmployments';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency } from '../../utils';
 import { useConfirm, useToast } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
 

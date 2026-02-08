@@ -28,7 +28,7 @@ import { useSalaryGradesLazy } from '../../hooks/useSalaryGrades';
 import type { SalaryGradeResponseDto } from '../../graphql/generated/graphql';
 import { useAgGridTheme } from '../../components/ui/use-ag-grid-theme';
 import { EyeIcon, EditIcon } from '../../components/icons';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency } from '../../utils';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 

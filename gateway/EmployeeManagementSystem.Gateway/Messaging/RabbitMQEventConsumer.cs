@@ -1,4 +1,7 @@
 using EmployeeManagementSystem.Gateway.Caching;
+using EmployeeManagementSystem.Gateway.Services;
+using EmployeeManagementSystem.Gateway.Types;
+using HotChocolate.Subscriptions;
 using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Retry;
@@ -17,6 +20,8 @@ public sealed class RabbitMQEventConsumer : IDisposable
     private readonly RabbitMQSettings _settings;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<RabbitMQEventConsumer> _logger;
+    private readonly ITopicEventSender _eventSender;
+    private readonly ActivityEventBuffer _eventBuffer;
     private IConnection? _connection;
     private IModel? _channel;
     private readonly ResiliencePipeline? _retryPipeline;
@@ -30,11 +35,15 @@ public sealed class RabbitMQEventConsumer : IDisposable
     public RabbitMQEventConsumer(
         IOptions<RabbitMQSettings> settings,
         IServiceProvider serviceProvider,
-        ILogger<RabbitMQEventConsumer> logger)
+        ILogger<RabbitMQEventConsumer> logger,
+        ITopicEventSender eventSender,
+        ActivityEventBuffer eventBuffer)
     {
         _settings = settings.Value;
         _serviceProvider = serviceProvider;
         _logger = logger;
+        _eventSender = eventSender;
+        _eventBuffer = eventBuffer;
 
         if (_settings.Enabled)
         {
@@ -175,36 +184,6 @@ public sealed class RabbitMQEventConsumer : IDisposable
             string body = Encoding.UTF8.GetString(ea.Body.ToArray());
             string routingKey = ea.RoutingKey;
 
-            // Print to console with clear formatting
-            Console.WriteLine("╔═══════════════════════════════════════════════════════════════════════════════");
-            Console.WriteLine("║ 📨 RABBITMQ MESSAGE RECEIVED");
-            Console.WriteLine("╠═══════════════════════════════════════════════════════════════════════════════");
-            Console.WriteLine($"║ Routing Key: {routingKey}");
-            Console.WriteLine($"║ Timestamp:    {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff} UTC");
-            Console.WriteLine("╠═══════════════════════════════════════════════════════════════════════════════");
-            Console.WriteLine("║ MESSAGE BODY:");
-            Console.WriteLine("╠═══════════════════════════════════════════════════════════════════════════════");
-
-            // Pretty print the JSON message
-            try
-            {
-                JsonDocument jsonDoc = JsonDocument.Parse(body);
-                string prettyJson = JsonSerializer.Serialize(jsonDoc, PrettyPrintOptions);
-
-                foreach (string line in prettyJson.Split('\n'))
-                {
-                    Console.WriteLine($"║ {line}");
-                }
-            }
-            catch
-            {
-                // If JSON parsing fails, just print raw body
-                Console.WriteLine($"║ {body}");
-            }
-
-            Console.WriteLine("╚═══════════════════════════════════════════════════════════════════════════════");
-            Console.WriteLine();
-
             _logger.LogDebug("Received event with routing key: {RoutingKey}", routingKey);
 
             // Deserialize CloudEvent
@@ -219,17 +198,15 @@ public sealed class RabbitMQEventConsumer : IDisposable
             // Invalidate cache based on event type
             await InvalidateCacheForEventAsync(cloudEvent.Type, cloudEvent.Data);
 
+            // Publish to GraphQL subscriptions and buffer
+            await PublishActivityEventAsync(cloudEvent);
+
             _logger.LogInformation("✅ Processed event {EventType} for {EntityType}:{EntityId}",
                 cloudEvent.Type, cloudEvent.Data.EntityType, cloudEvent.Data.EntityId);
-
-            Console.WriteLine($"✅ Cache invalidated for event: {cloudEvent.Type}");
-            Console.WriteLine();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing RabbitMQ message with routing key {RoutingKey}", ea.RoutingKey);
-            Console.WriteLine($"❌ ERROR processing message: {ex.Message}");
-            Console.WriteLine();
             // Message is already ack'd, so it won't be redelivered
         }
     }
@@ -356,6 +333,124 @@ public sealed class RabbitMQEventConsumer : IDisposable
                 _logger.LogDebug("Invalidated person caches due to blob change");
             }
         }
+    }
+
+    private async Task PublishActivityEventAsync(CloudEvent<EventMessage> cloudEvent)
+    {
+        try
+        {
+            ActivityEventDto activityEvent = TransformToActivityEvent(cloudEvent);
+
+            // Add to buffer
+            _eventBuffer.AddEvent(activityEvent);
+
+            // Publish to GraphQL subscriptions
+            await _eventSender.SendAsync("ActivityEvent", activityEvent);
+
+            _logger.LogDebug("Published activity event: {Message}", activityEvent.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish activity event for {EventType}", cloudEvent.Type);
+        }
+    }
+
+    private ActivityEventDto TransformToActivityEvent(CloudEvent<EventMessage> cloudEvent)
+    {
+        EventMessage data = cloudEvent.Data;
+        string message = GenerateFriendlyMessage(data.EntityType, data.Operation, data.Payload);
+
+        return new ActivityEventDto
+        {
+            Id = cloudEvent.Id,
+            EventType = cloudEvent.Type,
+            EntityType = data.EntityType,
+            EntityId = data.EntityId,
+            Operation = data.Operation,
+            Timestamp = data.Timestamp,
+            UserId = data.UserId,
+            Message = message,
+            Metadata = data.Metadata != null
+                ? data.Metadata.Where(kv => kv.Value != null).ToDictionary(kv => kv.Key, kv => kv.Value!)
+                : null
+        };
+    }
+
+    private string GenerateFriendlyMessage(string entityType, string operation, Dictionary<string, object?>? payload)
+    {
+        string entityName = GetEntityDisplayName(entityType);
+        string actionVerb = GetActionVerb(operation);
+
+        // Try to extract entity-specific details from payload
+        string? identifier = GetEntityIdentifier(entityType, payload);
+
+        if (!string.IsNullOrEmpty(identifier))
+        {
+            return $"{entityName} '{identifier}' was {actionVerb}";
+        }
+
+        return $"A {entityName.ToLower()} was {actionVerb}";
+    }
+
+    private string GetEntityDisplayName(string entityType) => entityType.ToLowerInvariant() switch
+    {
+        "person" => "Person",
+        "school" => "School",
+        "employee" => "Employment",
+        "item" => "Item",
+        "position" => "Position",
+        "salarygrade" => "Salary Grade",
+        "blob" => "File",
+        _ => entityType
+    };
+
+    private string GetActionVerb(string operation) => operation.ToUpperInvariant() switch
+    {
+        "CREATE" => "created",
+        "UPDATE" => "updated",
+        "DELETE" => "deleted",
+        "ASSIGN" => "assigned",
+        "REMOVE" => "removed",
+        "UPLOAD" => "uploaded",
+        _ => operation.ToLower()
+    };
+
+    private string? GetEntityIdentifier(string entityType, Dictionary<string, object?>? payload)
+    {
+        if (payload == null) return null;
+
+        try
+        {
+            return entityType.ToLowerInvariant() switch
+            {
+                "person" => GetPayloadValue(payload, "FirstName") != null && GetPayloadValue(payload, "LastName") != null
+                    ? $"{GetPayloadValue(payload, "FirstName")} {GetPayloadValue(payload, "LastName")}"
+                    : GetPayloadValue(payload, "DisplayId"),
+                "school" => GetPayloadValue(payload, "SchoolName"),
+                "item" => GetPayloadValue(payload, "Name"),
+                "position" => GetPayloadValue(payload, "PositionTitle"),
+                "salarygrade" => GetPayloadValue(payload, "Grade"),
+                _ => null
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private string? GetPayloadValue(Dictionary<string, object?> payload, string key)
+    {
+        if (payload.TryGetValue(key, out object? value))
+        {
+            // Handle JsonElement conversion
+            if (value is JsonElement jsonElement)
+            {
+                return jsonElement.ValueKind == JsonValueKind.String ? jsonElement.GetString() : jsonElement.ToString();
+            }
+            return value?.ToString();
+        }
+        return null;
     }
 
     public void Dispose()

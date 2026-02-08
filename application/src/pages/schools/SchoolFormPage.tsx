@@ -30,7 +30,7 @@ import type {
   AddressType,
   ContactType,
 } from '../../graphql/generated/graphql';
-import { formatEnumLabel } from '../../utils/formatters';
+import { formatEnumLabel } from '../../utils';
 import { useToast } from '../../hooks';
 
 // GraphQL enum values - used directly for both display and API calls

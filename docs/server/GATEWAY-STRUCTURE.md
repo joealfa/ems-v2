@@ -7,7 +7,7 @@ The Gateway GraphQL project has been reorganized for better maintainability and 
 
 ```
 gateway/EmployeeManagementSystem.Gateway/
-├── Program.cs                          # Application entry point
+├── Program.cs                          # Application entry point (with WebSocket support)
 ├── appsettings.json                    # Configuration settings
 ├── appsettings.Development.json        # Development configuration
 ├── Caching/                            # Redis caching implementation
@@ -30,13 +30,17 @@ gateway/EmployeeManagementSystem.Gateway/
 ├── Mappings/                           # GraphQL input to DTO mappings
 │   └── InputMappingExtensions.cs       # Extension methods for mapping inputs
 ├── Messaging/                          # RabbitMQ event consumer
-│   ├── RabbitMQEventConsumer.cs        # Event consumer (cache invalidation)
+│   ├── RabbitMQEventConsumer.cs        # Event consumer (cache + subscriptions)
 │   ├── RabbitMQBackgroundService.cs    # Background service lifecycle
 │   ├── RabbitMQSettings.cs             # RabbitMQ configuration
 │   └── CloudEvent.cs                   # CloudEvents message model
+├── Services/                           # Application services
+│   └── ActivityEventBuffer.cs          # Circular buffer for recent activity events
 ├── Types/                              # GraphQL type definitions
 │   ├── Query.cs                        # All GraphQL queries
 │   ├── Mutation.cs                     # All GraphQL mutations (with logging)
+│   ├── Subscription.cs                 # GraphQL subscriptions (real-time updates)
+│   ├── ActivityEventDto.cs             # Activity event DTO for subscriptions
 │   ├── Configuration/                  # GraphQL configuration & scalars
 │   │   ├── PascalCaseNamingConventions.cs  # Custom naming conventions for enums
 │   │   └── LongType.cs                 # Custom Long scalar type
@@ -76,6 +80,38 @@ gateway/EmployeeManagementSystem.Gateway/
 - `getPersonDocuments` - Get paginated list of documents
 - `getDocument` - Get a single document by ID
 - `getProfileImageUrl` - Get profile image URL
+
+### ✅ GraphQL Subscriptions (Real-time Updates)
+
+**Subscriptions** (`Subscription.cs`):
+- `subscribeToActivityEvents` - Subscribe to real-time activity events via WebSocket
+
+**Supporting Components**:
+- `ActivityEventDto.cs` - DTO for activity events with message, metadata, and timestamp
+- `ActivityEventBuffer.cs` - Circular buffer (50 events) for new subscribers to receive recent history
+- WebSocket support enabled in Program.cs
+- Uses HotChocolate.Subscriptions and graphql-ws protocol
+
+**Subscription Example**:
+
+```graphql
+subscription OnActivityEvent {
+  subscribeToActivityEvents {
+    id
+    eventType
+    entityType
+    entityId
+    operation
+    timestamp
+    userId
+    message
+    metadata {
+      key
+      value
+    }
+  }
+}
+```
 
 ### ✅ Authentication (GraphQL)
 
@@ -123,17 +159,17 @@ This will generate hooks like:
 ## Logging and Monitoring
 
 ### Serilog Integration
+ Subscription Broadcast |
+|---------------|-------------------|------------------------|
+| `com.ems.person.*` | `persons:list:*`, `employments:list:*` | Activity Feed |
+| `com.ems.school.*` | `schools:list:*`, `employments:list:*` | Activity Feed |
+| `com.ems.item.*` | `items:list:*` | Activity Feed |
+| `com.ems.position.*` | `positions:list:*`, `employments:list:*` | Activity Feed |
+| `com.ems.salarygrade.*` | `salarygrades:list:*`, `employments:list:*` | Activity Feed |
+| `com.ems.employee.*` | `employments:list:*` | Activity Feed |
+| `com.ems.blob.*` | Depends on `relatedEntityType` | Activity Feed |
 
-The Gateway uses **Serilog** for structured logging with the following components logged:
-
-**Logged Operations**:
-- **Mutations**: All create/update/delete operations for persons, employments, documents, auth
-- **RedisCacheService**: Cache hits, misses, and failures
-- **DataLoaders**: Entity fetch failures
-- **ApiExceptionErrorFilter**: GraphQL API exceptions with status codes
-- **ProfileImageController**: Profile image proxy operations
-- **RabbitMQEventConsumer**: Event consumption and cache invalidation
-- **Request Logging**: All HTTP requests with response times, status codes, user IDs
+All events also invalidate the dashboard stats cache and broadcast to subscribed clientsse times, status codes, user IDs
 
 **Log Destinations**:
 - **Console**: Colored output for local development
@@ -193,6 +229,8 @@ See [RabbitMQ Events Documentation](../TESTING_RABBITMQ_EVENTS.md) for complete 
 1. **Consistency**: All API operations now use GraphQL
 2. **Type Safety**: Auto-generated types from GraphQL schema
 3. **Better Performance**: DataLoaders prevent N+1 queries
-4. **Cleaner Architecture**: No mixing of REST and GraphQL
-5. **Caching**: Redis caching at the GraphQL layer
-6. **Observability**: Comprehensive structured logging with Serilog + Seq
+4. **Real-time Updates**: WebSocket subscriptions for activity feed
+5. **Event-driven Architecture**: RabbitMQ for cache invalidation and broadcasting
+6. **Cleaner Architecture**: No mixing of REST and GraphQL (except file operations)
+7. **Caching**: Redis caching at the GraphQL layer
+8. **Observability**: Comprehensive structured logging with Serilog + Seq

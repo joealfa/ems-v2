@@ -27,6 +27,7 @@
 - **Chakra-UI** - Component library
 - **TanStack Query** - Server state management and data fetching
 - **graphql-request** - Lightweight GraphQL client
+- **graphql-ws** - WebSocket client for GraphQL subscriptions
 - **GraphQL Code Generator** - Auto-generated types and documents
 - **AG Grid** - Data grid component
 
@@ -34,6 +35,7 @@
 - **HotChocolate** - GraphQL server for .NET
 - **Redis** - Caching layer
 - **RabbitMQ** - Event consumption (Consumer) for cache invalidation
+- **GraphQL Subscriptions** - WebSocket support for real-time updates
 - **Serilog + Seq** - Structured logging
 
 
@@ -58,24 +60,32 @@ ems-v2/
 │   │   └── setup-rabbitmq-queues.ps1               # RabbitMQ setup script
 │   └── tests/
 │       ├── EmployeeManagementSystem.Tests/         # Unit and integration tests
-├── gateway/                                        # GraphQL Gateway (HotChocolate)
-│   └── EmployeeManagementSystem.Gateway/           # GraphQL types, queries, mutations
-│       ├── Types/                                  # Query.cs, Mutation.cs, TypeExtensions.cs
+├── gateway/                                        # GraphQL Gateway (HotChocolate), subscriptions
+│       ├── Types/                                  # Query.cs, Mutation.cs, Subscription.cs, TypeExtensions.cs
 │       ├── Controllers/                            # REST proxy controllers for file operations
 │       ├── Caching/                                # Redis caching service and keys
 │       ├── DataLoaders/                            # HotChocolate DataLoaders for batching
+│       ├── Messaging/                              # RabbitMQ event consumer (Consumer)
+│       ├── Services/                               # ActivityEventBuffer for subscription historying
 │       ├── Messaging/                              # RabbitMQ event consumer (Consumer)
 │       └── Mappings/                               # Input type to DTO mappings
 ├── application/                                    # Frontend Application (React/TypeScript/Vite/Chakra-UI)
 │   └── src/                                        # Source code
 │       ├── components/                             # Reusable UI components
 │       ├── graphql/                                # GraphQL operations and generated code
-│       │   ├── graphql-client.ts                   # graphql-request client setup
+│       │   ├── subscription-client.ts              # graphql-ws WebSocket client
 │       │   ├── query-client.ts                     # TanStack QueryClient configuration
 │       │   ├── QueryProvider.tsx                    # TanStack Query provider wrapper
 │       │   ├── query-keys.ts                       # Query key factory for cache management
-│       │   ├── operations/                         # .graphql query/mutation files
+│       │   ├── operations/                         # .graphql query/mutation/subscription files
 │       │   └── generated/                          # Auto-generated types and documents
+│       ├── hooks/                                  # Custom React hooks (TanStack Query, subscriptions)
+│       ├── utils/                                  # Utility functions (formatters, helpers, mappers)
+│       │   ├── index.ts                            # Centralized exports for all utils
+│       │   ├── formatters.ts                       # Format functions (currency, date, enum, etc.)
+│       │   ├── helper.ts                           # Helper functions (getInitials, getActivityIcon, etc.)
+│       │   ├── mapper.ts                           # Enum options for forms
+│       │   └── devAuth.ts                          # Development authentication utilities
 │       ├── hooks/                                  # Custom React hooks (TanStack Query)
 │       └── contexts/                               # React context providers (AuthContext)
 ├── docs/                                           # Shared documentation
@@ -238,7 +248,9 @@ The GraphQL Gateway serves as the BFF (Backend-for-Frontend) layer:
 **GraphQL Types** (`gateway/.../Types/`):
 - `Query.cs` - All GraphQL queries with Redis caching
 - `Mutation.cs` - All GraphQL mutations with cache invalidation
+- `Subscription.cs` - GraphQL subscriptions for real-time updates
 - `TypeExtensions.cs` - GraphQL type extensions for nested resolvers
+- `ActivityEventDto.cs` - DTO for activity events in subscriptions
 
 **REST Controllers** (`gateway/.../Controllers/`):
 - `ProfileImageController.cs` - Proxy for profile image operations
@@ -289,18 +301,75 @@ string cacheKey = CacheKeys.PersonsList(
 - Use `RemoveAsync()` for individual entity caches
 
 **RabbitMQ Event Consumer** (`gateway/.../Messaging/`):
-- `RabbitMQEventConsumer.cs` - Listens for domain events and invalidates cache
+- `RabbitMQEventConsumer.cs` - Listens for domain events, invalidates cache, and broadcasts to subscribers
 - `RabbitMQBackgroundService.cs` - Background service lifecycle management
 - Events invalidate related caches (e.g., person events → persons:list:*, employments:list:*)
+- Events publish to GraphQL subscriptions for real-time updates
 - Dashboard stats are always invalidated on any entity change
 
+**GraphQL Subscriptions** (`gateway/.../Types/` and `gateway/.../Services/`):
+- `Subscription.cs` - Contains `subscribeToActivityEvents` subscription endpoint
+- `ActivityEventBuffer.cs` - In-memory circular buffer (50 events) for new subscribers
+- New subscribers immediately receive buffered history + live events
+- WebSocket connection at `/graphql` using graphql-ws protocol
+- Automatic reconnection and keep-alive (10s ping interval)
+
 **Event Types:**
-| Event Pattern | Cache Invalidated |
-|---------------|-------------------|
-| `com.ems.person.*` | `persons:list:*`, `employments:list:*` |
-| `com.ems.school.*` | `schools:list:*`, `employments:list:*` |
-| `com.ems.item.*` | `items:list:*` |
-| `com.ems.position.*` | `positions:list:*`, `employments:list:*` |
+| Event Pattern | Cache Invalidated | Subscription Broadcast |
+|---------------|-------------------|------------------------|
+| `com.ems.person.*` | `persons:list:*`, `employments:list:*` | Activity Feed |
+| `com.ems.school.*` | `schools:list:*`, `employments:list:*` | Activity Feed |
+| `com.ems.item.*` | `items:list:*` | Activity Feed |
+| `com.ems.position.*` | `positions:list:*`, `employments:list:*` | Activity Feed |
+
+
+### Frontend Architecture Guidelines
+
+**Utils Organization**:
+All utility functions are centralized in `application/src/utils/` with a single entry point:
+
+```typescript
+// Import from centralized index
+import { formatCurrency, getActivityIcon, formatTimestamp } from '@/utils';
+```
+
+**Utils Structure**:
+- `index.ts` - Centralized exports for all utilities
+- `formatters.ts` - Format functions (formatCurrency, formatAddress, formatFileSize, formatTimestamp, formatEnumLabel)
+- `helper.ts` - Helper functions (getDocumentTypeColor, getInitials, getActivityIcon)
+- `mapper.ts` - Enum option arrays for forms (AppointmentStatusOptions, EmploymentStatusOptions, etc.)
+- `devAuth.ts` - Development authentication utilities (only in dev mode)
+
+**Benefits**:
+- Single import source prevents circular dependencies
+- Easier to discover available utilities via IntelliSense
+- Consistent import paths across the application
+- Clear separation of concerns (formatting vs helpers vs mappers)
+
+**GraphQL Subscriptions (Frontend)**:
+- `subscription-client.ts` - WebSocket client using `graphql-ws`
+- `useRecentActivities` hook - Custom hook for activity feed subscription
+- Automatic reconnection on connection loss
+- Local buffer of last 50 events for resilience
+- Connection status indicator in Dashboard
+
+**Subscription Usage Example**:
+```typescript
+import { useRecentActivities } from '../hooks/useRecentActivities';
+
+function Dashboard() {
+  const { activities, isConnected, error } = useRecentActivities();
+
+  return (
+    <div>
+      {isConnected && <Badge colorScheme="green">Live</Badge>}
+      {activities.map(activity => (
+        <ActivityItem key={activity.id} activity={activity} />
+      ))}
+    </div>
+  );
+}
+```
 
 
 ### UI guidelines
@@ -313,7 +382,8 @@ string cacheKey = CacheKeys.PersonsList(
 
 ### Security Guidelines
 
-This project follows security best practices:
+Thigraphql-ws Documentation](https://github.com/enisdenjo/graphql-ws)
+- [s project follows security best practices:
 
 **Authentication & Authorization:**
 - JWT Bearer tokens with 15-minute expiration

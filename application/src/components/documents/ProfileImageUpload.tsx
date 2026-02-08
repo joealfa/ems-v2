@@ -8,7 +8,7 @@ import {
 } from '../../hooks/useDocuments';
 import { useConfirm } from '../../hooks';
 import { ConfirmDialog } from '../ui';
-import { getInitials } from '../../utils/helper';
+import { getInitials } from '../../utils';
 
 interface ProfileImageUploadProps {
   personDisplayId: number;

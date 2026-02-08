@@ -35,12 +35,12 @@ import type {
 import PersonSearchSelect from '../../components/PersonSearchSelect';
 import ItemSearchSelect from '../../components/ItemSearchSelect';
 import SchoolSearchSelect from '../../components/SchoolSearchSelect';
-import { formatEnumLabel } from '../../utils/formatters';
 import {
+  formatEnumLabel,
   AppointmentStatusOptions,
   EmploymentStatusOptions,
   EligibilityOptions,
-} from '../../utils/mapper';
+} from '../../utils';
 import { useToast } from '../../hooks';
 
 interface EmploymentFormData {
@@ -715,10 +715,10 @@ const EmploymentFormPage = () => {
                                   }}
                                   placeholder="Search schools by name..."
                                   initialSchool={
-                                    school.schoolDisplayId &&
-                                    school.schoolName
+                                    school.schoolDisplayId && school.schoolName
                                       ? {
-                                          displayId: school.schoolDisplayId as number,
+                                          displayId:
+                                            school.schoolDisplayId as number,
                                           schoolName: school.schoolName,
                                         }
                                       : null

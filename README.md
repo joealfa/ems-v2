@@ -57,6 +57,7 @@ ems-v2/
 - **HotChocolate 15** - GraphQL server for .NET
 - **Redis** - Caching layer with hash-based key generation
 - **RabbitMQ** - Event consumption (Consumer) for cache invalidation
+- **GraphQL Subscriptions** - WebSocket support for real-time updates
 - **Serilog + Seq** - Structured logging and centralized monitoring
 
 ### Frontend (React 19)
@@ -67,20 +68,24 @@ ems-v2/
 - **AG Grid** - Data grid component
 - **TanStack Query** - Server state management and data fetching
 - **graphql-request** - Lightweight GraphQL client
+- **graphql-ws** - WebSocket client for GraphQL subscriptions
 - **GraphQL Code Generator** - Auto-generated types and documents
 - **React Router** - Client-side routing
 
 ## Features
 
-- **Person Management** - Create, update, and manage person records
-- **Employment Tracking** - Track employment history and status
+- **Person Management** - Create, update, and manage person records with profile images
+- **Employment Tracking** - Track employment history, school assignments, and status
 - **Position Management** - Define and manage job positions
 - **Salary Grades** - Configure salary grade structures
-- **School Management** - Manage educational institutions
+- **School Management** - Manage educational institutions with addresses and contacts
 - **Document Storage** - Upload and manage documents with Azure Blob Storage
 - **Item Inventory** - Track items and inventory
+- **Real-time Activity Feed** - Live updates via GraphQL subscriptions (WebSocket)
 - **Reports** - Generate various reports
 - **Authentication** - Secure login with JWT tokens and HttpOnly cookies for refresh tokens
+- **Toast Notifications** - Centralized notification system with automatic error handling
+- **Structured Logging** - Serilog with Seq for centralized monitoring
 
 ## Getting Started
 
@@ -155,13 +160,14 @@ After changes to the GraphQL schema, regenerate the frontend types:
 cd application
 npm run codegen
 ```
-
-## Architecture
-
-The application uses a **GraphQL Gateway** pattern with **event-driven cache invalidation**:
-- **Frontend** communicates with the **GraphQL Gateway** (HotChocolate) for most operations
+ and **real-time subscriptions**:
+- **Frontend** communicates with the **GraphQL Gateway** (HotChocolate) for queries, mutations, and subscriptions
 - **Frontend** uses Gateway **REST endpoints** for file upload/download operations
+- **Frontend** receives **real-time activity updates** via GraphQL subscriptions over WebSocket
 - **Gateway** uses the **NSwag-generated API client** to communicate with the Backend
+- **Backend** handles business logic, data persistence, and file storage
+- **Backend** publishes domain events to **RabbitMQ** (Producer)
+- **Gateway** consumes events from **RabbitMQ** to invalidate cache and broadcast to subscriberse with the Backend
 - **Backend** handles business logic, data persistence, and file storage
 - **Backend** publishes domain events to **RabbitMQ** (Producer)
 - **Gateway** consumes events from **RabbitMQ** to invalidate cache (Consumer)
@@ -169,19 +175,21 @@ The application uses a **GraphQL Gateway** pattern with **event-driven cache inv
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         Frontend (React)                            │
-│            TanStack Query + graphql-request + REST fetch            │
+│    TanStack Query + graphql-request + graphql-ws + REST fetch       │
 └─────────────────────────────────────────────────────────────────────┘
-                │                                  │
-                │ GraphQL                          │ REST (files)
-                ▼                                  ▼
+           │                    │                       │
+           │ GraphQL            │ WebSocket             │ REST (files)
+           │ (Query/Mutation)   │ (Subscriptions)       │
+           ▼                    ▼                       ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │                     Gateway (HotChocolate)                           │
 │  ┌───────────────────────────┐    ┌───────────────────────────────┐  │
 │  │  GraphQL (Query/Mutation) │    │  REST Controllers (Documents) │  │
+│  │  + Subscriptions (WS)     │    │                               │  │
 │  └───────────────────────────┘    └───────────────────────────────┘  │
 │               │ Uses NSwag ApiClient             │                   │
 │  ┌───────────────────────────────────────────────────────────────┐   │
-│  │           RabbitMQ Consumer (Cache Invalidation)              │   │
+│  │  RabbitMQ Consumer (Cache Invalidation + Subscription Pub)    │   │
 │  └───────────────────────────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────────────────────────┘
                 │                                  ▲
@@ -205,10 +213,12 @@ graph TB
 
     subgraph Gateway["🌐 GraphQL Gateway Layer - Port 5003"]
         GQL["GraphQL API<br/>(HotChocolate)"]
+        Subscriptions["GraphQL Subscriptions<br/>(WebSocket)"]
         DataLoaders["DataLoaders<br/>(Batch + Dedup)"]
         RestProxy["REST Controllers<br/>(File Operations)"]
         CacheService["Cache Service"]
-        RabbitConsumer["RabbitMQ Consumer<br/>(Cache Invalidation)"]
+        EventBuffer["Activity Event Buffer<br/>(Recent 50 Events)"]
+        RabbitConsumer["RabbitMQ Consumer<br/>(Cache + Broadcast)"]
     end
 
     subgraph Backend["⚙️ Backend API Layer - Port 7166"]
@@ -236,12 +246,14 @@ graph TB
 
     %% Client interactions
     Browser -->|"GraphQL Queries/Mutations"| GQL
+    Browser <-->|"WebSocket (Subscriptions)"| Subscriptions
     Browser -->|"REST (File Upload/Download)"| RestProxy
 
     %% Gateway internal flow
     GQL --> DataLoaders
     GQL --> CacheService
     RestProxy --> CacheService
+    Subscriptions --> EventBuffer
     
     %% Gateway to Backend
     DataLoaders -->|"NSwag API Client"| Controllers
@@ -260,14 +272,16 @@ graph TB
     Infrastructure -->|"Entity Framework Core"| SQL
     Infrastructure -->|"Azure SDK"| Blob
 
-    %% Event publishing
+    %% Event publishing and subscription flow
     Services -->|"Publish Events"| RabbitPublisher
     RabbitPublisher -->|"CloudEvents"| RabbitMQ
     RabbitMQ -->|"Consume Events"| RabbitConsumer
     RabbitConsumer -->|"Invalidate Cache"| CacheService
+    RabbitConsumer -->|"Broadcast Activity"| Subscriptions
+    RabbitConsumer -->|"Buffer Events"| EventBuffer
 
     %% Logging
-    Browser -.->|"Serilog"| Seq
+    Browser -.->|"Console"| Seq
     GQL -.->|"Serilog"| Seq
     API -.->|"Serilog"| Seq
     Services -.->|"Serilog"| Seq
@@ -282,7 +296,7 @@ graph TB
     classDef monitorStyle fill:#fce4ec,stroke:#880e4f,stroke-width:2px
 
     class Browser clientStyle
-    class GQL,DataLoaders,RestProxy,CacheService,RabbitConsumer gatewayStyle
+    class GQL,Subscriptions,DataLoaders,RestProxy,CacheService,EventBuffer,RabbitConsumer gatewayStyle
     class API,Controllers,Services,Domain,Infrastructure,RabbitPublisher backendStyle
     class SQL,Blob,Redis dataStyle
     class RabbitMQ messagingStyle
@@ -292,7 +306,9 @@ graph TB
 **Key Components:**
 - **RabbitMQ**: Event messaging using CloudEvents format for decoupled communication between Backend and Gateway
 - **Event Publisher (Backend)**: Publishes domain events (person.created, person.updated, etc.) after data mutations
-- **Event Consumer (Gateway)**: Listens for domain events and automatically invalidates related Redis cache entries
+- **Event Consumer (Gateway)**: Listens for domain events, invalidates cache, and broadcasts to subscribed clients
+- **GraphQL Subscriptions**: WebSocket-based real-time updates for activity feed and notifications
+- **Activity Event Buffer**: In-memory circular buffer (50 events) for new subscription clients to receive recent history
 - **Redis Cache**: Used by the Gateway for caching GraphQL queries and responses with hash-based key generation
 - **Seq (Datalust)**: Centralized logging platform for structured logs from all layers (accessible at `http://localhost:5341`)
 - **SQL Server**: Primary database for persisting entities using Entity Framework Core

@@ -27,3 +27,26 @@ export const getInitials = (
 
   return `${firstInitial}${lastInitial}`.trim() || '?';
 };
+
+export const getActivityIcon = (entityType: string): string => {
+  switch (entityType.toLowerCase()) {
+    case 'person':
+      return '👤';
+    case 'school':
+      return '🏫';
+    case 'employee':
+    case 'employment':
+      return '💼';
+    case 'position':
+      return '📋';
+    case 'salarygrade':
+      return '💰';
+    case 'item':
+      return '📦';
+    case 'blob':
+      return '📎';
+    default:
+      return '📌';
+  }
+};
+

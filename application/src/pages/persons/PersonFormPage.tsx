@@ -44,7 +44,7 @@ import {
   formatFileSize,
   ProfileImageUpload,
 } from '../../components/documents';
-import { formatEnumLabel } from '../../utils/formatters';
+import { formatEnumLabel } from '../../utils';
 import { useConfirm, useToast } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
 

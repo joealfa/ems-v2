@@ -14,7 +14,7 @@ import {
   useSalaryGrade,
   useDeleteSalaryGrade,
 } from '../../hooks/useSalaryGrades';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency } from '../../utils';
 import { useConfirm, useToast } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
 

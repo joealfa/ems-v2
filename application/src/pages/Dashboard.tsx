@@ -11,7 +11,9 @@ import {
   GridItem,
 } from '@chakra-ui/react';
 import { useDashboardStats } from '../hooks/useDashboard';
+import { useRecentActivities } from '../hooks/useRecentActivities';
 import { useState } from 'react';
+import { formatTimestamp, getActivityIcon } from '../utils';
 
 interface StatCardProps {
   title: string;
@@ -46,6 +48,11 @@ const StatCard = ({ title, value, icon, isLoading }: StatCardProps) => {
 
 const Dashboard = () => {
   const { stats, loading, error } = useDashboardStats();
+  const {
+    activities,
+    isConnected,
+    error: subscriptionError,
+  } = useRecentActivities();
 
   // Dummy quotes data
   const quotes = [
@@ -154,90 +161,56 @@ const Dashboard = () => {
         <GridItem rowSpan={{ base: 1, lg: 2 }}>
           <Card.Root height={{ base: 'auto', lg: '500px' }}>
             <Card.Header>
-              <Heading size="sm">📋 Recent Activities</Heading>
+              <Flex justify="space-between" align="center">
+                <Heading size="sm">📋 Recent Activities</Heading>
+                {isConnected && (
+                  <Box
+                    width="10px"
+                    height="10px"
+                    borderRadius="full"
+                    bg="green.500"
+                    title="Connected"
+                  />
+                )}
+              </Flex>
             </Card.Header>
             <Card.Body
               overflowY="auto"
               maxHeight={{ base: 'auto', lg: '420px' }}
             >
+              {subscriptionError && (
+                <Text fontSize="sm" color="red.500" mb={4}>
+                  Error loading activities: {subscriptionError.message}
+                </Text>
+              )}
+
+              {activities.length === 0 && !subscriptionError && (
+                <Text fontSize="sm" color="fg.muted">
+                  {isConnected
+                    ? 'No recent activities yet. Activities will appear here as they occur.'
+                    : 'Connecting to activity stream...'}
+                </Text>
+              )}
+
               <Box display="flex" flexDirection="column" gap={3}>
-                <Box>
-                  <Text fontSize="sm" fontWeight="medium">
-                    New Employee Added
-                  </Text>
-                  <Text fontSize="sm" color="fg.muted">
-                    Sarah Williams joined as Teacher
-                  </Text>
-                  <Text fontSize="xs" color="fg.muted">
-                    2 hours ago
-                  </Text>
-                </Box>
-                <Box>
-                  <Text fontSize="sm" fontWeight="medium">
-                    Position Updated
-                  </Text>
-                  <Text fontSize="sm" color="fg.muted">
-                    Principal position requirements changed
-                  </Text>
-                  <Text fontSize="xs" color="fg.muted">
-                    5 hours ago
-                  </Text>
-                </Box>
-                <Box>
-                  <Text fontSize="sm" fontWeight="medium">
-                    School Added
-                  </Text>
-                  <Text fontSize="sm" color="fg.muted">
-                    Springfield Elementary School registered
-                  </Text>
-                  <Text fontSize="xs" color="fg.muted">
-                    Yesterday
-                  </Text>
-                </Box>
-                <Box>
-                  <Text fontSize="sm" fontWeight="medium">
-                    Employee Profile Updated
-                  </Text>
-                  <Text fontSize="sm" color="fg.muted">
-                    John Doe updated contact information
-                  </Text>
-                  <Text fontSize="xs" color="fg.muted">
-                    2 days ago
-                  </Text>
-                </Box>
-                <Box>
-                  <Text fontSize="sm" fontWeight="medium">
-                    New Position Created
-                  </Text>
-                  <Text fontSize="sm" color="fg.muted">
-                    Assistant Principal position added
-                  </Text>
-                  <Text fontSize="xs" color="fg.muted">
-                    3 days ago
-                  </Text>
-                </Box>
-                <Box>
-                  <Text fontSize="sm" fontWeight="medium">
-                    Salary Grade Updated
-                  </Text>
-                  <Text fontSize="sm" color="fg.muted">
-                    Grade 5 salary range adjusted
-                  </Text>
-                  <Text fontSize="xs" color="fg.muted">
-                    4 days ago
-                  </Text>
-                </Box>
-                <Box>
-                  <Text fontSize="sm" fontWeight="medium">
-                    Item Added
-                  </Text>
-                  <Text fontSize="sm" color="fg.muted">
-                    New laptop assigned to IT department
-                  </Text>
-                  <Text fontSize="xs" color="fg.muted">
-                    5 days ago
-                  </Text>
-                </Box>
+                {activities.map((activity) => (
+                  <Box
+                    key={activity.id}
+                    pb={3}
+                    borderBottom="1px"
+                    borderColor="border"
+                  >
+                    <Flex justify="space-between" align="start" mb={1}>
+                      <Text fontSize="sm" fontWeight="medium">
+                        {getActivityIcon(activity.entityType)}{' '}
+                        {activity.message}
+                      </Text>
+                    </Flex>
+                    <Text fontSize="xs" color="fg.muted">
+                      {formatTimestamp(activity.timestamp)}
+                    </Text>
+                  </Box>
+                ))}
               </Box>
             </Card.Body>
           </Card.Root>

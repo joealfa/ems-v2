@@ -15,7 +15,7 @@ import {
   PersonDocuments,
   ProfileImageUpload,
 } from '../../components/documents';
-import { formatAddress } from '../../utils/formatters';
+import { formatAddress } from '../../utils';
 import { useConfirm, useToast } from '../../hooks';
 import { ConfirmDialog } from '../../components/ui';
 

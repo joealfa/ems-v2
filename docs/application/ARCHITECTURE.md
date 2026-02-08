@@ -23,7 +23,10 @@ Each major feature (persons, schools, positions, etc.) has its own folder under 
 
 ### 3. Centralized API Layer
 
-All API communication goes through TanStack Query with graphql-request for GraphQL operations and direct fetch calls for file operations via the Gateway REST endpoints.
+All API communication goes through:
+- **TanStack Query** with **graphql-request** for GraphQL queries and mutations
+- **graphql-ws** for GraphQL subscriptions over WebSocket
+- Direct fetch calls for file operations via the Gateway REST endpoints
 
 ---
 
@@ -146,6 +149,64 @@ onRowClicked: (event) => navigate(`/persons/${event.data.displayId}`)
 
 ## State Management
 
+### WebSocket Subscriptions (Real-time Updates)
+
+The application uses GraphQL subscriptions over WebSocket for real-time activity updates:
+
+```tsx
+// src/hooks/useRecentActivities.ts
+import { getSubscriptionClient } from '../graphql/subscription-client';
+
+export const useRecentActivities = () => {
+  const [activities, setActivities] = useState<ActivityEvent[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const client = getSubscriptionClient();
+    
+    // Subscribe to activity events
+    const unsubscribe = client.subscribe({
+      query: `subscription { subscribeToActivityEvents { ... } }`
+    }, {
+      next: (data) => {
+        setIsConnected(true);
+        setActivities(prev => [data, ...prev].slice(0, 50));
+      },
+      error: (err) => setError(err),
+      complete: () => setIsConnected(false)
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  return { activities, isConnected, error };
+};
+```
+
+**Subscription Features**:
+- **Automatic Reconnection**: Retries 5 times on connection loss
+- **Keep-alive**: 10-second ping interval
+- **Buffered History**: New subscribers receive last 50 events immediately
+- **Connection Status**: Track `isConnected` state for UI indicators
+- **Local Buffer**: Maintains circular buffer of recent events for resilience
+
+**Usage Example**:
+```tsx
+function Dashboard() {
+  const { activities, isConnected, error } = useRecentActivities();
+  
+  return (
+    <>
+      {isConnected && <Badge colorScheme="green">Live</Badge>}
+      {activities.map(activity => (
+        <ActivityItem key={activity.id} activity={activity} />
+      ))}
+    </>
+  );
+}
+```
+
 ### Local Component State
 
 The application primarily uses local component state with React hooks:
@@ -181,12 +242,51 @@ const PersonDetail = ({ displayId }: { displayId: number }) => {
 
 ### Global State
 
+- **Authentication State** - Managed by AuthProvider (JWT tokens, user info)
 - **Color Mode** - Managed by Chakra UI's ColorModeProvider
+- **Subscription Connection** - WebSocket connection state in useRecentActivities
 - **No Redux/Zustand** - Application complexity doesn't require global state management
 
 ---
 
 ## Data Flow Patterns
+
+### Real-time Event Flow (Subscriptions)
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                      Backend API                           │
+│  (Data mutation occurs → RabbitMQ event published)         │
+└────────────────────────────────────────────────────────────┘
+                           │
+                           ▼ CloudEvents
+                    ┌─────────────┐
+                    │  RabbitMQ   │
+                    │  (Broker)   │
+                    └─────────────┘
+                           │
+                           ▼ Consume event
+┌────────────────────────────────────────────────────────────┐
+│                    Gateway (Consumer)                      │
+│  1. Invalidate Redis cache                                 │
+│  2. Add event to ActivityEventBuffer (last 50)             │
+│  3. Broadcast to GraphQL subscribers                       │
+└────────────────────────────────────────────────────────────┘
+                           │
+                           ▼ WebSocket (graphql-ws protocol)
+┌────────────────────────────────────────────────────────────┐
+│                  Frontend (Subscribers)                    │
+│  useRecentActivities() → Update local state                │
+│  → Dashboard shows real-time activity                      │
+└────────────────────────────────────────────────────────────┘
+```
+
+**Flow Details**:
+1. User performs action (e.g., creates a person)
+2. Backend publishes domain event to RabbitMQ
+3. Gateway consumes event, invalidates cache, buffers event
+4. Gateway broadcasts event to all WebSocket subscribers  
+5. Frontend receives event, updates activity feed instantly
 
 ### List Page Data Flow
 
@@ -285,7 +385,55 @@ export { default as PersonDetailPage } from './PersonDetailPage';
 import { PersonsPage, PersonFormPage, PersonDetailPage } from './pages/persons';
 ```
 
-### Component File Structure
+---
+
+## Utility Organization
+
+### Centralized Utils
+
+All utility functions are centralized in `src/utils/` with a single export point:
+
+```typescript
+// src/utils/index.ts - Single entry point
+export * from './formatters';
+export * from './helper';
+export * from './mapper';
+export * from './devAuth';
+
+// Usage anywhere in the app
+import { formatCurrency, getActivityIcon, formatTimestamp } from '@/utils';
+```
+
+### Utils Structure
+
+| File | Purpose | Examples |
+|------|---------|----------|
+| `formatters.ts` | Data formatting functions | `formatCurrency`, `formatAddress`, `formatFileSize`, `formatTimestamp`, `formatEnumLabel` |
+| `helper.ts` | Helper utilities | `getDocumentTypeColor`, `getInitials`, `getActivityIcon` |
+| `mapper.ts` | Enum option arrays for forms | `AppointmentStatusOptions`, `EmploymentStatusOptions`, `EligibilityOptions` |
+| `devAuth.ts` | Development auth utilities | `getDevToken`, `generateAndStoreDevToken` (dev mode only) |
+
+### Benefits of Centralized Utils
+
+- **Single Import Source**: Prevents circular dependencies
+- **Discoverability**: IntelliSense shows all available utilities
+- **Consistency**: Same import path across the entire application
+- **Maintainability**: Clear separation of concerns
+
+### Utils Best Practices
+
+```typescript
+// ❌ Don't import from individual files
+import { formatCurrency } from '../utils/formatters';
+import { getInitials } from '../utils/helper';
+
+// ✅ Do import from centralized index
+import { formatCurrency, getInitials } from '@/utils';
+```
+
+---
+
+## Code Organization Best Practices
 
 ```tsx
 // 1. Imports
