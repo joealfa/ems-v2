@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useContext, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box,
   Heading,
@@ -26,7 +26,6 @@ import {
   getDocumentDownloadUrl,
   useDeleteDocument,
 } from '../../hooks/useDocuments';
-import { AuthContext } from '../../contexts/AuthContext';
 import type {
   CreatePersonInput,
   UpdatePersonInput,
@@ -138,8 +137,6 @@ const initialFormData: PersonFormData = {
 const PersonFormPage = () => {
   const navigate = useNavigate();
   const { displayId } = useParams<{ displayId: string }>();
-  const authContext = useContext(AuthContext);
-  const accessToken = authContext?.accessToken ?? null;
   const isEditMode = displayId && displayId !== 'new';
   const { confirm, confirmDialog } = useConfirm();
   const { showSuccess, showError } = useToast();
@@ -325,8 +322,7 @@ const PersonFormPage = () => {
   );
 
   const handleDocumentUpload = async () => {
-    if (selectedDocumentFiles.length === 0 || !displayId || !accessToken)
-      return;
+    if (selectedDocumentFiles.length === 0 || !displayId) return;
 
     setUploadingDocument(true);
     setError(null);
@@ -374,14 +370,12 @@ const PersonFormPage = () => {
     documentDisplayId: number,
     fileName: string | null | undefined
   ) => {
-    if (!displayId || !accessToken) return;
+    if (!displayId) return;
 
     try {
       const url = getDocumentDownloadUrl(Number(displayId), documentDisplayId);
       const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -410,7 +404,7 @@ const PersonFormPage = () => {
   };
 
   const handleDocumentDelete = async (documentDisplayId: number) => {
-    if (!displayId || !accessToken) return;
+    if (!displayId) return;
 
     const confirmed = await confirm({
       title: 'Delete Document',

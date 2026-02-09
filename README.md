@@ -11,7 +11,7 @@ ems-v2/
 │   ├── EmployeeManagementSystem.Application/        # Business logic and DTOs
 │   ├── EmployeeManagementSystem.Infrastructure/     # Data access, external services, RabbitMQ publisher
 │   │   └── Messaging/RabbitMQ/                      # RabbitMQ event publisher (Producer)
-│   ├── EmployeeManagementSystem.Api/                # API controllers (v1, v2)
+│   ├── EmployeeManagementSystem.Api/                # API controllers (v1)
 │   ├── EmployeeManagementSystem.ApiClient/          # NSwag-generated API client for Gateway
 │   ├── scripts/                                     # SQL scripts and setup scripts
 │   │   ├── create-database.sql                      # Database creation script
@@ -160,17 +160,17 @@ After changes to the GraphQL schema, regenerate the frontend types:
 cd application
 npm run codegen
 ```
- and **real-time subscriptions**:
+
+## Architecture
+
+The system uses a three-tier architecture with GraphQL Gateway and **real-time subscriptions**:
 - **Frontend** communicates with the **GraphQL Gateway** (HotChocolate) for queries, mutations, and subscriptions
 - **Frontend** uses Gateway **REST endpoints** for file upload/download operations
 - **Frontend** receives **real-time activity updates** via GraphQL subscriptions over WebSocket
 - **Gateway** uses the **NSwag-generated API client** to communicate with the Backend
 - **Backend** handles business logic, data persistence, and file storage
 - **Backend** publishes domain events to **RabbitMQ** (Producer)
-- **Gateway** consumes events from **RabbitMQ** to invalidate cache and broadcast to subscriberse with the Backend
-- **Backend** handles business logic, data persistence, and file storage
-- **Backend** publishes domain events to **RabbitMQ** (Producer)
-- **Gateway** consumes events from **RabbitMQ** to invalidate cache (Consumer)
+- **Gateway** consumes events from **RabbitMQ** to invalidate cache and broadcast to subscribers
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -355,7 +355,7 @@ See [.github/copilot-instructions.md](.github/copilot-instructions.md) for detai
 - [Analysis Summary](docs/ANALYSIS-SUMMARY.md) - Architecture analysis and improvements
 - [API Reference](docs/server/API-REFERENCE.md) - Complete API endpoint documentation
 - [Database Schema](docs/server/DATABASE.md) - Database structure and relationships
-- [GraphQL Quick Reference](docs/gateway/GRAPHQL-QUICK-REFERENCE.md) - GraphQL schema
+- [GraphQL Quick Reference](docs/server/GRAPHQL-QUICK-REFERENCE.md) - GraphQL schema
 - [Logging & Monitoring](docs/server/LOGGING.md) - Serilog and Seq logging implementation
 
 ## License

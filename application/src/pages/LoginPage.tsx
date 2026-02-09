@@ -173,7 +173,7 @@ const LoginPage = () => {
           'Login Successful',
           'Welcome back to Employee Management System!'
         );
-        navigate(from, { replace: true });
+        // Don't navigate here - let the useEffect handle it when isAuthenticated changes
       } catch (err: unknown) {
         console.error('Login error:', err);
         // Extract error message from response if available

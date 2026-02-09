@@ -49,4 +49,3 @@ export const getActivityIcon = (entityType: string): string => {
       return '📌';
   }
 };
-

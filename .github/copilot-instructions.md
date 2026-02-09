@@ -49,8 +49,7 @@ ems-v2/
 │   ├── EmployeeManagementSystem.Infrastructure/    # Data access, external services, RabbitMQ publisher
 │   │   └── Messaging/RabbitMQ/                     # RabbitMQ event publisher (Producer)
 │   ├── EmployeeManagementSystem.Api/               # API controllers and middleware
-│   │   ├── v1/                                     # Version 1 of the API
-│   │   ├── v2/                                     # Version 2 of the API
+│   │   └── v1/                                     # API v1 controllers
 │   ├── EmployeeManagementSystem.ApiClient/         # NSwag-generated API client for Gateway
 │   │   ├── Generated/                              # Auto-generated client code (DO NOT EDIT)
 │   │   └── nswag.json                              # NSwag configuration
@@ -61,13 +60,14 @@ ems-v2/
 │   └── tests/
 │       ├── EmployeeManagementSystem.Tests/         # Unit and integration tests
 ├── gateway/                                        # GraphQL Gateway (HotChocolate), subscriptions
-│       ├── Types/                                  # Query.cs, Mutation.cs, Subscription.cs, TypeExtensions.cs
+│   └── EmployeeManagementSystem.Gateway/
+│       ├── Types/                                  # Query.cs, Mutation.cs, Subscription.cs
+│       │   └── Extensions/                         # TypeExtensions.cs
 │       ├── Controllers/                            # REST proxy controllers for file operations
-│       ├── Caching/                                # Redis caching service and keys
+│       ├── Caching/                                # RedisCacheService and CacheKeys
 │       ├── DataLoaders/                            # HotChocolate DataLoaders for batching
 │       ├── Messaging/                              # RabbitMQ event consumer (Consumer)
-│       ├── Services/                               # ActivityEventBuffer for subscription historying
-│       ├── Messaging/                              # RabbitMQ event consumer (Consumer)
+│       ├── Services/                               # ActivityEventBuffer for subscription buffering
 │       └── Mappings/                               # Input type to DTO mappings
 ├── application/                                    # Frontend Application (React/TypeScript/Vite/Chakra-UI)
 │   └── src/                                        # Source code
@@ -86,7 +86,6 @@ ems-v2/
 │       │   ├── helper.ts                           # Helper functions (getInitials, getActivityIcon, etc.)
 │       │   ├── mapper.ts                           # Enum options for forms
 │       │   └── devAuth.ts                          # Development authentication utilities
-│       ├── hooks/                                  # Custom React hooks (TanStack Query)
 │       └── contexts/                               # React context providers (AuthContext)
 ├── docs/                                           # Shared documentation
 │   ├── server/                                     # Backend related documentation
@@ -263,9 +262,8 @@ The GraphQL Gateway serves as the BFF (Backend-for-Frontend) layer:
 - Each DataLoader checks Redis cache first, then batches API calls
 
 **Caching** (`gateway/.../Caching/`):
-- `IRedisCacheService` - Redis cache interface with GetAsync, SetAsync, RemoveAsync methods
-- `RedisCacheService` - Implementation using StackExchange.Redis and IDistributedCache
-- `CacheKeys` - Centralized cache key generation with hash-based approach
+- `RedisCacheService.cs` - Contains `IRedisCacheService` interface and implementation using StackExchange.Redis
+- `CacheKeys.cs` - Centralized cache key generation with hash-based approach
   - Individual entities: `person:123`, `school:456`
   - List queries: `persons:list:a3f2e1b4c5d6e7f8` (SHA256 hash of all filter parameters)
   - Hash includes ALL filter parameters (pageNumber, pageSize, searchTerm, sorting, filtering)
@@ -382,8 +380,7 @@ function Dashboard() {
 
 ### Security Guidelines
 
-Thigraphql-ws Documentation](https://github.com/enisdenjo/graphql-ws)
-- [s project follows security best practices:
+This project follows security best practices:
 
 **Authentication & Authorization:**
 - JWT Bearer tokens with 15-minute expiration

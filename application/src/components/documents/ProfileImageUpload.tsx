@@ -1,6 +1,5 @@
-import { useState, useRef, useContext, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Box, Button, Flex, Text, Image, Spinner } from '@chakra-ui/react';
-import { AuthContext } from '../../contexts/AuthContext';
 import {
   useProfileImageUrl,
   useUploadProfileImage,
@@ -27,8 +26,6 @@ const ProfileImageUpload = ({
   lastName,
   onImageUpdated,
 }: ProfileImageUploadProps) => {
-  const authContext = useContext(AuthContext);
-  const accessToken = authContext?.accessToken ?? null;
   const { confirm, confirmDialog } = useConfirm();
   const [error, setError] = useState<string | null>(null);
   const [imageVersion, setImageVersion] = useState(0);
@@ -49,12 +46,7 @@ const ProfileImageUpload = ({
   useEffect(() => {
     const fetchImage = async () => {
       // Only fetch if hasProfileImage flag is true or currentImageUrl exists
-      if (
-        !currentImageUrl ||
-        !accessToken ||
-        !graphqlImageUrl ||
-        !hasProfileImage
-      ) {
+      if (!currentImageUrl || !graphqlImageUrl || !hasProfileImage) {
         setImageBlobUrl(null);
         return;
       }
@@ -64,9 +56,7 @@ const ProfileImageUpload = ({
         // Use the URL from GraphQL query with cache busting
         const url = `${graphqlImageUrl}?v=${imageVersion}`;
         const response = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+          credentials: 'include',
         });
 
         if (!response.ok) {
@@ -97,7 +87,6 @@ const ProfileImageUpload = ({
     personDisplayId,
     currentImageUrl,
     hasProfileImage,
-    accessToken,
     imageVersion,
     graphqlImageUrl,
   ]);

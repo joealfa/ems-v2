@@ -38,6 +38,7 @@ application/
 │   │   ├── index.ts        # Barrel exports
 │   │   ├── useAuth.ts
 │   │   ├── useAuthMutations.ts
+│   │   ├── useConfirm.ts
 │   │   ├── useDashboard.ts
 │   │   ├── useDebounce.ts
 │   │   ├── useDocuments.ts
@@ -45,8 +46,10 @@ application/
 │   │   ├── useItems.ts
 │   │   ├── usePersons.ts
 │   │   ├── usePositions.ts
+│   │   ├── useRecentActivities.ts
 │   │   ├── useSalaryGrades.ts
-│   │   └── useSchools.ts
+│   │   ├── useSchools.ts
+│   │   └── useToast.ts
 │   ├── pages/            # Page components
 │   │   ├── Dashboard.tsx
 │   │   ├── LoginPage.tsx

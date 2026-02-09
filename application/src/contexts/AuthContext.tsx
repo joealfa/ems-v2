@@ -24,76 +24,44 @@ export {
   type UserDto,
 } from './AuthContextType';
 
-const ACCESS_TOKEN_KEY = 'accessToken';
-const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_KEY = 'user';
-const TOKEN_EXPIRY_KEY = 'tokenExpiry';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserDto | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const clearAuthData = useCallback(() => {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(TOKEN_EXPIRY_KEY);
-    setAccessToken(null);
     setUser(null);
   }, []);
 
-  const saveAuthData = useCallback(
-    (response: {
-      accessToken?: string | null;
-      refreshToken?: string | null;
-      expiresOn?: string | null;
-      user?: UserDto | null;
-    }) => {
-      if (response.accessToken) {
-        localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
-        setAccessToken(response.accessToken);
-      }
-      if (response.refreshToken) {
-        localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
-      }
-      if (response.expiresOn) {
-        localStorage.setItem(TOKEN_EXPIRY_KEY, response.expiresOn);
-      }
-      if (response.user) {
-        localStorage.setItem(USER_KEY, JSON.stringify(response.user));
-        setUser(response.user);
-      }
-    },
-    []
-  );
+  const saveUser = useCallback((userData: UserDto | null) => {
+    if (userData) {
+      localStorage.setItem(USER_KEY, JSON.stringify(userData));
+      setUser(userData);
+    }
+  }, []);
 
-  const refreshToken = useCallback(async (): Promise<string | null> => {
+  const refreshToken = useCallback(async (): Promise<boolean> => {
     try {
-      const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-
-      if (!storedRefreshToken) {
-        clearAuthData();
-        return null;
-      }
-
+      // No refresh token variable needed — Gateway reads from HttpOnly cookie
       const data = await graphqlRequest<
         RefreshTokenMutation,
         RefreshTokenMutationVariables
-      >(RefreshTokenDocument, { refreshToken: storedRefreshToken });
+      >(RefreshTokenDocument, {});
 
-      if (data?.refreshToken) {
-        saveAuthData(data.refreshToken);
-        return data.refreshToken.accessToken || null;
+      if (data?.refreshToken?.user) {
+        saveUser(data.refreshToken.user as UserDto);
+        return true;
       }
 
       clearAuthData();
-      return null;
+      return false;
     } catch {
       clearAuthData();
-      return null;
+      return false;
     }
-  }, [clearAuthData, saveAuthData]);
+  }, [clearAuthData, saveUser]);
 
   const login = useCallback(
     async (googleIdToken: string) => {
@@ -104,73 +72,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           GoogleLoginMutationVariables
         >(GoogleLoginDocument, { idToken: googleIdToken });
 
-        if (data?.googleLogin) {
-          saveAuthData(data.googleLogin);
+        if (data?.googleLogin?.user) {
+          saveUser(data.googleLogin.user as UserDto);
+          setIsLoading(false);
+          return; // Exit early - don't run validation logic
         }
-      } finally {
+      } catch (error) {
         setIsLoading(false);
+        throw error; // Re-throw so LoginPage can handle it
       }
+      setIsLoading(false);
     },
-    [saveAuthData]
+    [saveUser]
   );
 
   const logout = useCallback(async () => {
-    const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-
-    if (storedRefreshToken) {
-      try {
-        await graphqlRequest<LogoutMutation, LogoutMutationVariables>(
-          LogoutDocument,
-          { refreshToken: storedRefreshToken }
-        );
-      } catch {
-        // Ignore errors during logout
-      }
+    try {
+      // No refresh token variable needed — Gateway reads from HttpOnly cookie
+      await graphqlRequest<LogoutMutation, LogoutMutationVariables>(
+        LogoutDocument,
+        {}
+      );
+    } catch {
+      // Ignore errors during logout
     }
 
     clearAuthData();
     queryClient.clear();
   }, [clearAuthData]);
 
-  // Initialize auth state from localStorage
+  // Initialize auth state: trust localStorage, don't aggressively validate
   useEffect(() => {
     const initializeAuth = async () => {
-      const storedToken = localStorage.getItem(ACCESS_TOKEN_KEY);
       const storedUser = localStorage.getItem(USER_KEY);
-      const tokenExpiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
 
-      if (storedToken && storedUser) {
-        // Check if token is expired
-        if (tokenExpiry && new Date(tokenExpiry) <= new Date()) {
-          // Token expired, try to refresh
-          const newToken = await refreshToken();
-          if (!newToken) {
-            setIsLoading(false);
-            return;
-          }
-        } else {
-          setAccessToken(storedToken);
-          try {
-            setUser(JSON.parse(storedUser));
-          } catch {
-            clearAuthData();
-          }
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+
+          // Don't validate immediately - let natural API errors handle auth issues
+          // This prevents race conditions after login where cookies aren't ready yet
+        } catch {
+          clearAuthData();
         }
       }
       setIsLoading(false);
     };
 
     initializeAuth();
-  }, [clearAuthData, refreshToken]);
+  }, [clearAuthData]);
 
-  // If storage is cleared while the app is running (e.g. DevTools), keep in-memory auth state in sync.
+  // Keep in-memory auth state in sync if user key is cleared from storage
   useEffect(() => {
     const syncAuthStateFromStorage = () => {
-      const storedToken = localStorage.getItem(ACCESS_TOKEN_KEY);
       const storedUser = localStorage.getItem(USER_KEY);
 
-      // Only clear when we think we're authenticated but storage says otherwise.
-      if ((accessToken && !storedToken) || (user && !storedUser)) {
+      if (user && !storedUser) {
         clearAuthData();
       }
     };
@@ -192,12 +150,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.clearInterval(intervalId);
     };
-  }, [accessToken, user, clearAuthData]);
+  }, [user, clearAuthData]);
 
   const value: AuthContextType = {
     user,
-    accessToken,
-    isAuthenticated: !!accessToken && !!user,
+    isAuthenticated: !!user,
     isLoading,
     login,
     logout,

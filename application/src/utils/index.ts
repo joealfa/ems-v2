@@ -11,11 +11,7 @@ export {
 } from './formatters';
 
 // Helpers
-export {
-  getDocumentTypeColor,
-  getInitials,
-  getActivityIcon,
-} from './helper';
+export { getDocumentTypeColor, getInitials, getActivityIcon } from './helper';
 
 // Mappers
 export {
@@ -25,4 +21,4 @@ export {
 } from './mapper';
 
 // Development authentication (only available in dev mode)
-export { getDevToken, generateAndStoreDevToken } from './devAuth';
+export { generateAndStoreDevToken } from './devAuth';

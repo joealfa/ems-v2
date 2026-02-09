@@ -144,14 +144,20 @@ src/
 │   ├── layout/                   # Layout components (MainLayout, Sidebar, Header)
 │   └── ui/                       # UI utilities (color mode, AG Grid theme)
 ├── hooks/                        # Custom React hooks (TanStack Query)
-│   ├── usePersons.ts
-│   ├── useEmployments.ts
-│   ├── useSchools.ts
-│   ├── usePositions.ts
-│   ├── useSalaryGrades.ts
-│   ├── useItems.ts
+│   ├── useAuth.ts
+│   ├── useAuthMutations.ts
+│   ├── useConfirm.ts
 │   ├── useDashboard.ts
-│   └── ...
+│   ├── useDebounce.ts
+│   ├── useDocuments.ts
+│   ├── useEmployments.ts
+│   ├── useItems.ts
+│   ├── usePersons.ts
+│   ├── usePositions.ts
+│   ├── useRecentActivities.ts
+│   ├── useSalaryGrades.ts
+│   ├── useSchools.ts
+│   └── useToast.ts
 ├── pages/                        # Page components by feature
 │   ├── Dashboard.tsx
 │   ├── persons/

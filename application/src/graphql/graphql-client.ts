@@ -11,12 +11,8 @@ export const graphqlClient = new GraphQLClient(GRAPHQL_URL, {
   },
 });
 
-export const setAuthHeader = (token: string | null) => {
-  if (token) {
-    graphqlClient.setHeader('authorization', `Bearer ${token}`);
-  } else {
-    graphqlClient.setHeader('authorization', '');
-  }
+export const setAuthHeader = (_token: string | null) => {
+  // No-op: auth is handled via HttpOnly cookies
 };
 
 export const graphqlRequest = <
@@ -26,10 +22,7 @@ export const graphqlRequest = <
   document: RequestDocument | TypedDocumentNode<TData, TVariables>,
   variables?: TVariables
 ): Promise<TData> => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    graphqlClient.setHeader('authorization', `Bearer ${token}`);
-  }
+  // Auth is handled via HttpOnly cookies sent automatically with credentials: 'include'
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return graphqlClient.request<TData>(document as any, variables as any);
 };

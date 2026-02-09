@@ -48,11 +48,9 @@ const performUpload = async (
   );
   formData.append('0', file);
 
-  const token = localStorage.getItem('accessToken');
   const response = await fetch(GRAPHQL_URL, {
     method: 'POST',
     headers: {
-      ...(token ? { authorization: `Bearer ${token}` } : {}),
       'GraphQL-Preflight': '1',
     },
     credentials: 'include',

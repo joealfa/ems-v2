@@ -14,10 +14,8 @@ export const getSubscriptionClient = (): Client => {
     subscriptionClient = createClient({
       url: GRAPHQL_WS_URL,
       connectionParams: () => {
-        const token = localStorage.getItem('accessToken');
-        return {
-          authorization: token ? `Bearer ${token}` : '',
-        };
+        // Auth is handled via HttpOnly cookies on the WebSocket upgrade request
+        return {};
       },
       retryAttempts: 5,
       shouldRetry: () => true,

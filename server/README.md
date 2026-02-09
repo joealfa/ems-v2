@@ -112,7 +112,6 @@ server/
 ├── EmployeeManagementSystem.Api/
 │   ├── Controllers/        # Base controller
 │   ├── v1/Controllers/     # API v1 endpoints
-│   ├── v2/                 # API v2 endpoints (future)
 │   └── Properties/         # Launch settings
 ├── EmployeeManagementSystem.ApiClient/
 │   ├── Generated/          # NSwag-generated client (DO NOT EDIT)

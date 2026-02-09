@@ -11,12 +11,11 @@ export interface UserDto {
 
 export interface AuthContextType {
   user: UserDto | null;
-  accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (googleIdToken: string) => Promise<void>;
   logout: () => Promise<void>;
-  refreshToken: () => Promise<string | null>;
+  refreshToken: () => Promise<boolean>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(

@@ -20,21 +20,27 @@ const isAuthError = (error: unknown): boolean => {
 
 export const handleGlobalError = (error: unknown): void => {
   if (isAuthError(error)) {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('tokenExpiry');
-    localStorage.removeItem('refreshToken');
+    // Only clear user from localStorage — tokens are in HttpOnly cookies (inaccessible to JS)
+    const wasAuthenticated = localStorage.getItem('user') !== null;
     localStorage.removeItem('user');
     queryClient.clear();
 
-    toaster.create({
-      title: 'Session Expired',
-      description: 'Your session has expired. Please login again.',
-      type: 'warning',
-      duration: 5000,
-    });
+    // Only show toast and redirect if user was actually authenticated
+    // This prevents unnecessary redirects right after login
+    if (wasAuthenticated) {
+      toaster.create({
+        title: 'Session Expired',
+        description: 'Your session has expired. Please login again.',
+        type: 'warning',
+        duration: 5000,
+      });
 
-    if (!window.location.pathname.includes('/login')) {
-      window.location.href = '/login';
+      if (!window.location.pathname.includes('/login')) {
+        // Small delay to prevent race conditions
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 100);
+      }
     }
   } else {
     // Show generic error toast for non-auth errors

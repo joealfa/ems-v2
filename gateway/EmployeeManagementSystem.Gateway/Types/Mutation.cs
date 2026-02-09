@@ -1,5 +1,6 @@
 using EmployeeManagementSystem.ApiClient.Generated;
 using EmployeeManagementSystem.Gateway.Caching;
+using EmployeeManagementSystem.Gateway.Extensions;
 using EmployeeManagementSystem.Gateway.Mappings;
 using EmployeeManagementSystem.Gateway.Types.Inputs;
 using System.Net.Http.Headers;
@@ -23,14 +24,14 @@ public class Mutation
         [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        logger.LogInformation("Creating person via GraphQL: {FirstName} {LastName}",
+        logger.LogIfEnabled(LogLevel.Information, "Creating person via GraphQL: {FirstName} {LastName}",
             input.FirstName, input.LastName);
 
         PersonResponseDto result = await client.PersonsPOSTAsync(input.ToDto(), ct);
         await cache.RemoveByPrefixAsync(CacheKeys.PersonsListPrefix, ct);
         await cache.RemoveAsync(CacheKeys.DashboardStats, ct);
 
-        logger.LogInformation("Person created successfully: DisplayId {DisplayId}, Name: {FullName}",
+        logger.LogIfEnabled(LogLevel.Information, "Person created successfully: DisplayId {DisplayId}, Name: {FullName}",
             result.DisplayId, result.FullName);
         return result;
     }
@@ -57,14 +58,14 @@ public class Mutation
         [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        logger.LogInformation("Deleting person via GraphQL: DisplayId {DisplayId}", displayId);
+        logger.LogIfEnabled(LogLevel.Information, "Deleting person via GraphQL: DisplayId {DisplayId}", displayId);
 
         await client.PersonsDELETEAsync(displayId, ct);
         await cache.RemoveAsync(CacheKeys.Person(displayId), ct);
         await cache.RemoveByPrefixAsync(CacheKeys.PersonsListPrefix, ct);
         await cache.RemoveAsync(CacheKeys.DashboardStats, ct);
 
-        logger.LogInformation("Person deleted successfully: DisplayId {DisplayId}", displayId);
+        logger.LogIfEnabled(LogLevel.Information, "Person deleted successfully: DisplayId {DisplayId}", displayId);
         return true;
     }
 
@@ -80,14 +81,14 @@ public class Mutation
         [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        logger.LogInformation("Creating employment via GraphQL: Person {PersonDisplayId}, Position {PositionDisplayId}",
+        logger.LogIfEnabled(LogLevel.Information, "Creating employment via GraphQL: Person {PersonDisplayId}, Position {PositionDisplayId}",
             input.PersonDisplayId, input.PositionDisplayId);
 
         EmploymentResponseDto result = await client.EmploymentsPOSTAsync(input.ToDto(), ct);
         await cache.RemoveByPrefixAsync(CacheKeys.EmploymentsListPrefix, ct);
         await cache.RemoveAsync(CacheKeys.DashboardStats, ct);
 
-        logger.LogInformation("Employment created successfully: DisplayId {DisplayId}, DepEdId {DepEdId}",
+        logger.LogIfEnabled(LogLevel.Information, "Employment created successfully: DisplayId {DisplayId}, DepEdId {DepEdId}",
             result.DisplayId, result.DepEdId);
         return result;
     }
@@ -114,14 +115,14 @@ public class Mutation
         [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        logger.LogInformation("Deleting employment via GraphQL: DisplayId {DisplayId}", displayId);
+        logger.LogIfEnabled(LogLevel.Information, "Deleting employment via GraphQL: DisplayId {DisplayId}", displayId);
 
         await client.EmploymentsDELETEAsync(displayId, ct);
         await cache.RemoveAsync(CacheKeys.Employment(displayId), ct);
         await cache.RemoveByPrefixAsync(CacheKeys.EmploymentsListPrefix, ct);
         await cache.RemoveAsync(CacheKeys.DashboardStats, ct);
 
-        logger.LogInformation("Employment deleted successfully: DisplayId {DisplayId}", displayId);
+        logger.LogIfEnabled(LogLevel.Information, "Employment deleted successfully: DisplayId {DisplayId}", displayId);
         return true;
     }
 
@@ -343,7 +344,7 @@ public class Mutation
         [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        logger.LogInformation("Uploading document via GraphQL for person {PersonDisplayId}: {FileName} ({Length} bytes)",
+        logger.LogIfEnabled(LogLevel.Information, "Uploading document via GraphQL for person {PersonDisplayId}: {FileName} ({Length} bytes)",
             personDisplayId, file.Name, file.Length);
 
         using HttpClient client = CreateApiClient(httpClientFactory, configuration, httpContextAccessor);
@@ -369,7 +370,7 @@ public class Mutation
         string responseBody = await response.Content.ReadAsStringAsync(ct);
         if (!response.IsSuccessStatusCode)
         {
-            logger.LogWarning("Document upload failed for person {PersonDisplayId}: {StatusCode} {ReasonPhrase}",
+            logger.LogIfEnabled(LogLevel.Warning, "Document upload failed for person {PersonDisplayId}: {StatusCode} {ReasonPhrase}",
                 personDisplayId, response.StatusCode, response.ReasonPhrase);
             throw new GraphQLException(
                 $"Backend upload failed ({(int)response.StatusCode} {response.ReasonPhrase}). {responseBody}");
@@ -414,7 +415,7 @@ public class Mutation
             }
         }
 
-        logger.LogInformation("Document uploaded successfully for person {PersonDisplayId}: {FileName}",
+        logger.LogIfEnabled(LogLevel.Information, "Document uploaded successfully for person {PersonDisplayId}: {FileName}",
             personDisplayId, file.Name);
 
         await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
@@ -429,14 +430,14 @@ public class Mutation
         [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        logger.LogInformation("Deleting profile image via GraphQL for person {PersonDisplayId}", personDisplayId);
+        logger.LogIfEnabled(LogLevel.Information, "Deleting profile image via GraphQL for person {PersonDisplayId}", personDisplayId);
 
         await client.ProfileImageDELETEAsync(personDisplayId, ct);
 
         await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
         await cache.RemoveByPrefixAsync(CacheKeys.PersonsListPrefix, ct);
 
-        logger.LogInformation("Profile image deleted successfully for person {PersonDisplayId}", personDisplayId);
+        logger.LogIfEnabled(LogLevel.Information, "Profile image deleted successfully for person {PersonDisplayId}", personDisplayId);
         return true;
     }
 
@@ -468,13 +469,13 @@ public class Mutation
         [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        logger.LogInformation("Deleting document via GraphQL: Person {PersonDisplayId}, Document {DocumentDisplayId}",
+        logger.LogIfEnabled(LogLevel.Information, "Deleting document via GraphQL: Person {PersonDisplayId}, Document {DocumentDisplayId}",
             personDisplayId, documentDisplayId);
 
         await client.DocumentsDELETEAsync(personDisplayId, documentDisplayId, ct);
         await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
 
-        logger.LogInformation("Document deleted successfully: Person {PersonDisplayId}, Document {DocumentDisplayId}",
+        logger.LogIfEnabled(LogLevel.Information, "Document deleted successfully: Person {PersonDisplayId}, Document {DocumentDisplayId}",
             personDisplayId, documentDisplayId);
         return true;
     }
@@ -490,7 +491,7 @@ public class Mutation
         [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        logger.LogInformation("Uploading profile image via GraphQL for person {PersonDisplayId}: {FileName} ({Length} bytes)",
+        logger.LogIfEnabled(LogLevel.Information, "Uploading profile image via GraphQL for person {PersonDisplayId}: {FileName} ({Length} bytes)",
             personDisplayId, file.Name, file.Length);
 
         using HttpClient client = CreateApiClient(httpClientFactory, configuration, httpContextAccessor);
@@ -511,13 +512,13 @@ public class Mutation
         string result = await response.Content.ReadAsStringAsync(ct);
         if (!response.IsSuccessStatusCode)
         {
-            logger.LogWarning("Profile image upload failed for person {PersonDisplayId}: {StatusCode} {ReasonPhrase}",
+            logger.LogIfEnabled(LogLevel.Warning, "Profile image upload failed for person {PersonDisplayId}: {StatusCode} {ReasonPhrase}",
                 personDisplayId, response.StatusCode, response.ReasonPhrase);
             throw new GraphQLException(
                 $"Backend profile image upload failed ({(int)response.StatusCode} {response.ReasonPhrase}). {result}");
         }
 
-        logger.LogInformation("Profile image uploaded successfully for person {PersonDisplayId}", personDisplayId);
+        logger.LogIfEnabled(LogLevel.Information, "Profile image uploaded successfully for person {PersonDisplayId}", personDisplayId);
 
         // Invalidate both individual person cache and persons list cache
         await cache.RemoveAsync(CacheKeys.Person(personDisplayId), ct);
@@ -551,10 +552,11 @@ public class Mutation
     public async Task<AuthResponseDto?> GoogleLoginAsync(
         string idToken,
         [Service] EmsApiClient client,
+        [Service] IHttpContextAccessor httpContextAccessor,
         [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        logger.LogInformation("Google login attempt via GraphQL");
+        logger.LogIfEnabled(LogLevel.Information, "Google login attempt via GraphQL");
 
         AuthResponseDto? result = await client.GoogleAsync(
             new GoogleAuthRequestDto { IdToken = idToken },
@@ -562,7 +564,8 @@ public class Mutation
 
         if (result != null)
         {
-            logger.LogInformation("Google login successful for user {UserId}", result.User.Id);
+            SetAuthCookies(httpContextAccessor.HttpContext!, result);
+            logger.LogIfEnabled(LogLevel.Information, "Google login successful for user {UserId}", result.User.Id);
         }
 
         return result;
@@ -572,10 +575,11 @@ public class Mutation
     public async Task<AuthResponseDto?> GoogleTokenLoginAsync(
         string accessToken,
         [Service] EmsApiClient client,
+        [Service] IHttpContextAccessor httpContextAccessor,
         [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        logger.LogInformation("Google token login attempt via GraphQL");
+        logger.LogIfEnabled(LogLevel.Information, "Google token login attempt via GraphQL");
 
         AuthResponseDto? result = await client.TokenAsync(
             new GoogleAccessTokenRequestDto { AccessToken = accessToken },
@@ -583,7 +587,8 @@ public class Mutation
 
         if (result != null)
         {
-            logger.LogInformation("Google token login successful for user {UserId}", result.User.Id);
+            SetAuthCookies(httpContextAccessor.HttpContext!, result);
+            logger.LogIfEnabled(LogLevel.Information, "Google token login successful for user {UserId}", result.User.Id);
         }
 
         return result;
@@ -593,29 +598,40 @@ public class Mutation
     public async Task<AuthResponseDto?> RefreshTokenAsync(
         string? refreshToken,
         [Service] EmsApiClient client,
+        [Service] IHttpContextAccessor httpContextAccessor,
         [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        logger.LogDebug("Token refresh attempt via GraphQL");
+        // Read refresh token from cookie if not provided as argument
+        string? effectiveRefreshToken = refreshToken
+            ?? httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
+
+        if (string.IsNullOrWhiteSpace(effectiveRefreshToken))
+        {
+            logger.LogIfEnabled(LogLevel.Warning, "Token refresh attempt without refresh token");
+            return null;
+        }
+
+        logger.LogIfEnabled(LogLevel.Debug, "Token refresh attempt via GraphQL");
 
         try
         {
             AuthResponseDto? result = await client.RefreshAsync(
-                new RefreshTokenRequestDto { RefreshToken = refreshToken },
+                new RefreshTokenRequestDto { RefreshToken = effectiveRefreshToken },
                 ct);
 
             if (result != null)
             {
-                logger.LogInformation("Token refreshed successfully for user {UserId}", result.User.Id);
+                SetAuthCookies(httpContextAccessor.HttpContext!, result);
+                logger.LogIfEnabled(LogLevel.Information, "Token refreshed successfully for user {UserId}", result.User.Id);
             }
 
             return result;
         }
         catch (ApiException ex) when (ex.StatusCode == 401)
         {
-            logger.LogWarning("Token refresh failed: Invalid or expired refresh token");
-            // Treat invalid/expired/missing refresh token as a non-error for GraphQL.
-            // The frontend will interpret null and clear local auth state.
+            logger.LogIfEnabled(LogLevel.Warning, "Token refresh failed: Invalid or expired refresh token");
+            ClearAuthCookies(httpContextAccessor.HttpContext!);
             return null;
         }
     }
@@ -624,25 +640,73 @@ public class Mutation
     public async Task<bool> LogoutAsync(
         string? refreshToken,
         [Service] EmsApiClient client,
+        [Service] IHttpContextAccessor httpContextAccessor,
         [Service] ILogger<Mutation> logger,
         CancellationToken ct)
     {
-        logger.LogInformation("Logout attempt via GraphQL");
+        // Read refresh token from cookie if not provided as argument
+        string? effectiveRefreshToken = refreshToken
+            ?? httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
+
+        logger.LogIfEnabled(LogLevel.Information, "Logout attempt via GraphQL");
 
         try
         {
-            await client.RevokeAsync(
-                new RevokeTokenRequestDto { RefreshToken = refreshToken },
-                ct);
-            logger.LogInformation("Logout successful - tokens revoked");
-            return true;
+            if (!string.IsNullOrWhiteSpace(effectiveRefreshToken))
+            {
+                await client.RevokeAsync(
+                    new RevokeTokenRequestDto { RefreshToken = effectiveRefreshToken },
+                    ct);
+            }
+
+            logger.LogIfEnabled(LogLevel.Information, "Logout successful - tokens revoked");
         }
         catch (ApiException ex) when (ex.StatusCode is 400 or 401)
         {
-            logger.LogDebug("Logout completed - token was already invalid/expired");
-            // If the token is already invalid/expired, consider logout successful.
-            return true;
+            logger.LogIfEnabled(LogLevel.Debug, "Logout completed - token was already invalid/expired");
         }
+
+        ClearAuthCookies(httpContextAccessor.HttpContext!);
+        return true;
+    }
+
+    private static void SetAuthCookies(HttpContext context, AuthResponseDto authResponse)
+    {
+        // Both frontend and Gateway use HTTPS in development and production
+        // So we can use consistent secure cookie settings across all environments
+        CookieOptions accessCookieOptions = new()
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Path = "/",
+            Expires = authResponse.ExpiresOn
+        };
+
+        CookieOptions refreshCookieOptions = new()
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Path = "/",
+            Expires = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        context.Response.Cookies.Append("accessToken", authResponse.AccessToken, accessCookieOptions);
+        context.Response.Cookies.Append("refreshToken", authResponse.RefreshToken, refreshCookieOptions);
+    }
+
+    private static void ClearAuthCookies(HttpContext context)
+    {
+        // Use consistent cookie settings to match SetAuthCookies
+        CookieOptions cookieOptions = new()
+        {
+            Path = "/",
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+        };
+        context.Response.Cookies.Delete("accessToken", cookieOptions);
+        context.Response.Cookies.Delete("refreshToken", cookieOptions);
     }
 
     #endregion

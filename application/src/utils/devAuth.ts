@@ -1,6 +1,9 @@
 /**
  * Development-only authentication utilities.
  * These functions are only available when running in development mode.
+ *
+ * Calls the Gateway dev-auth endpoint which sets HttpOnly cookies.
+ * No tokens are stored in localStorage.
  */
 
 interface DevTokenRequest {
@@ -10,64 +13,24 @@ interface DevTokenRequest {
 }
 
 interface DevTokenResponse {
-  token: string;
-  expiresAt: string;
   userId: string;
   email: string;
   name: string;
+  expiresAt: string;
 }
 
+const GATEWAY_BASE_URL =
+  import.meta.env.VITE_GRAPHQL_URL?.replace('/graphql', '') ||
+  'https://localhost:5003';
+
 /**
- * Generates a development JWT token without requiring OAuth authentication.
- * This function only works in development mode and when the backend is running in DEBUG mode.
+ * Generates a development JWT token via the Gateway.
+ * The token is set as an HttpOnly cookie by the Gateway — it is never
+ * exposed to JavaScript.
  *
  * @param request Optional user information to include in the token
- * @returns The generated JWT token
+ * @returns User info from the dev token (token itself is in HttpOnly cookie)
  * @throws Error if not in development mode or if the request fails
- */
-export const getDevToken = async (
-  request?: DevTokenRequest
-): Promise<string> => {
-  if (import.meta.env.PROD) {
-    throw new Error(
-      'Dev token generation is only available in development mode'
-    );
-  }
-
-  const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7001';
-
-  try {
-    const response = await fetch(`${apiUrl}/api/v1/dev/devauth/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request || {}),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        `Failed to generate dev token: ${errorData.message || response.statusText}`
-      );
-    }
-
-    const data: DevTokenResponse = await response.json();
-    return data.token;
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to generate dev token: ${error.message}`);
-    }
-    throw error;
-  }
-};
-
-/**
- * Generates a development token and stores it in localStorage.
- * This is useful for quick testing without having to login via OAuth.
- *
- * @param request Optional user information
- * @returns The full token response with expiry information
  */
 export const generateAndStoreDevToken = async (
   request?: DevTokenRequest
@@ -78,14 +41,13 @@ export const generateAndStoreDevToken = async (
     );
   }
 
-  const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7001';
-
   try {
-    const response = await fetch(`${apiUrl}/api/v1/dev/devauth/token`, {
+    const response = await fetch(`${GATEWAY_BASE_URL}/api/dev/auth/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify(request || {}),
     });
 
@@ -98,22 +60,18 @@ export const generateAndStoreDevToken = async (
 
     const data: DevTokenResponse = await response.json();
 
-    // Store the token in localStorage (same keys as used by your auth system)
-    localStorage.setItem('accessToken', data.token);
-
-    // Create a mock user object
+    // Store a mock user object for display purposes (not a secret)
     const mockUser = {
       id: data.userId,
       email: data.email,
-      displayName: data.name,
-      pictureUrl: null,
+      firstName: data.name.split(' ')[0] || data.name,
+      lastName: data.name.split(' ').slice(1).join(' ') || '',
+      profilePictureUrl: null,
+      role: 'Admin',
     };
     localStorage.setItem('user', JSON.stringify(mockUser));
 
-    // Set expiry
-    localStorage.setItem('tokenExpiry', data.expiresAt);
-
-    console.log('Development token generated and stored:', {
+    console.log('Development token set as HttpOnly cookie:', {
       email: data.email,
       expiresAt: data.expiresAt,
     });
@@ -138,19 +96,17 @@ export const quickDevLogin = async (): Promise<void> => {
     name: 'Dev User',
   });
 
-  console.log('✅ Dev token generated! Refresh the page to use it.');
+  console.log('Dev token set as HttpOnly cookie! Refresh the page to use it.');
 };
 
 // Expose devLogin function to window in development mode for easy console access
 if (import.meta.env.DEV) {
   interface WindowWithDevTools extends Window {
     devLogin: typeof quickDevLogin;
-    getDevToken: typeof getDevToken;
   }
 
   (window as unknown as WindowWithDevTools).devLogin = quickDevLogin;
-  (window as unknown as WindowWithDevTools).getDevToken = getDevToken;
   console.log(
-    '🔧 Dev mode: Use window.devLogin() in console for quick authentication'
+    'Dev mode: Use window.devLogin() in console for quick authentication'
   );
 }

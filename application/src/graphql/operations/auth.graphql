@@ -1,8 +1,6 @@
 # Auth Fragments
 fragment AuthResponseFields on AuthResponseDto {
-  accessToken
   expiresOn
-  refreshToken
   user {
     id
     email

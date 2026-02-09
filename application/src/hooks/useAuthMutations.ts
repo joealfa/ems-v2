@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlRequest } from '../graphql/graphql-client';
-import { setAuthHeader } from '../graphql/graphql-client';
 import { authKeys } from '../graphql/query-keys';
 import {
   GoogleLoginDocument,
@@ -26,12 +25,6 @@ export function useGoogleLogin() {
         GoogleLoginDocument,
         variables
       ),
-    onSuccess: (data) => {
-      if (data.googleLogin?.accessToken) {
-        localStorage.setItem('accessToken', data.googleLogin.accessToken);
-        setAuthHeader(data.googleLogin.accessToken);
-      }
-    },
   });
 
   const handleLogin = async (idToken: string) => {
@@ -54,12 +47,6 @@ export function useGoogleTokenLogin() {
         GoogleTokenLoginMutation,
         GoogleTokenLoginMutationVariables
       >(GoogleTokenLoginDocument, variables),
-    onSuccess: (data) => {
-      if (data.googleTokenLogin?.accessToken) {
-        localStorage.setItem('accessToken', data.googleTokenLogin.accessToken);
-        setAuthHeader(data.googleTokenLogin.accessToken);
-      }
-    },
   });
 
   const handleLogin = async (accessToken: string) => {
@@ -108,11 +95,7 @@ export function useLogout() {
       ),
     onSuccess: (data) => {
       if (data.logout) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('tokenExpiry');
-        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
-        setAuthHeader(null);
         queryClient.clear();
       }
     },
@@ -130,16 +113,14 @@ export function useLogout() {
   };
 }
 
-export function useCurrentUser() {
-  const token = localStorage.getItem('accessToken');
-
+export function useCurrentUser(enabled = true) {
   const query = useQuery({
     queryKey: authKeys.currentUser(),
     queryFn: () =>
       graphqlRequest<GetCurrentUserQuery, Record<string, unknown>>(
         GetCurrentUserDocument
       ),
-    enabled: !!token,
+    enabled,
     staleTime: Infinity,
     gcTime: Infinity,
   });

@@ -6,11 +6,12 @@
 3. [Token Management](#token-management)
 4. [API Security](#api-security)
 5. [CORS Configuration](#cors-configuration)
-6. [Secrets Management](#secrets-management)
-7. [Input Validation](#input-validation)
-8. [Database Security](#database-security)
-9. [Caching Security](#caching-security)
-10. [Security Checklist](#security-checklist)
+6. [Security Headers](#security-headers)
+7. [Secrets Management](#secrets-management)
+8. [Input Validation](#input-validation)
+9. [Database Security](#database-security)
+10. [Caching Security](#caching-security)
+11. [Security Checklist](#security-checklist)
 
 ---
 
@@ -481,6 +482,51 @@ builder.Services.AddCors(options =>
 
 ---
 
+## Security Headers
+
+The application implements comprehensive security headers to provide defense-in-depth protection.
+
+### Implemented Headers
+
+| Header | Purpose | Status |
+|--------|---------|--------|
+| Content-Security-Policy | XSS protection via resource restrictions | ✅ Enabled |
+| Strict-Transport-Security | Force HTTPS (production only) | ✅ Enabled |
+| X-Content-Type-Options | Prevent MIME sniffing | ✅ Enabled |
+| X-Frame-Options | Clickjacking protection | ✅ Enabled |
+| X-XSS-Protection | Legacy XSS filter | ✅ Enabled |
+| Referrer-Policy | Control referrer information | ✅ Enabled |
+| Permissions-Policy | Feature/API restrictions | ✅ Enabled |
+
+### Implementation
+
+Security headers are applied via middleware:
+- Backend: `server/EmployeeManagementSystem.Api/Middleware/SecurityHeadersMiddleware.cs`
+- Gateway: `gateway/EmployeeManagementSystem.Gateway/Middleware/SecurityHeadersMiddleware.cs`
+
+### Environment-Specific Policies
+
+**Development:** Relaxed CSP for developer tools (Swagger, Banana Cake Pop)  
+**Production:** Strict CSP with no `unsafe-inline` or `unsafe-eval`
+
+### Testing
+
+Verify headers are present:
+```powershell
+curl -I https://localhost:7166/api/v1/persons
+```
+
+### Documentation
+
+See [SECURITY-HEADERS.md](SECURITY-HEADERS.md) for complete documentation including:
+- All header values and configurations
+- Testing procedures
+- Browser compatibility
+- Troubleshooting guide
+- Best practices
+
+---
+
 ## Secrets Management
 
 ### User Secrets (Development)
@@ -777,6 +823,9 @@ await _cache.RemoveAsync(CacheKeys.Person(displayId));
 - ✅ Authorization attributes on endpoints
 - ✅ API versioning implemented
 - ✅ Rate limiting on all endpoints (AspNetCoreRateLimit)
+- ✅ Content Security Policy (CSP) headers
+- ✅ HSTS (HTTP Strict Transport Security)
+- ✅ Security headers (X-Frame-Options, X-Content-Type-Options, etc.)
 
 ### Data Protection
 
@@ -799,7 +848,9 @@ await _cache.RemoveAsync(CacheKeys.Person(displayId));
 - ✅ Deployment guide created (docs/DEPLOYMENT.md)
 - ⚠️ Monitoring/logging strategy needs documentation
 - ✅ Rate limiting implemented
-- ⚠️ Content Security Policy headers recommended
+- ✅ Content Security Policy headers implemented (docs/SECURITY-HEADERS.md)
+- ✅ HSTS enabled for production
+- ✅ Security headers suite implemented
 - ⚠️ Disaster recovery plan needs documentation
 - ✅ Refresh token rotation implemented
 - ⚠️ Redis AUTH recommended for production

@@ -11,11 +11,11 @@ gateway/EmployeeManagementSystem.Gateway/
 ├── appsettings.json                    # Configuration settings
 ├── appsettings.Development.json        # Development configuration
 ├── Caching/                            # Redis caching implementation
-│   ├── IRedisCacheService.cs           # Cache service interface
-│   ├── RedisCacheService.cs            # Redis cache implementation (with logging)
+│   ├── RedisCacheService.cs            # IRedisCacheService interface + implementation (with logging)
 │   └── CacheKeys.cs                    # Centralized cache key generation
 ├── Controllers/                        # REST proxy controllers
-│   └── ProfileImageController.cs       # Profile image proxy (with logging)
+│   ├── ProfileImageController.cs       # Profile image proxy (with logging)
+│   └── DevAuthController.cs            # Development authentication (dev only)
 ├── DataLoaders/                        # HotChocolate DataLoaders for batching
 │   ├── PersonDataLoader.cs             # Person entity data loader (with logging)
 │   ├── EmploymentDataLoader.cs         # Employment entity data loader (with logging)
@@ -124,8 +124,7 @@ subscription OnActivityEvent {
 ### ✅ Cleaned Up Folders
 - **Removed**: Empty `Authentication/` folder
 - **Removed**: Empty `Scalars/` folder
-- **Removed**: `Controllers/` folder (no longer needed)
-- **Moved**: `LongType.cs` to `Types/` root directory
+- **Moved**: `LongType.cs` to `Types/Configuration/` directory
 
 ## GraphQL File Upload
 
@@ -159,17 +158,8 @@ This will generate hooks like:
 ## Logging and Monitoring
 
 ### Serilog Integration
- Subscription Broadcast |
-|---------------|-------------------|------------------------|
-| `com.ems.person.*` | `persons:list:*`, `employments:list:*` | Activity Feed |
-| `com.ems.school.*` | `schools:list:*`, `employments:list:*` | Activity Feed |
-| `com.ems.item.*` | `items:list:*` | Activity Feed |
-| `com.ems.position.*` | `positions:list:*`, `employments:list:*` | Activity Feed |
-| `com.ems.salarygrade.*` | `salarygrades:list:*`, `employments:list:*` | Activity Feed |
-| `com.ems.employee.*` | `employments:list:*` | Activity Feed |
-| `com.ems.blob.*` | Depends on `relatedEntityType` | Activity Feed |
 
-All events also invalidate the dashboard stats cache and broadcast to subscribed clientsse times, status codes, user IDs
+All Gateway components include structured logging with Serilog and Seq.
 
 **Log Destinations**:
 - **Console**: Colored output for local development

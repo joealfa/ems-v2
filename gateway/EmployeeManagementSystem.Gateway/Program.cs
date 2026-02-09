@@ -1,4 +1,5 @@
 using EmployeeManagementSystem.Gateway.Extensions;
+using EmployeeManagementSystem.Gateway.Middleware;
 using Serilog;
 using Serilog.Events;
 
@@ -55,7 +56,13 @@ try
 
     WebApplication app = builder.Build();
 
+    // Add security headers (CSP, HSTS, X-Frame-Options, etc.)
+    _ = app.UseMiddleware<SecurityHeadersMiddleware>();
+
     _ = app.UseCors("AllowHost");
+
+    // Inject access token from HttpOnly cookie into Authorization header
+    _ = app.UseMiddleware<CookieAuthMiddleware>();
 
     // Add Serilog request logging - replaces default logging with structured logging
     _ = app.UseSerilogRequestLogging(options =>

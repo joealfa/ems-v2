@@ -1,4 +1,5 @@
 using AspNetCoreRateLimit;
+using EmployeeManagementSystem.Api.Middleware;
 using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Infrastructure.Data;
@@ -301,6 +302,9 @@ try
         ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await dbContext.Database.MigrateAsync();
     }
+
+    // Add security headers (CSP, HSTS, X-Frame-Options, etc.)
+    _ = app.UseMiddleware<SecurityHeadersMiddleware>();
 
     // CORS must be before HttpsRedirection to handle preflight requests
     _ = app.UseCors("AllowHost");
