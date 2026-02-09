@@ -14,7 +14,8 @@ public class ReportsService(
     IRepository<School> schoolRepository,
     IRepository<Position> positionRepository,
     IRepository<SalaryGrade> salaryGradeRepository,
-    IRepository<Item> itemRepository) : IReportsService
+    IRepository<Item> itemRepository,
+    IRecentActivityRepository activityRepository) : IReportsService
 {
     private readonly IRepository<Person> _personRepository = personRepository;
     private readonly IRepository<Employment> _employmentRepository = employmentRepository;
@@ -22,6 +23,7 @@ public class ReportsService(
     private readonly IRepository<Position> _positionRepository = positionRepository;
     private readonly IRepository<SalaryGrade> _salaryGradeRepository = salaryGradeRepository;
     private readonly IRepository<Item> _itemRepository = itemRepository;
+    private readonly IRecentActivityRepository _activityRepository = activityRepository;
 
     /// <inheritdoc />
     public async Task<DashboardStatsDto> GetDashboardStatsAsync(CancellationToken cancellationToken = default)
@@ -51,6 +53,40 @@ public class ReportsService(
         int totalItems = await _itemRepository.Query()
             .CountAsync(cancellationToken);
 
+        // Get birthday celebrants for the current month
+        int currentMonth = DateTime.UtcNow.Month;
+        List<BirthdayCelebrantDto> birthdayCelebrants = await _personRepository.Query()
+            .Where(p => p.DateOfBirth.Month == currentMonth)
+            .OrderBy(p => p.DateOfBirth.Day)
+            .Select(p => new BirthdayCelebrantDto
+            {
+                DisplayId = p.DisplayId,
+                FirstName = p.FirstName,
+                LastName = p.LastName,
+                MiddleName = p.MiddleName,
+                FullName = p.FirstName + " " + (p.MiddleName != null ? p.MiddleName + " " : "") + p.LastName,
+                DateOfBirth = p.DateOfBirth,
+                ProfileImageUrl = p.ProfileImageUrl,
+                HasProfileImage = p.HasProfileImage
+            })
+            .ToListAsync(cancellationToken);
+
+        // Get recent activities (last 10)
+        List<RecentActivity> recentActivities = await _activityRepository.GetLatestAsync(10, cancellationToken);
+
+        List<RecentActivityDto> recentActivityDtos = recentActivities
+            .Select(a => new RecentActivityDto
+            {
+                Id = a.Id,
+                EntityType = a.EntityType,
+                EntityId = a.EntityId,
+                Operation = a.Operation,
+                Message = a.Message,
+                Timestamp = a.Timestamp,
+                UserId = a.UserId
+            })
+            .ToList();
+
         return new DashboardStatsDto
         {
             TotalPersons = totalPersons,
@@ -58,7 +94,9 @@ public class ReportsService(
             TotalSchools = totalSchools,
             TotalPositions = totalPositions,
             TotalSalaryGrades = totalSalaryGrades,
-            TotalItems = totalItems
+            TotalItems = totalItems,
+            BirthdayCelebrants = birthdayCelebrants,
+            RecentActivities = recentActivityDtos
         };
     }
 }

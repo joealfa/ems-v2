@@ -215,6 +215,7 @@ try
 
     // Register Repositories
     _ = builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+    _ = builder.Services.AddScoped<IRecentActivityRepository, RecentActivityRepository>();
 
     // Register Services
     _ = builder.Services.AddScoped<IPersonService, PersonService>();

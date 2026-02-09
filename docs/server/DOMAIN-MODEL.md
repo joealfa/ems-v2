@@ -33,6 +33,15 @@ BaseEntity (abstract) : AuditableEntity
     ├── Address
     ├── Contact
     └── EmploymentSchool
+
+RecentActivity (standalone - no base class)
+├── Id: long (auto-increment)
+├── EntityType: string
+├── EntityId: string
+├── Operation: string
+├── Message: string
+├── Timestamp: DateTime
+└── UserId: string?
 ```
 
 ---
@@ -312,6 +321,28 @@ Junction table for Employment-School many-to-many relationship.
 **Relationships:**
 - Many-to-One → `Employment`
 - Many-to-One → `School`
+
+---
+
+### RecentActivity
+
+Represents an immutable activity log record. Does **not** inherit from `BaseEntity` — no soft deletes, no audit trail, no GUID primary key.
+
+| Property      | Type       | Constraints           | Description                           |
+|---------------|------------|-----------------------|---------------------------------------|
+| `Id`          | `long`     | PK, Auto-increment    | Unique identifier                     |
+| `EntityType`  | `string`   | Required, max 50      | Entity type (person, school, etc.)    |
+| `EntityId`    | `string`   | Required, max 100     | Display ID or GUID string             |
+| `Operation`   | `string`   | Required, max 20      | CREATE, UPDATE, DELETE, etc.          |
+| `Message`     | `string`   | Required, max 500     | Friendly message (e.g., "Person 'John Doe' was created") |
+| `Timestamp`   | `DateTime` | Required              | UTC timestamp of the activity         |
+| `UserId`      | `string?`  | max 256               | Who performed the action              |
+
+**Key Design Decisions:**
+- No relationships — standalone log table
+- No soft-delete filter applied
+- Indexed on `Timestamp` descending for efficient latest-N queries
+- Persisted via `ActivityPersistingEventPublisher` decorator (wraps `RabbitMQEventPublisher`)
 
 ---
 

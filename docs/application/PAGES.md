@@ -36,23 +36,38 @@ The main landing page displaying key system statistics.
 
 ### Features
 
-- Real-time data fetching from `/api/v1/reports/dashboard`
+- Real-time data fetching via GraphQL `dashboardStats` query
 - Loading skeletons during data fetch
 - Responsive grid layout (1-3 columns)
 - Color-coded stat cards
+- **Birthday celebrants** section — shows persons with birthdays in the current month
+- **Recent activities** section with dual data sources:
+  - Live subscription data (via WebSocket) takes priority when available
+  - Persisted activities from database (via `stats.recentActivities`) serve as fallback
+- Profile images for birthday celebrants (with initials fallback)
 
-### Code Pattern
+### Birthday Celebrants Section
+
+Displays persons with birthdays in the current month, ordered by day:
+- Profile image or initials avatar with cycling background colors
+- Full name and formatted date (e.g., "February 14")
+- Shows "No birthdays this month" when list is empty
+
+### Recent Activities Fallback Logic
 
 ```tsx
-useEffect(() => {
-  const loadStats = async () => {
-    setIsLoading(true);
-    const response = await reportsApi.apiV1ReportsDashboardGet();
-    setStats(response.data);
-    setIsLoading(false);
-  };
-  loadStats();
-}, []);
+// Subscription data takes priority over persisted data
+const displayActivities = activities.length > 0
+  ? activities
+  : (stats?.recentActivities ?? []).map(a => ({
+      id: String(a.id),
+      entityType: a.entityType,
+      entityId: a.entityId,
+      operation: a.operation,
+      timestamp: a.timestamp,
+      userId: a.userId ?? null,
+      message: a.message,
+    }));
 ```
 
 ---

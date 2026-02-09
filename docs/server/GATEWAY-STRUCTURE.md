@@ -45,7 +45,7 @@ gateway/EmployeeManagementSystem.Gateway/
 │   │   ├── PascalCaseNamingConventions.cs  # Custom naming conventions for enums
 │   │   └── LongType.cs                 # Custom Long scalar type
 │   ├── Extensions/                     # GraphQL type extensions
-│   │   └── TypeExtensions.cs           # Type extensions for nested resolvers
+│   │   └── TypeExtensions.cs           # Type extensions for nested resolvers (incl. BirthdayCelebrantDto, RecentActivityDto)
 │   └── Inputs/                         # GraphQL input types
 │       ├── PersonInputs.cs             # Person create/update inputs
 │       ├── EmploymentInputs.cs         # Employment create/update inputs

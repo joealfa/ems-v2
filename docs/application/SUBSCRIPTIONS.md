@@ -217,6 +217,27 @@ const [activities, setActivities] = useState<ActivityEvent[]>([]);
 setActivities(prev => [newEvent, ...prev].slice(0, 50));
 ```
 
+### 4. Database-Backed Fallback
+
+Activities are also persisted to a `RecentActivities` database table via the `ActivityPersistingEventPublisher` decorator in the Backend. The Dashboard uses these persisted activities as a fallback when the WebSocket subscription hasn't delivered events yet:
+
+```tsx
+// In Dashboard.tsx
+const displayActivities = activities.length > 0
+  ? activities                                    // Live subscription data (priority)
+  : (stats?.recentActivities ?? []).map(a => ({   // Persisted fallback from DB
+      id: String(a.id),
+      entityType: a.entityType,
+      entityId: a.entityId,
+      operation: a.operation,
+      timestamp: a.timestamp,
+      userId: a.userId ?? null,
+      message: a.message,
+    }));
+```
+
+This ensures activity history survives server restarts and is immediately available on page load without waiting for the WebSocket connection.
+
 ---
 
 ## Troubleshooting

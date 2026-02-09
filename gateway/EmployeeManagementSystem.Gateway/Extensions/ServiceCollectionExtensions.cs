@@ -140,6 +140,8 @@ public static class ServiceCollectionExtensions
                 .AddTypeExtension<Types.Extensions.ContactResponseDtoExtensions>()
                 .AddTypeExtension<Types.Extensions.DocumentListDtoExtensions>()
                 .AddTypeExtension<Types.Extensions.DocumentResponseDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.BirthdayCelebrantDtoExtensions>()
+                .AddTypeExtension<Types.Extensions.RecentActivityDtoExtensions>()
                 .AddTypeExtension<Types.Extensions.DashboardStatsDtoExtensions>()
                 .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
                 .AddFiltering()

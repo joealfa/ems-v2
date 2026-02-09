@@ -752,9 +752,36 @@ GET /api/v1/reports/dashboard
   "totalSchools": 25,
   "totalPositions": 10,
   "totalSalaryGrades": 30,
-  "totalItems": 50
+  "totalItems": 50,
+  "birthdayCelebrants": [
+    {
+      "displayId": 123456789012,
+      "firstName": "Juan",
+      "lastName": "Santos",
+      "middleName": "Cruz",
+      "fullName": "Juan Cruz Santos",
+      "dateOfBirth": "1990-02-14",
+      "profileImageUrl": null,
+      "hasProfileImage": false
+    }
+  ],
+  "recentActivities": [
+    {
+      "id": 1,
+      "entityType": "person",
+      "entityId": "123456789012",
+      "operation": "CREATE",
+      "message": "Person 'Juan Santos' was created",
+      "timestamp": "2026-02-09T10:30:00Z",
+      "userId": "user@example.com"
+    }
+  ]
 }
 ```
+
+**Notes**:
+- `birthdayCelebrants`: Persons whose `DateOfBirth` month matches the current month, ordered by day
+- `recentActivities`: Last 10 activity entries from the `RecentActivities` database table
 
 ---
 

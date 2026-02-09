@@ -61,6 +61,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<Address> Addresses { get; set; }
     public DbSet<Contact> Contacts { get; set; }
     public DbSet<EmploymentSchool> EmploymentSchools { get; set; }
+
+    // Activity logging (no soft-delete filter)
+    public DbSet<RecentActivity> RecentActivities => Set<RecentActivity>();
 }
 ```
 
@@ -257,8 +260,9 @@ public class EmploymentSchoolConfiguration : IEntityTypeConfiguration<Employment
 | `Addresses`         | Address records            |
 | `Contacts`          | Contact information        |
 | `EmploymentSchools` | Employment-School junction |
+| `RecentActivities`  | Activity log (immutable)   |
 
-### Common Columns (All Tables)
+### Common Columns (All Tables except RecentActivities)
 
 |    Column    |        Type        |        Description       |
 |--------------|--------------------|--------------------------|
@@ -281,6 +285,21 @@ public class EmploymentSchoolConfiguration : IEntityTypeConfiguration<Employment
 | Documents         | IX_Documents_PersonId                      | PersonId               | Non-unique |
 | Addresses         | IX_Addresses_PersonId                      | PersonId               | Non-unique |
 | Addresses         | IX_Addresses_SchoolId                      | SchoolId               | Non-unique |
+| RecentActivities  | IX_RecentActivities_Timestamp              | Timestamp (DESC)       | Non-unique |
+
+### RecentActivities Table Columns
+
+The `RecentActivities` table does **not** follow the common column pattern — it is a standalone log table:
+
+|    Column      |        Type        |        Description                 |
+|----------------|--------------------|------------------------------------|
+| `Id`           | `bigint`           | Auto-increment primary key         |
+| `EntityType`   | `nvarchar(50)`     | Entity type (person, school, etc.) |
+| `EntityId`     | `nvarchar(100)`    | Display ID or GUID string          |
+| `Operation`    | `nvarchar(20)`     | CREATE, UPDATE, DELETE, etc.       |
+| `Message`      | `nvarchar(500)`    | Human-readable activity message    |
+| `Timestamp`    | `datetime2`        | UTC timestamp                      |
+| `UserId`       | `nvarchar(256)`    | User who performed the action      |
 
 ---
 
@@ -294,6 +313,7 @@ public class EmploymentSchoolConfiguration : IEntityTypeConfiguration<Employment
 | `RemoveDisplayIdIdentity`        | 2026-01-21 | Changed DisplayId generation |
 | `AddDocumentsAndProfileImage`    | 2026-01-21 | Added Document entity        |
 | `UpdateDeleteBehaviorToRestrict` | 2026-01-21 | Changed delete behavior      |
+| `AddRecentActivitiesTable`       | 2026-02-09 | Added RecentActivities table |
 
 ### Running Migrations
 

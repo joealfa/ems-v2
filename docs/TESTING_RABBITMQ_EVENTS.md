@@ -4,21 +4,25 @@ This document describes the RabbitMQ implementation for event-driven cache inval
 
 ## Overview
 
-The EMS uses RabbitMQ to implement event-driven cache invalidation:
+The EMS uses RabbitMQ to implement event-driven cache invalidation and activity persistence:
 - **Backend API (Producer)**: Publishes domain events when entities are created, updated, or deleted
+- **Activity Persistence**: `ActivityPersistingEventPublisher` decorator saves activities to the `RecentActivities` database table before publishing to RabbitMQ
 - **Gateway (Consumer)**: Listens for events and invalidates the corresponding Redis cache entries
 
 This decoupled architecture ensures that:
 1. Cache is automatically invalidated when data changes
-2. Backend doesn't need to know about Gateway's caching strategy
-3. Multiple consumers can listen to the same events if needed
+2. Activity history persists across server restarts (stored in database)
+3. Backend doesn't need to know about Gateway's caching strategy
+4. Multiple consumers can listen to the same events if needed
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                      Backend API (Producer)                         │
-│  PersonService → RabbitMQEventPublisher → CloudEvent → Exchange     │
+│  PersonService → ActivityPersistingEventPublisher (Decorator)       │
+│                    ├─ Save to RecentActivities table (DB)           │
+│                    └─ RabbitMQEventPublisher → CloudEvent → Exchange│
 └─────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
@@ -217,7 +221,18 @@ All events follow the [CloudEvents specification](https://cloudevents.io/):
 
 ## Code Implementation
 
-### Backend: Publishing Events
+### Backend: Event Publishing with Activity Persistence
+
+Events are published from services via the `IEventPublisher` interface. The `ActivityPersistingEventPublisher` decorator wraps the `RabbitMQEventPublisher` to persist activities to the database before publishing to RabbitMQ:
+
+```csharp
+// Registration in Program.cs (Decorator pattern)
+services.AddSingleton<RabbitMQEventPublisher>();
+services.AddScoped<IEventPublisher>(sp => new ActivityPersistingEventPublisher(
+    sp.GetRequiredService<RabbitMQEventPublisher>(),    // Inner publisher
+    sp.GetRequiredService<IRecentActivityRepository>(), // DB persistence
+    sp.GetRequiredService<ILogger<ActivityPersistingEventPublisher>>()));
+```
 
 Events are published from services after successful operations. Example from `PersonService.cs`:
 

@@ -47,7 +47,8 @@ ems-v2/
 │   ├── EmployeeManagementSystem.Domain/            # Entities and domain logic
 │   ├── EmployeeManagementSystem.Application/       # Business logic and DTOs
 │   ├── EmployeeManagementSystem.Infrastructure/    # Data access, external services, RabbitMQ publisher
-│   │   └── Messaging/RabbitMQ/                     # RabbitMQ event publisher (Producer)
+│   │   ├── Messaging/                              # Event publishing (ActivityPersistingEventPublisher + RabbitMQ)
+│   │   └── Repositories/                           # Repository implementations (incl. RecentActivityRepository)
 │   ├── EmployeeManagementSystem.Api/               # API controllers and middleware
 │   │   └── v1/                                     # API v1 controllers
 │   ├── EmployeeManagementSystem.ApiClient/         # NSwag-generated API client for Gateway
@@ -305,6 +306,12 @@ string cacheKey = CacheKeys.PersonsList(
 - Events publish to GraphQL subscriptions for real-time updates
 - Dashboard stats are always invalidated on any entity change
 
+**Event Publishing (Decorator Pattern)** (`server/.../Infrastructure/Messaging/`):
+- `ActivityPersistingEventPublisher` wraps `RabbitMQEventPublisher` using the Decorator pattern
+- On `PublishAsync`: saves a `RecentActivity` record to the database, then delegates to RabbitMQ
+- Activities persist across server restarts and are served via the Dashboard API
+- Registration: `RabbitMQEventPublisher` as concrete type, `ActivityPersistingEventPublisher` as `IEventPublisher`
+
 **GraphQL Subscriptions** (`gateway/.../Types/` and `gateway/.../Services/`):
 - `Subscription.cs` - Contains `subscribeToActivityEvents` subscription endpoint
 - `ActivityEventBuffer.cs` - In-memory circular buffer (50 events) for new subscribers
@@ -368,6 +375,20 @@ function Dashboard() {
   );
 }
 ```
+
+
+**Dashboard Data Sources:**
+- **Statistics**: Entity counts from `DashboardStatsDto`
+- **Birthday Celebrants**: `BirthdayCelebrantDto[]` — persons with birthdays in the current month, queried from `Person` table
+- **Recent Activities (fallback)**: `RecentActivityDto[]` — last 10 activities from `RecentActivities` database table
+- **Recent Activities (live)**: WebSocket subscription data takes priority when available
+- The Dashboard renders live subscription data if available, otherwise falls back to persisted activities from the API
+
+**RecentActivity Entity:**
+- Standalone entity (no BaseEntity inheritance, no soft deletes)
+- Persisted via `ActivityPersistingEventPublisher` decorator before RabbitMQ publish
+- Fields: `Id` (auto-increment), `EntityType`, `EntityId`, `Operation`, `Message`, `Timestamp`, `UserId`
+- Repository: `IRecentActivityRepository` with `AddAsync` and `GetLatestAsync(count)` methods
 
 
 ### UI guidelines

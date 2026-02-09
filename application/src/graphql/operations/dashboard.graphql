@@ -7,5 +7,24 @@ query GetDashboardStats {
     totalSalaryGrades
     totalItems
     activeEmployments
+    birthdayCelebrants {
+      displayId
+      firstName
+      lastName
+      middleName
+      fullName
+      dateOfBirth
+      profileImageUrl
+      hasProfileImage
+    }
+    recentActivities {
+      id
+      entityType
+      entityId
+      operation
+      message
+      timestamp
+      userId
+    }
   }
 }

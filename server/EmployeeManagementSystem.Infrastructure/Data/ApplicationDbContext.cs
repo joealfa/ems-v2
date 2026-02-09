@@ -77,6 +77,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     /// <summary>
+    /// Gets or sets the RecentActivities DbSet.
+    /// </summary>
+    public DbSet<RecentActivity> RecentActivities => Set<RecentActivity>();
+
+    /// <summary>
     /// Configures the model using Fluent API.
     /// </summary>
     /// <param name="modelBuilder">The model builder.</param>
@@ -84,11 +89,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         base.OnModelCreating(modelBuilder);
 
-        // Apply global query filter for soft delete (RefreshToken has its own filter configured separately)
+        // Apply global query filter for soft delete (RefreshToken and RecentActivity have their own filters or none)
         foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
         {
             // Skip RefreshToken as it has a custom query filter based on User.IsDeleted
-            if (entityType.ClrType == typeof(RefreshToken))
+            // Skip RecentActivity as it's an immutable log table with no soft delete
+            if (entityType.ClrType == typeof(RefreshToken) || entityType.ClrType == typeof(RecentActivity))
             {
                 continue;
             }
@@ -316,6 +322,21 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             // Add matching query filter for RefreshToken to filter when User is soft deleted
             _ = entity.HasQueryFilter(rt => !rt.User.IsDeleted);
+        });
+
+        // Configure RecentActivity
+        _ = modelBuilder.Entity<RecentActivity>(entity =>
+        {
+            _ = entity.HasKey(e => e.Id);
+            _ = entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            _ = entity.Property(e => e.EntityType).IsRequired().HasMaxLength(50);
+            _ = entity.Property(e => e.EntityId).IsRequired().HasMaxLength(100);
+            _ = entity.Property(e => e.Operation).IsRequired().HasMaxLength(20);
+            _ = entity.Property(e => e.Message).IsRequired().HasMaxLength(500);
+            _ = entity.Property(e => e.UserId).HasMaxLength(256);
+
+            // Index on Timestamp for efficient queries (descending for latest-first queries)
+            _ = entity.HasIndex(e => e.Timestamp).IsDescending();
         });
     }
 

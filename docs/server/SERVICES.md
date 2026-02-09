@@ -490,27 +490,44 @@ public interface IReportsService
 **Implementation:**
 
 ```csharp
-public class ReportsService : IReportsService
+public class ReportsService(
+    IRepository<Person> personRepository,
+    IRepository<Employment> employmentRepository,
+    IRepository<School> schoolRepository,
+    IRepository<Position> positionRepository,
+    IRepository<SalaryGrade> salaryGradeRepository,
+    IRepository<Item> itemRepository,
+    IRecentActivityRepository activityRepository) : IReportsService
 {
-    private readonly IRepository<Person> _personRepository;
-    private readonly IRepository<Employment> _employmentRepository;
-    private readonly IRepository<School> _schoolRepository;
-    private readonly IRepository<Position> _positionRepository;
-    private readonly IRepository<SalaryGrade> _salaryGradeRepository;
-    private readonly IRepository<Item> _itemRepository;
-    
-    public async Task<DashboardStatsDto> GetDashboardStatsAsync()
+    public async Task<DashboardStatsDto> GetDashboardStatsAsync(CancellationToken ct = default)
     {
+        // Entity counts
+        int totalPersons = await personRepository.Query().CountAsync(ct);
+        int activeEmployments = await employmentRepository.Query()
+            .Where(e => e.IsActive).CountAsync(ct);
+        // ... other counts ...
+
+        // Birthday celebrants for current month
+        int currentMonth = DateTime.UtcNow.Month;
+        var birthdayCelebrants = await personRepository.Query()
+            .Where(p => p.DateOfBirth.Month == currentMonth)
+            .OrderBy(p => p.DateOfBirth.Day)
+            .Select(p => new BirthdayCelebrantDto { /* map fields */ })
+            .ToListAsync(ct);
+
+        // Recent activities (last 10 from database)
+        var recentActivities = await activityRepository.GetLatestAsync(10, ct);
+        var recentActivityDtos = recentActivities
+            .Select(a => new RecentActivityDto { /* map fields */ })
+            .ToList();
+
         return new DashboardStatsDto
         {
-            TotalPersons = await _personRepository.Query().CountAsync(),
-            ActiveEmployments = await _employmentRepository.Query()
-                .Where(e => e.IsActive)
-                .CountAsync(),
-            TotalSchools = await _schoolRepository.Query().CountAsync(),
-            TotalPositions = await _positionRepository.Query().CountAsync(),
-            TotalSalaryGrades = await _salaryGradeRepository.Query().CountAsync(),
-            TotalItems = await _itemRepository.Query().CountAsync()
+            TotalPersons = totalPersons,
+            ActiveEmployments = activeEmployments,
+            // ... other counts ...
+            BirthdayCelebrants = birthdayCelebrants,
+            RecentActivities = recentActivityDtos
         };
     }
 }
@@ -543,6 +560,18 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Reports
 builder.Services.AddScoped<IReportsService, ReportsService>();
+
+// Activity persistence
+builder.Services.AddScoped<IRecentActivityRepository, RecentActivityRepository>();
+
+// Event publishing (Decorator pattern)
+// RabbitMQEventPublisher is the inner publisher, ActivityPersistingEventPublisher wraps it
+// to persist activities to the database before publishing to RabbitMQ
+builder.Services.AddSingleton<RabbitMQEventPublisher>();
+builder.Services.AddScoped<IEventPublisher>(sp => new ActivityPersistingEventPublisher(
+    sp.GetRequiredService<RabbitMQEventPublisher>(),
+    sp.GetRequiredService<IRecentActivityRepository>(),
+    sp.GetRequiredService<ILogger<ActivityPersistingEventPublisher>>()));
 ```
 
 **Note**: All services use constructor injection for `ILogger<T>` automatically via ASP.NET Core's dependency injection.

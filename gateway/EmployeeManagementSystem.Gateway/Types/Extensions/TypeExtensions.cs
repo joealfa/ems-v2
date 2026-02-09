@@ -553,6 +553,56 @@ public class DocumentResponseDtoExtensions
 
 #region Dashboard Types
 
+[ExtendObjectType<BirthdayCelebrantDto>]
+public class BirthdayCelebrantDtoExtensions
+{
+    /// <summary>
+    /// Get the display ID as a long value
+    /// </summary>
+    public long GetDisplayId([Parent] BirthdayCelebrantDto dto)
+    {
+        return dto.DisplayId;
+    }
+
+    /// <summary>
+    /// Get the profile image URL (Gateway proxy URL for CORS handling)
+    /// Overrides the ProfileImageUrl property from the DTO
+    /// </summary>
+    [GraphQLName("profileImageUrl")]
+    public string? GetProfileImageUrl(
+        [Parent] BirthdayCelebrantDto dto,
+        [Service] IConfiguration configuration)
+    {
+        if (!dto.HasProfileImage)
+        {
+            return null;
+        }
+
+        // Return Gateway proxy URL for CORS handling
+        string gatewayBaseUrl = configuration["Gateway:BaseUrl"] ?? "https://localhost:5003";
+
+        // Ensure the base URL has a protocol
+        if (!gatewayBaseUrl.StartsWith("http://") && !gatewayBaseUrl.StartsWith("https://"))
+        {
+            gatewayBaseUrl = $"https://{gatewayBaseUrl}";
+        }
+
+        return $"{gatewayBaseUrl}/api/persons/{dto.DisplayId}/profile-image";
+    }
+}
+
+[ExtendObjectType<RecentActivityDto>]
+public class RecentActivityDtoExtensions
+{
+    /// <summary>
+    /// Get the activity ID as a long value
+    /// </summary>
+    public long GetId([Parent] RecentActivityDto dto)
+    {
+        return dto.Id;
+    }
+}
+
 [ExtendObjectType<DashboardStatsDto>]
 public class DashboardStatsDtoExtensions
 {
@@ -602,6 +652,22 @@ public class DashboardStatsDtoExtensions
     public int GetActiveEmployments([Parent] DashboardStatsDto stats)
     {
         return stats.ActiveEmployments;
+    }
+
+    /// <summary>
+    /// Get the list of birthday celebrants this month
+    /// </summary>
+    public IReadOnlyList<BirthdayCelebrantDto> GetBirthdayCelebrants([Parent] DashboardStatsDto stats)
+    {
+        return stats.BirthdayCelebrants;
+    }
+
+    /// <summary>
+    /// Get the list of recent activities
+    /// </summary>
+    public IReadOnlyList<RecentActivityDto> GetRecentActivities([Parent] DashboardStatsDto stats)
+    {
+        return stats.RecentActivities;
     }
 }
 

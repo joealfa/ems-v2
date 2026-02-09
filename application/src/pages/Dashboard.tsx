@@ -9,11 +9,12 @@ import {
   Button,
   Grid,
   GridItem,
+  Image,
 } from '@chakra-ui/react';
 import { useDashboardStats } from '../hooks/useDashboard';
 import { useRecentActivities } from '../hooks/useRecentActivities';
 import { useState } from 'react';
-import { formatTimestamp, getActivityIcon } from '../utils';
+import { formatTimestamp, getActivityIcon, getInitials } from '../utils';
 
 interface StatCardProps {
   title: string;
@@ -83,6 +84,48 @@ const Dashboard = () => {
   const handleNextQuote = () => {
     setCurrentQuoteIndex((prev) => (prev + 1) % quotes.length);
   };
+
+  // Merge subscription activities with DTO activities for complete history
+  const displayActivities = (() => {
+    // Convert DTO activities to the same format as subscription activities
+    const dtoActivities = (stats?.recentActivities ?? []).map((a) => ({
+      id: String(a.id),
+      eventType: '',
+      entityType: a.entityType,
+      entityId: a.entityId,
+      operation: a.operation,
+      timestamp: a.timestamp,
+      userId: a.userId ?? null,
+      message: a.message,
+    }));
+
+    // Combine subscription activities (newer) with DTO activities (older/baseline)
+    const combined = [...activities, ...dtoActivities];
+
+    // Deduplicate by message+timestamp (in case of overlap)
+    const uniqueMap = new Map();
+    combined.forEach((activity) => {
+      const key = `${activity.message}-${activity.timestamp}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, activity);
+      }
+    });
+
+    // Sort by timestamp descending (most recent first) and return
+    return Array.from(uniqueMap.values()).sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  })();
+
+  // Avatar background colors for cycling
+  const avatarColors = [
+    'blue.500',
+    'purple.500',
+    'green.500',
+    'orange.500',
+    'red.500',
+  ];
 
   return (
     <Box>
@@ -184,7 +227,7 @@ const Dashboard = () => {
                 </Text>
               )}
 
-              {activities.length === 0 && !subscriptionError && (
+              {displayActivities.length === 0 && !subscriptionError && (
                 <Text fontSize="sm" color="fg.muted">
                   {isConnected
                     ? 'No recent activities yet. Activities will appear here as they occur.'
@@ -193,7 +236,7 @@ const Dashboard = () => {
               )}
 
               <Box display="flex" flexDirection="column" gap={3}>
-                {activities.map((activity) => (
+                {displayActivities.map((activity) => (
                   <Box
                     key={activity.id}
                     pb={3}
@@ -202,7 +245,7 @@ const Dashboard = () => {
                   >
                     <Flex justify="space-between" align="start" mb={1}>
                       <Text fontSize="sm" fontWeight="medium">
-                        {getActivityIcon(activity.entityType)}{' '}
+                        {getActivityIcon(activity.entityType ?? 'unknown')}{' '}
                         {activity.message}
                       </Text>
                     </Flex>
@@ -248,118 +291,79 @@ const Dashboard = () => {
               overflowY="auto"
               maxHeight={{ base: 'auto', lg: '220px' }}
             >
-              <Box display="flex" flexDirection="column" gap={3}>
-                <Box display="flex" alignItems="center" gap={3}>
-                  <Box
-                    width="40px"
-                    height="40px"
-                    borderRadius="full"
-                    bg="blue.500"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    color="white"
-                    fontWeight="bold"
-                    flexShrink={0}
-                  >
-                    JD
-                  </Box>
-                  <Box flex="1">
-                    <Text fontWeight="medium">John Doe</Text>
-                    <Text fontSize="sm" color="fg.muted">
-                      February 15
-                    </Text>
-                  </Box>
+              {loading && (
+                <Flex justify="center" align="center" py={4}>
+                  <Spinner size="sm" />
+                </Flex>
+              )}
+
+              {!loading && stats?.birthdayCelebrants.length === 0 && (
+                <Text fontSize="sm" color="fg.muted">
+                  No birthdays this month.
+                </Text>
+              )}
+
+              {!loading && (stats?.birthdayCelebrants.length ?? 0) > 0 && (
+                <Box display="flex" flexDirection="column" gap={3}>
+                  {stats?.birthdayCelebrants.map((celebrant, index) => {
+                    const initials = getInitials(
+                      celebrant.firstName,
+                      celebrant.lastName
+                    );
+                    const avatarBg = avatarColors[index % avatarColors.length];
+
+                    // Format date of birth to "Month Day" format
+                    const dob = new Date(celebrant.dateOfBirth);
+                    const formattedDate = dob.toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                    });
+
+                    return (
+                      <Box
+                        key={celebrant.displayId}
+                        display="flex"
+                        alignItems="center"
+                        gap={3}
+                      >
+                        {celebrant.hasProfileImage &&
+                        celebrant.profileImageUrl ? (
+                          <Image
+                            src={celebrant.profileImageUrl}
+                            alt={celebrant.fullName ?? 'Profile'}
+                            width="40px"
+                            height="40px"
+                            borderRadius="full"
+                            objectFit="cover"
+                            flexShrink={0}
+                          />
+                        ) : (
+                          <Box
+                            width="40px"
+                            height="40px"
+                            borderRadius="full"
+                            bg={avatarBg}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            color="white"
+                            fontWeight="bold"
+                            flexShrink={0}
+                          >
+                            {initials}
+                          </Box>
+                        )}
+                        <Box flex="1">
+                          <Text fontWeight="medium">{celebrant.fullName}</Text>
+                          <Text fontSize="sm" color="fg.muted">
+                            {formattedDate}
+                          </Text>
+                        </Box>
+                      </Box>
+                    );
+                  })}
                 </Box>
-                <Box display="flex" alignItems="center" gap={3}>
-                  <Box
-                    width="40px"
-                    height="40px"
-                    borderRadius="full"
-                    bg="purple.500"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    color="white"
-                    fontWeight="bold"
-                    flexShrink={0}
-                  >
-                    AS
-                  </Box>
-                  <Box flex="1">
-                    <Text fontWeight="medium">Alice Smith</Text>
-                    <Text fontSize="sm" color="fg.muted">
-                      February 22
-                    </Text>
-                  </Box>
-                </Box>
-                <Box display="flex" alignItems="center" gap={3}>
-                  <Box
-                    width="40px"
-                    height="40px"
-                    borderRadius="full"
-                    bg="green.500"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    color="white"
-                    fontWeight="bold"
-                    flexShrink={0}
-                  >
-                    MJ
-                  </Box>
-                  <Box flex="1">
-                    <Text fontWeight="medium">Michael Johnson</Text>
-                    <Text fontSize="sm" color="fg.muted">
-                      February 28
-                    </Text>
-                  </Box>
-                </Box>
-                <Box display="flex" alignItems="center" gap={3}>
-                  <Box
-                    width="40px"
-                    height="40px"
-                    borderRadius="full"
-                    bg="orange.500"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    color="white"
-                    fontWeight="bold"
-                    flexShrink={0}
-                  >
-                    EW
-                  </Box>
-                  <Box flex="1">
-                    <Text fontWeight="medium">Emma Wilson</Text>
-                    <Text fontSize="sm" color="fg.muted">
-                      February 10
-                    </Text>
-                  </Box>
-                </Box>
-                <Box display="flex" alignItems="center" gap={3}>
-                  <Box
-                    width="40px"
-                    height="40px"
-                    borderRadius="full"
-                    bg="red.500"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    color="white"
-                    fontWeight="bold"
-                    flexShrink={0}
-                  >
-                    DB
-                  </Box>
-                  <Box flex="1">
-                    <Text fontWeight="medium">David Brown</Text>
-                    <Text fontSize="sm" color="fg.muted">
-                      February 5
-                    </Text>
-                  </Box>
-                </Box>
-              </Box>
+              )}
             </Card.Body>
           </Card.Root>
         </GridItem>

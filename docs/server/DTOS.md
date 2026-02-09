@@ -708,14 +708,51 @@ public class ContactResponseDto
 ### DashboardStatsDto
 
 ```csharp
-public class DashboardStatsDto
+public record DashboardStatsDto
 {
-    public int TotalPersons { get; set; }
-    public int ActiveEmployments { get; set; }
-    public int TotalSchools { get; set; }
-    public int TotalPositions { get; set; }
-    public int TotalSalaryGrades { get; set; }
-    public int TotalItems { get; set; }
+    public int TotalPersons { get; init; }
+    public int ActiveEmployments { get; init; }
+    public int TotalSchools { get; init; }
+    public int TotalPositions { get; init; }
+    public int TotalSalaryGrades { get; init; }
+    public int TotalItems { get; init; }
+    public IReadOnlyList<BirthdayCelebrantDto> BirthdayCelebrants { get; init; } = [];
+    public IReadOnlyList<RecentActivityDto> RecentActivities { get; init; } = [];
+}
+```
+
+### BirthdayCelebrantDto
+
+Represents a person with a birthday in the current month.
+
+```csharp
+public record BirthdayCelebrantDto
+{
+    public long DisplayId { get; init; }
+    public string FirstName { get; init; } = string.Empty;
+    public string LastName { get; init; } = string.Empty;
+    public string? MiddleName { get; init; }
+    public string FullName { get; init; } = string.Empty;
+    public DateOnly DateOfBirth { get; init; }
+    public string? ProfileImageUrl { get; init; }
+    public bool HasProfileImage { get; init; }
+}
+```
+
+### RecentActivityDto
+
+Represents a recent activity entry from the database.
+
+```csharp
+public record RecentActivityDto
+{
+    public long Id { get; init; }
+    public string EntityType { get; init; } = string.Empty;
+    public string EntityId { get; init; } = string.Empty;
+    public string Operation { get; init; } = string.Empty;
+    public string Message { get; init; } = string.Empty;
+    public DateTime Timestamp { get; init; }
+    public string? UserId { get; init; }
 }
 ```
 
