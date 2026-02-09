@@ -25,6 +25,6 @@
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.*" />
 
     <!-- ApiClient (local NuGet) -->
-    <PackageReference Include="EmployeeManagementSystem.ApiClient" Version="1.0.2640.248" />
+    <PackageReference Include="EmployeeManagementSystem.ApiClient" Version="1.0.2640.744" />
   </ItemGroup>
 </Project>
