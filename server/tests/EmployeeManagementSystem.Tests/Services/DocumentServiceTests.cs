@@ -209,6 +209,8 @@ public class DocumentServiceTests
                 It.IsAny<string>(),
                 It.IsAny<Stream>(),
                 It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://storage.blob.core.windows.net/documents/test.pdf");
 
@@ -231,6 +233,8 @@ public class DocumentServiceTests
             It.IsAny<string>(),
             It.IsAny<Stream>(),
             It.IsAny<string>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
             It.IsAny<CancellationToken>()), Times.Once);
         _documentRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Document>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -321,6 +325,8 @@ public class DocumentServiceTests
                 It.IsAny<string>(),
                 It.IsAny<Stream>(),
                 It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://storage.blob.core.windows.net/documents/test.pdf");
 
@@ -530,6 +536,8 @@ public class DocumentServiceTests
                 It.IsAny<string>(),
                 It.IsAny<Stream>(),
                 It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://storage.blob.core.windows.net/profile-images/profile.jpg");
 
@@ -594,6 +602,9 @@ public class DocumentServiceTests
             .Setup(b => b.DeleteAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         _ = _personRepositoryMock
@@ -608,6 +619,9 @@ public class DocumentServiceTests
         _blobStorageServiceMock.Verify(b => b.DeleteAsync(
             It.IsAny<string>(),
             It.IsAny<string>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

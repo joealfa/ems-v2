@@ -5,6 +5,7 @@ using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Tests.Helpers;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using System.Reflection;
 
@@ -18,7 +19,12 @@ public class SalaryGradeServiceTests
     public SalaryGradeServiceTests()
     {
         _salaryGradeRepositoryMock = new Mock<IRepository<SalaryGrade>>();
-        _salaryGradeService = new SalaryGradeService(_salaryGradeRepositoryMock.Object);
+        Mock<IEventPublisher> eventPublisherMock = new();
+        Mock<IHttpContextAccessor> httpContextAccessorMock = new();
+        _salaryGradeService = new SalaryGradeService(
+            _salaryGradeRepositoryMock.Object,
+            eventPublisherMock.Object,
+            httpContextAccessorMock.Object);
     }
 
     #region GetByDisplayIdAsync Tests

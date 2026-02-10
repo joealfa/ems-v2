@@ -6,6 +6,7 @@ using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Domain.Enums;
 using EmployeeManagementSystem.Tests.Helpers;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Reflection;
@@ -33,6 +34,8 @@ public class EmploymentServiceTests
         _salaryGradeRepositoryMock = new Mock<IRepository<SalaryGrade>>();
         _itemRepositoryMock = new Mock<IRepository<Item>>();
         _schoolRepositoryMock = new Mock<IRepository<School>>();
+        Mock<IEventPublisher> eventPublisherMock = new();
+        Mock<IHttpContextAccessor> httpContextAccessorMock = new();
         _loggerMock = new Mock<ILogger<EmploymentService>>();
 
         _employmentService = new EmploymentService(
@@ -43,6 +46,8 @@ public class EmploymentServiceTests
             _salaryGradeRepositoryMock.Object,
             _itemRepositoryMock.Object,
             _schoolRepositoryMock.Object,
+            eventPublisherMock.Object,
+            httpContextAccessorMock.Object,
             _loggerMock.Object);
     }
 

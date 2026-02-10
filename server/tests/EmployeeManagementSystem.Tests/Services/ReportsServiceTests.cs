@@ -17,6 +17,7 @@ public class ReportsServiceTests
     private readonly Mock<IRepository<Position>> _positionRepositoryMock;
     private readonly Mock<IRepository<SalaryGrade>> _salaryGradeRepositoryMock;
     private readonly Mock<IRepository<Item>> _itemRepositoryMock;
+    private readonly Mock<IRecentActivityRepository> _activityRepositoryMock;
     private readonly ReportsService _reportsService;
 
     public ReportsServiceTests()
@@ -27,6 +28,10 @@ public class ReportsServiceTests
         _positionRepositoryMock = new Mock<IRepository<Position>>();
         _salaryGradeRepositoryMock = new Mock<IRepository<SalaryGrade>>();
         _itemRepositoryMock = new Mock<IRepository<Item>>();
+        _activityRepositoryMock = new Mock<IRecentActivityRepository>();
+        _activityRepositoryMock
+            .Setup(r => r.GetLatestAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RecentActivity>());
 
         _reportsService = new ReportsService(
             _personRepositoryMock.Object,
@@ -34,7 +39,8 @@ public class ReportsServiceTests
             _schoolRepositoryMock.Object,
             _positionRepositoryMock.Object,
             _salaryGradeRepositoryMock.Object,
-            _itemRepositoryMock.Object);
+            _itemRepositoryMock.Object,
+            _activityRepositoryMock.Object);
     }
 
     #region GetDashboardStatsAsync Tests
@@ -244,7 +250,7 @@ public class ReportsServiceTests
 
         // Assert
         Assert.NotNull(result);
-        _personRepositoryMock.Verify(r => r.Query(), Times.Once);
+        _personRepositoryMock.Verify(r => r.Query(), Times.Exactly(2)); // Once for count, once for birthday celebrants
         _employmentRepositoryMock.Verify(r => r.Query(), Times.Once);
         _schoolRepositoryMock.Verify(r => r.Query(), Times.Once);
         _positionRepositoryMock.Verify(r => r.Query(), Times.Once);

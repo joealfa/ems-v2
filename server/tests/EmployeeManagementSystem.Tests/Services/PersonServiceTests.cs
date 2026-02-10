@@ -6,6 +6,7 @@ using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Domain.Enums;
 using EmployeeManagementSystem.Tests.Helpers;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Reflection;
@@ -27,6 +28,8 @@ public class PersonServiceTests
         _addressRepositoryMock = new Mock<IRepository<Address>>();
         _contactRepositoryMock = new Mock<IRepository<Contact>>();
         _documentRepositoryMock = new Mock<IRepository<Document>>();
+        Mock<IEventPublisher> eventPublisherMock = new();
+        Mock<IHttpContextAccessor> httpContextAccessorMock = new();
         _loggerMock = new Mock<ILogger<PersonService>>();
 
         _personService = new PersonService(
@@ -34,6 +37,8 @@ public class PersonServiceTests
             _addressRepositoryMock.Object,
             _contactRepositoryMock.Object,
             _documentRepositoryMock.Object,
+            eventPublisherMock.Object,
+            httpContextAccessorMock.Object,
             _loggerMock.Object);
     }
 

@@ -5,6 +5,7 @@ using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Tests.Helpers;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using System.Reflection;
 
@@ -24,12 +25,16 @@ public class SchoolServiceTests
         _addressRepositoryMock = new Mock<IRepository<Address>>();
         _contactRepositoryMock = new Mock<IRepository<Contact>>();
         _employmentSchoolRepositoryMock = new Mock<IRepository<EmploymentSchool>>();
+        Mock<IEventPublisher> eventPublisherMock = new();
+        Mock<IHttpContextAccessor> httpContextAccessorMock = new();
 
         _schoolService = new SchoolService(
             _schoolRepositoryMock.Object,
             _addressRepositoryMock.Object,
             _contactRepositoryMock.Object,
-            _employmentSchoolRepositoryMock.Object);
+            _employmentSchoolRepositoryMock.Object,
+            eventPublisherMock.Object,
+            httpContextAccessorMock.Object);
     }
 
     #region GetByDisplayIdAsync Tests

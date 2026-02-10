@@ -5,6 +5,7 @@ using EmployeeManagementSystem.Application.Interfaces;
 using EmployeeManagementSystem.Application.Services;
 using EmployeeManagementSystem.Domain.Entities;
 using EmployeeManagementSystem.Tests.Helpers;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using System.Reflection;
 
@@ -18,7 +19,12 @@ public class PositionServiceTests
     public PositionServiceTests()
     {
         _positionRepositoryMock = new Mock<IRepository<Position>>();
-        _positionService = new PositionService(_positionRepositoryMock.Object);
+        Mock<IEventPublisher> eventPublisherMock = new();
+        Mock<IHttpContextAccessor> httpContextAccessorMock = new();
+        _positionService = new PositionService(
+            _positionRepositoryMock.Object,
+            eventPublisherMock.Object,
+            httpContextAccessorMock.Object);
     }
 
     #region GetByDisplayIdAsync Tests
