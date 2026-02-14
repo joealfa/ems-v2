@@ -48,7 +48,7 @@ The EMS frontend uses **TanStack Query** with **graphql-request** and **GraphQL 
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    Backend API                              │
-│                 https://localhost:5001                      │
+│                 https://localhost:7166                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 

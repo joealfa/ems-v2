@@ -1,8 +1,18 @@
 import { GraphQLClient, type RequestDocument } from 'graphql-request';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-const GRAPHQL_URL =
-  import.meta.env.VITE_GRAPHQL_URL || 'https://localhost:5003/graphql';
+// Resolve relative URLs (e.g. /graphql) to absolute URLs
+// graphql-request internally uses new URL() which requires absolute URLs
+const resolveUrl = (url: string): string => {
+  if (url.startsWith('/')) {
+    return `${window.location.origin}${url}`;
+  }
+  return url;
+};
+
+const GRAPHQL_URL = resolveUrl(
+  import.meta.env.VITE_GRAPHQL_URL || 'https://localhost:5003/graphql'
+);
 
 export const graphqlClient = new GraphQLClient(GRAPHQL_URL, {
   credentials: 'include',

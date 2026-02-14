@@ -22,12 +22,21 @@ import {
   type DeleteProfileImageMutationVariables,
 } from '../graphql/generated/graphql';
 
-const GRAPHQL_URL =
-  import.meta.env.VITE_GRAPHQL_URL || 'https://localhost:5003/graphql';
+// Resolve relative URLs to absolute using window.location.origin
+const resolveUrl = (url: string): string => {
+  if (url.startsWith('/')) {
+    return `${window.location.origin}${url}`;
+  }
+  return url;
+};
 
-const GATEWAY_BASE_URL =
-  import.meta.env.VITE_GRAPHQL_URL?.replace('/graphql', '') ||
-  'https://localhost:5003';
+const GRAPHQL_URL = resolveUrl(
+  import.meta.env.VITE_GRAPHQL_URL || 'https://localhost:5003/graphql'
+);
+
+const GATEWAY_BASE_URL = resolveUrl(
+  import.meta.env.VITE_GRAPHQL_URL || 'https://localhost:5003/graphql'
+).replace('/graphql', '');
 
 const performUpload = async (
   query: string,

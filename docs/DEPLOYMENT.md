@@ -112,12 +112,32 @@
       "https://yourdomain.com"
     ]
   },
-  "Logging": {
-    "LogLevel": {
+  "Serilog": {
+    "MinimumLevel": {
       "Default": "Information",
-      "Microsoft.AspNetCore": "Warning",
-      "Microsoft.EntityFrameworkCore": "Warning"
-    }
+      "Override": {
+        "Microsoft": "Warning",
+        "Microsoft.AspNetCore": "Warning",
+        "Microsoft.EntityFrameworkCore": "Warning",
+        "System": "Warning"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "Async",
+        "Args": {
+          "configure": [
+            {
+              "Name": "Seq",
+              "Args": {
+                "serverUrl": "https://your-seq-instance.com",
+                "apiKey": "[FROM ENVIRONMENT VARIABLES]"
+              }
+            }
+          ]
+        }
+      }
+    ]
   }
 }
 ```
@@ -188,11 +208,31 @@
       "https://yourdomain.com"
     ]
   },
-  "Logging": {
-    "LogLevel": {
+  "Serilog": {
+    "MinimumLevel": {
       "Default": "Information",
-      "HotChocolate": "Warning"
-    }
+      "Override": {
+        "Microsoft": "Warning",
+        "HotChocolate": "Information",
+        "System": "Warning"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "Async",
+        "Args": {
+          "configure": [
+            {
+              "Name": "Seq",
+              "Args": {
+                "serverUrl": "https://your-seq-instance.com",
+                "apiKey": "[FROM ENVIRONMENT VARIABLES]"
+              }
+            }
+          ]
+        }
+      }
+    ]
   }
 }
 ```

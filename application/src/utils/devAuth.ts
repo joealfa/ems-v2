@@ -19,9 +19,17 @@ interface DevTokenResponse {
   expiresAt: string;
 }
 
-const GATEWAY_BASE_URL =
-  import.meta.env.VITE_GRAPHQL_URL?.replace('/graphql', '') ||
-  'https://localhost:5003';
+// Resolve relative URLs to absolute using window.location.origin
+const resolveUrl = (url: string): string => {
+  if (url.startsWith('/')) {
+    return `${window.location.origin}${url}`;
+  }
+  return url;
+};
+
+const GATEWAY_BASE_URL = resolveUrl(
+  import.meta.env.VITE_GRAPHQL_URL || 'https://localhost:5003/graphql'
+).replace('/graphql', '');
 
 /**
  * Generates a development JWT token via the Gateway.

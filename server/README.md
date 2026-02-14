@@ -148,7 +148,7 @@ dotnet test
 
 ## API Documentation
 
-Once running, access Swagger UI at: `https://localhost:5001/swagger`
+Once running, access Swagger UI at: `https://localhost:7166/swagger`
 
 ## Dependencies
 

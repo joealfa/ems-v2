@@ -46,10 +46,10 @@ TokenValidationParameters = new TokenValidationParameters
     ValidateAudience = true,
     ValidateLifetime = true,
     ValidateIssuerSigningKey = true,
-    ValidIssuer = configuration["Jwt:Issuer"],
-    ValidAudience = configuration["Jwt:Audience"],
+    ValidIssuer = configuration["Authentication:Jwt:Issuer"],
+    ValidAudience = configuration["Authentication:Jwt:Audience"],
     IssuerSigningKey = new SymmetricSecurityKey(
-        Encoding.UTF8.GetBytes(configuration["Jwt:Key"] ?? throw new InvalidOperationException())),
+        Encoding.UTF8.GetBytes(configuration["Authentication:Jwt:Secret"] ?? throw new InvalidOperationException())),
     ClockSkew = TimeSpan.Zero  // Strict expiration enforcement
 }
 ```
@@ -859,19 +859,15 @@ await _cache.RemoveAsync(CacheKeys.Person(displayId));
 
 ## Immediate Action Items
 
-### ✅ Completed (Feb 5, 2026)
+### ✅ Completed
 
-1. ✅ **Environment File Template** - Created `.env.example` and updated documentation
-2. ✅ **Refresh Token Rotation** - Verified already implemented with token reuse detection
-3. ✅ **Rate Limiting** - Installed `AspNetCoreRateLimit` and configured auth endpoint limits
-4. ✅ **CORS Configuration** - Removed unused origins, optimized for security
+1. ✅ **Environment File Template** (Feb 5, 2026) - Created `.env.example` and updated documentation
+2. ✅ **Refresh Token Rotation** (Feb 5, 2026) - Verified already implemented with token reuse detection
+3. ✅ **Rate Limiting** (Feb 5, 2026) - Installed `AspNetCoreRateLimit` and configured auth endpoint limits
+4. ✅ **CORS Configuration** (Feb 5, 2026) - Removed unused origins, optimized for security
+5. ✅ **Content Security Policy** (Feb 5, 2026) - Configured CSP headers in middleware with environment-specific policies (see [SECURITY-HEADERS.md](SECURITY-HEADERS.md))
 
 ### Priority 1 (Remaining High Priority Items)
-
-5. **Add Content Security Policy**
-   - Configure CSP headers in middleware
-   - Test with frontend application
-   - Prevent XSS and code injection attacks
 
 6. **Redis Security (Production)**
    - Enable AUTH with strong password

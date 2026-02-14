@@ -10,11 +10,28 @@
     <Version>1.0.$([System.DateTime]::UtcNow.ToString("yy"))$([System.DateTime]::UtcNow.DayOfYear).$([System.DateTime]::UtcNow.ToString("HHmm"))</Version>
     <Authors>EMS Development Team</Authors>
     <Description>NSwag-generated API client for Employee Management System</Description>
-    <PackageOutputPath>../nupkg</PackageOutputPath>
+    <PackageOutputPath>../nupkg/</PackageOutputPath>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <NugetSourceUrl>http://localhost:5000/v3/index.json</NugetSourceUrl>
+    <UserSecretsId>ba962cbd-9673-40d8-991a-7428506f1d47</UserSecretsId>
   </PropertyGroup>
 
+  <Target Name="PushNugetPackage" AfterTargets="Pack">
+    <PropertyGroup>
+      <ApiKey Condition="'$(ApiKey)' == ''">$(NUGET_API_KEY)</ApiKey>
+    </PropertyGroup>
+    <ItemGroup>
+      <NugetPackages Include="$(PackageOutputPath)*.nupkg" />
+    </ItemGroup>
+    <Exec
+      Condition="'@(NugetPackages)' != '' and '$(NugetSourceUrl)' != '' and '$(ApiKey)' != ''"
+      Command="dotnet nuget push %(NugetPackages.Identity) --source $(NugetSourceUrl) --api-key $(ApiKey) --skip-duplicate" />
+    <Delete Files="@(NugetPackages)" />
+    <Exec Command="dotnet nuget locals http-cache --clear" />
+  </Target>
+
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.*" />

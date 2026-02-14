@@ -153,7 +153,7 @@ public class PersonService : IPersonService
         };
         
         await _repository.AddAsync(person);
-        return MapToResponseDto(person);
+        return person.ToResponseDto();
     }
     
     public async Task<PagedResult<PersonListDto>> GetPagedAsync(
@@ -174,7 +174,7 @@ public class PersonService : IPersonService
         var result = await GetPagedAsync(query, page, pageSize);
         return new PagedResult<PersonListDto>
         {
-            Items = result.Items.Select(MapToListDto).ToList(),
+            Items = result.Items.Select(p => p.ToListDto()).ToList(),
             TotalCount = result.TotalCount,
             Page = page,
             PageSize = pageSize
@@ -408,7 +408,7 @@ public class DocumentService : IDocumentService
         };
         
         await _repository.AddAsync(document);
-        return MapToResponseDto(document);
+        return document.ToResponseDto();
     }
 }
 ```
@@ -580,29 +580,40 @@ builder.Services.AddScoped<IEventPublisher>(sp => new ActivityPersistingEventPub
 
 ## Service Patterns
 
-### 1. DTO Mapping
+### 1. DTO Mapping via Extension Methods
 
-Services handle all DTO mapping internally:
+Services use extension methods from `Application/Mappings/` for DTO mapping:
 
 ```csharp
-private PersonResponseDto MapToResponseDto(Person entity)
+// Extension methods are defined in Application/Mappings/PersonMappingExtensions.cs
+public static class PersonMappingExtensions
 {
-    return new PersonResponseDto
+    public static PersonResponseDto ToResponseDto(this Person entity)
     {
-        DisplayId = entity.DisplayId,
-        FirstName = entity.FirstName,
-        // ... other properties
-    };
+        return new PersonResponseDto
+        {
+            DisplayId = entity.DisplayId,
+            FirstName = entity.FirstName,
+            // ... other properties
+        };
+    }
+
+    public static PersonListDto ToListDto(this Person entity)
+    {
+        return new PersonListDto
+        {
+            DisplayId = entity.DisplayId,
+            FullName = entity.FullName,
+            // ... other properties
+        };
+    }
 }
 
-private PersonListDto MapToListDto(Person entity)
+// Usage in service
+public async Task<PersonResponseDto> GetByIdAsync(long displayId)
 {
-    return new PersonListDto
-    {
-        DisplayId = entity.DisplayId,
-        FullName = entity.FullName,
-        // ... other properties
-    };
+    Person? person = await _repository.GetByDisplayIdAsync(displayId);
+    return person?.ToResponseDto();
 }
 ```
 
@@ -671,6 +682,6 @@ public async Task<PersonResponseDto?> GetByDisplayIdAsync(long displayId)
         .Include(p => p.Documents.Where(d => !d.IsDeleted))
         .FirstOrDefaultAsync(p => p.DisplayId == displayId);
     
-    return person == null ? null : MapToResponseDto(person);
+    return person == null ? null : person.ToResponseDto();
 }
 ```

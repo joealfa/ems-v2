@@ -189,12 +189,12 @@ Seq API keys are stored in **user secrets** for security:
 
 **Backend API**:
 ```bash
-dotnet user-secrets set "Serilog:WriteTo:1:Args:configure:0:Args:apiKey" "eNbAoVON73DB9XV3ygAO"
+dotnet user-secrets set "Serilog:WriteTo:1:Args:configure:0:Args:apiKey" "your-backend-seq-api-key-here"
 ```
 
 **Gateway**:
 ```bash
-dotnet user-secrets set "Serilog:WriteTo:1:Args:configure:0:Args:apiKey" "0irSuiu7B4ZPuKkSTHMf"
+dotnet user-secrets set "Serilog:WriteTo:1:Args:configure:0:Args:apiKey" "your-gateway-seq-api-key-here"
 ```
 
 ---

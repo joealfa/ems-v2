@@ -760,38 +760,95 @@ public record RecentActivityDto
 
 ## DTO Mapping Conventions
 
-### Entity to Response DTO
+### Overview
+
+The EMS project uses **extension methods** for DTO mapping, located in the `Application/Mappings/` folder. This approach:
+- Keeps services clean and focused on business logic
+- Provides reusable mapping logic across the application
+- Makes mappings discoverable through IntelliSense
+
+### Entity to Response DTO (Extension Method)
 
 ```csharp
-// In Service layer
-public PersonResponseDto MapToResponseDto(Person entity)
+// In Application/Mappings/PersonMappingExtensions.cs
+public static class PersonMappingExtensions
 {
-    return new PersonResponseDto
+    public static PersonResponseDto ToResponseDto(this Person entity)
     {
-        DisplayId = entity.DisplayId,
-        FirstName = entity.FirstName,
-        LastName = entity.LastName,
-        MiddleName = entity.MiddleName,
-        FullName = entity.FullName,
-        DateOfBirth = entity.DateOfBirth,
-        Gender = entity.Gender,
-        CivilStatus = entity.CivilStatus,
-        ProfileImageUrl = entity.ProfileImageUrl,
-        Addresses = entity.Addresses.Select(MapToAddressDto).ToList(),
-        Contacts = entity.Contacts.Select(MapToContactDto).ToList(),
-        CreatedAt = entity.CreatedAt,
-        CreatedBy = entity.CreatedBy,
-        ModifiedAt = entity.ModifiedAt,
-        ModifiedBy = entity.ModifiedBy
+        return new PersonResponseDto
+        {
+            DisplayId = entity.DisplayId,
+            FirstName = entity.FirstName,
+            LastName = entity.LastName,
+            MiddleName = entity.MiddleName,
+            FullName = entity.FullName,
+            DateOfBirth = entity.DateOfBirth,
+            Gender = entity.Gender,
+            CivilStatus = entity.CivilStatus,
+            ProfileImageUrl = entity.ProfileImageUrl,
+            Addresses = entity.Addresses.Select(a => a.ToDto()).ToList(),
+            Contacts = entity.Contacts.Select(c => c.ToDto()).ToList(),
+            CreatedAt = entity.CreatedAt,
+            CreatedBy = entity.CreatedBy,
+            ModifiedAt = entity.ModifiedAt,
+            ModifiedBy = entity.ModifiedBy
+        };
+    }
+
+    public static PersonListDto ToListDto(this Person entity)
+    {
+        return new PersonListDto
+        {
+            DisplayId = entity.DisplayId,
+            FullName = entity.FullName,
+            Gender = entity.Gender,
+            CivilStatus = entity.CivilStatus,
+            ProfileImageUrl = entity.ProfileImageUrl
+        };
+    }
+}
+```
+
+### Usage in Services
+
+```csharp
+// In PersonService.cs
+public async Task<PersonResponseDto> GetByIdAsync(long displayId)
+{
+    Person? person = await _repository.GetByDisplayIdAsync(displayId);
+    if (person == null)
+        throw new NotFoundException($"Person with DisplayId {displayId} not found");
+
+    // Use extension method for mapping
+    return person.ToResponseDto();
+}
+
+public async Task<PagedResult<PersonListDto>> GetAllAsync(int page, int pageSize)
+{
+    IQueryable<Person> query = _repository.GetQueryable();
+    int totalCount = await query.CountAsync();
+
+    List<Person> persons = await query
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+
+    // Use extension method for mapping
+    return new PagedResult<PersonListDto>
+    {
+        Items = persons.Select(p => p.ToListDto()).ToList(),
+        TotalCount = totalCount,
+        Page = page,
+        PageSize = pageSize
     };
 }
 ```
 
-### Create DTO to Entity
+### Create DTO to Entity (Extension Method)
 
 ```csharp
-// In Service layer
-public Person MapToEntity(CreatePersonDto dto)
+// In Application/Mappings/PersonMappingExtensions.cs
+public static Person ToEntity(this CreatePersonDto dto, string createdBy)
 {
     return new Person
     {
@@ -801,8 +858,46 @@ public Person MapToEntity(CreatePersonDto dto)
         DateOfBirth = dto.DateOfBirth,
         Gender = dto.Gender,
         CivilStatus = dto.CivilStatus,
-        CreatedBy = "System",  // TODO: Get from auth context
+        CreatedBy = createdBy,
         CreatedAt = DateTime.UtcNow
     };
+}
+```
+
+### DTO Type Conventions
+
+**Response DTOs** (read-only data returned from API):
+- Use `record` types for immutability
+- Inherit from `BaseResponseDto` when appropriate
+- Located in `Application/DTOs/`
+
+Example:
+```csharp
+public record PersonResponseDto : BaseResponseDto
+{
+    public string FirstName { get; init; } = string.Empty;
+    public string LastName { get; init; } = string.Empty;
+    public string FullName { get; init; } = string.Empty;
+    // ... other properties
+}
+```
+
+**Request DTOs** (data sent to API):
+- Use `class` types to support validation attributes
+- Located in `Application/DTOs/`
+- Include validation attributes (Required, MaxLength, etc.)
+
+Example:
+```csharp
+public class CreatePersonDto
+{
+    [Required]
+    [MaxLength(100)]
+    public string FirstName { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(100)]
+    public string LastName { get; set; } = string.Empty;
+    // ... other properties
 }
 ```

@@ -198,7 +198,28 @@ function Dashboard() {
 
 #### Activity Event Structure
 
-```typessubscription-client.ts # graphql-ws WebSocket client
+```typescript
+interface ActivityEventDto {
+  entityType: string;        // e.g., "person", "employment"
+  entityId: string;          // Display ID of the entity
+  operation: string;         // "CREATE", "UPDATE", "DELETE"
+  message: string;           // Human-readable description
+  timestamp: string;         // ISO 8601 timestamp
+  userId?: string | null;    // User who triggered the event
+}
+```
+
+---
+
+## Project Structure
+
+### GraphQL Files Organization
+
+```
+src/
+├── graphql/
+│   ├── graphql-client.ts    # graphql-request client configuration
+│   ├── subscription-client.ts # graphql-ws WebSocket client
 │   ├── query-client.ts        # TanStack QueryClient configuration
 │   ├── QueryProvider.tsx      # TanStack Query provider wrapper
 │   ├── query-keys.ts         # Query key factory for cache management
@@ -231,7 +252,12 @@ function Dashboard() {
     ├── usePersons.ts          # Person CRUD hooks
     ├── usePositions.ts        # Position CRUD hooks
     ├── useRecentActivities.ts # Real-time activity subscription hook
+    ├── useSalaryGrades.ts     # Salary grade CRUD hooks
+    ├── useSchools.ts          # School CRUD hooks
+    └── useToast.ts            # Toast notification hook
+```
 
+---
 ### Automatic Caching
 TanStack Query caches query results using query keys. Data is considered fresh for a configurable `staleTime`, then automatically refetched in the background:
 

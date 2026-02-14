@@ -6,8 +6,7 @@ This document provides complete API endpoint documentation for the EMS backend.
 
 ## Base URL
 
-- **Development**: `http://localhost:5031/api/v1`
-- **HTTPS Development**: `https://localhost:7009/api/v1`
+- **Development**: `https://localhost:7166/api/v1`
 
 ## API Versioning
 

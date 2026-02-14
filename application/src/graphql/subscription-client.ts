@@ -1,7 +1,8 @@
 import { createClient, type Client } from 'graphql-ws';
 
 const GRAPHQL_WS_URL =
-  import.meta.env.VITE_GRAPHQL_WS_URL || 'wss://localhost:5003/graphql';
+  import.meta.env.VITE_GRAPHQL_WS_URL ||
+  `wss://${window.location.host}/graphql`;
 
 let subscriptionClient: Client | null = null;
 

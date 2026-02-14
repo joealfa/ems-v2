@@ -303,6 +303,115 @@ graph TB
     class Seq monitorStyle
 ```
 
+### Sequence Diagrams
+
+#### 1. GraphQL Query Flow (with Caching)
+
+```mermaid
+%%{init: {'theme': 'neutral'}}%%
+sequenceDiagram
+    participant Browser
+    participant Gateway as GraphQL Gateway
+    participant Redis
+    participant DataLoader
+    participant Backend as Backend API
+    participant DB as SQL Database
+
+    Browser->>Gateway: GraphQL Query (persons list)
+    Gateway->>Redis: Check cache (persons:list:hash)
+    
+    alt Cache Hit
+        Redis-->>Gateway: Return cached data
+        Gateway-->>Browser: Return response
+    else Cache Miss
+        Redis-->>Gateway: Cache miss
+        Gateway->>DataLoader: Load persons
+        DataLoader->>Backend: Batch API request
+        Backend->>DB: Query database
+        DB-->>Backend: Return entities
+        Backend-->>DataLoader: Return DTOs
+        DataLoader-->>Gateway: Return data
+        Gateway->>Redis: Store in cache (TTL: 5min)
+        Gateway-->>Browser: Return response
+    end
+    
+    Note over Browser,DB: Future queries served from Redis cache
+```
+
+#### 2. Event-Driven Update Flow (Real-time)
+
+```mermaid
+%%{init: {'theme': 'neutral'}}%%
+sequenceDiagram
+    participant Browser
+    participant Gateway as GraphQL Gateway
+    participant Subscription as Subscription Manager
+    participant EventBuffer
+    participant RabbitConsumer as RabbitMQ Consumer
+    participant RabbitMQ
+    participant Backend as Backend API
+    participant DB as SQL Database
+
+    Note over Browser,Gateway: 1. Client establishes WebSocket connection
+    Browser->>Gateway: Connect WebSocket
+    Browser->>Subscription: Subscribe to activity events
+    Subscription->>EventBuffer: Get buffered events (last 50)
+    EventBuffer-->>Subscription: Return history
+    Subscription-->>Browser: Send buffered events
+    
+    Note over Browser,DB: 2. User performs mutation (e.g., create person)
+    Browser->>Gateway: GraphQL Mutation (createPerson)
+    Gateway->>Backend: REST API call via NSwag client
+    Backend->>DB: Insert person record
+    DB-->>Backend: Success
+    Backend->>Backend: Persist RecentActivity
+    Backend->>RabbitMQ: Publish event (com.ems.person.created)
+    Backend-->>Gateway: Return response
+    Gateway-->>Browser: Mutation result
+    
+    Note over RabbitConsumer,Subscription: 3. Gateway processes event
+    RabbitMQ->>RabbitConsumer: Consume event
+    RabbitConsumer->>Gateway: Invalidate cache (persons:list:*)
+    RabbitConsumer->>EventBuffer: Add to buffer
+    RabbitConsumer->>Subscription: Broadcast to subscribers
+    
+    Note over Browser: 4. Real-time update
+    Subscription-->>Browser: Push activity event via WebSocket
+    Browser->>Browser: Update activity feed UI
+```
+
+#### 3. File Upload Flow
+
+```mermaid
+%%{init: {'theme': 'neutral'}}%%
+sequenceDiagram
+    participant Browser
+    participant Gateway as Gateway REST Proxy
+    participant Backend as Backend API
+    participant Blob as Azure Blob Storage
+    participant DB as SQL Database
+    participant RabbitMQ
+
+    Browser->>Gateway: POST /api/documents/upload<br/>(multipart/form-data)
+    Gateway->>Backend: Forward file upload via NSwag
+    Backend->>Backend: Validate file (type, size)
+    Backend->>Blob: Upload file to container
+    Blob-->>Backend: Return blob URL
+    Backend->>DB: Save document metadata
+    DB-->>Backend: Success
+    Backend->>RabbitMQ: Publish event (com.ems.document.created)
+    Backend-->>Gateway: Return DocumentResponseDto
+    Gateway-->>Browser: Return document info
+    
+    Note over Browser,DB: File download follows similar proxy pattern
+    Browser->>Gateway: GET /api/documents/{id}/download
+    Gateway->>Backend: Forward request
+    Backend->>Blob: Retrieve file stream
+    Blob-->>Backend: Return stream
+    Backend-->>Gateway: Return file stream
+    Gateway-->>Browser: Return file with headers
+```
+
 **Key Components:**
 - **RabbitMQ**: Event messaging using CloudEvents format for decoupled communication between Backend and Gateway
 - **Event Publisher (Backend)**: Publishes domain events (person.created, person.updated, etc.) after data mutations

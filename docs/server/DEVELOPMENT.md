@@ -515,19 +515,25 @@ builder.Services.AddSwaggerGen(c =>
 
 ### Logging
 
-Configure logging in `appsettings.Development.json`:
+The project uses **Serilog** for structured logging. Configure in `appsettings.Development.json`:
 
 ```json
 {
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning",
-      "Microsoft.EntityFrameworkCore.Database.Command": "Information"
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Debug",
+      "Override": {
+        "Microsoft": "Information",
+        "Microsoft.AspNetCore": "Warning",
+        "Microsoft.EntityFrameworkCore.Database.Command": "Information",
+        "System": "Information"
+      }
     }
   }
 }
 ```
+
+See [Logging Documentation](../docs/server/LOGGING.md) for complete Serilog configuration details.
 
 ---
 

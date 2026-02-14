@@ -72,8 +72,10 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=(localdb)\
 # Azure Blob Storage (or use Azurite)
 dotnet user-secrets set "ConnectionStrings:BlobStorage" "DefaultEndpointsProtocol=https;AccountName=your_account;AccountKey=your_key"
 
-# JWT Secret
-dotnet user-secrets set "Jwt:Secret" "your-super-secret-key-min-32-chars-long"
+# JWT Configuration
+dotnet user-secrets set "Authentication:Jwt:Secret" "your-super-secret-key-min-32-chars-long"
+dotnet user-secrets set "Authentication:Jwt:Issuer" "ems-api"
+dotnet user-secrets set "Authentication:Jwt:Audience" "ems-app"
 
 # Google OAuth
 dotnet user-secrets set "Google:ClientId" "your-google-client-id.apps.googleusercontent.com"

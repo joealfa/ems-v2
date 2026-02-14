@@ -1,0 +1,23 @@
+{
+  "name": "EMS Application",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "GraphQL.vscode-graphql",
+        "GraphQL.vscode-graphql-syntax"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "postCreateCommand": "npm ci",
+  "forwardPorts": [5173]
+}

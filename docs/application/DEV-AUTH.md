@@ -77,21 +77,21 @@ await generateAndStoreDevToken({
 
 Using curl or any HTTP client:
 ```bash
-curl -X POST https://localhost:7001/api/v1/dev/devauth/token \
+curl -X POST https://localhost:7166/api/v1/dev/devauth/token \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
 
 Then use the returned token in the Authorization header:
 ```bash
-curl -X GET https://localhost:7001/api/v1/persons \
+curl -X GET https://localhost:7166/api/v1/persons \
   -H "Authorization: Bearer <your-token>"
 ```
 
 ## Testing in Swagger
 
 1. Start your backend in DEBUG mode
-2. Navigate to Swagger UI (https://localhost:7001/swagger)
+2. Navigate to Swagger UI (https://localhost:7166/swagger)
 3. Find the `dev/DevAuth` section
 4. Use `POST /api/v1/dev/devauth/token` to generate a token
 5. Copy the token from the response

@@ -1,0 +1,85 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    container_name: ems-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      - Authentication__Jwt__Secret=${JWT_SECRET}
+      - Authentication__Jwt__Issuer=${JWT_ISSUER}
+      - Authentication__Jwt__Audience=${JWT_AUDIENCE}
+      - Authentication__Google__ClientId=${GOOGLE_CLIENT_ID}
+      - Authentication__Google__ClientSecret=${GOOGLE_CLIENT_SECRET}
+      - RabbitMQ__HostName=${RABBITMQ_HOST}
+      - RabbitMQ__Port=${RABBITMQ_PORT}
+      - RabbitMQ__VirtualHost=${RABBITMQ_VIRTUAL_HOST}
+      - RabbitMQ__UserName=${RABBITMQ_USERNAME}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - RabbitMQ__UseSsl=false
+      - Cors__AllowedOrigins__0=https://localhost
+      - Serilog__WriteTo__1__Args__configure__0__Args__serverUrl=${SEQ_URL}
+      - Serilog__WriteTo__1__Args__configure__0__Args__apiKey=${SEQ_API_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - ems-network
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/gateway/Dockerfile
+    container_name: ems-gateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+      - ApiClient__BaseUrl=http://backend:8080
+      - Gateway__BaseUrl=http://gateway:8080
+      - Redis__ConnectionString=${REDIS_CONNECTION_STRING}
+      - "Redis__InstanceName=EmsGateway:"
+      - RabbitMQ__HostName=${RABBITMQ_HOST}
+      - RabbitMQ__Port=${RABBITMQ_PORT}
+      - RabbitMQ__VirtualHost=${RABBITMQ_VIRTUAL_HOST}
+      - RabbitMQ__UserName=${RABBITMQ_USERNAME}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - RabbitMQ__UseSsl=false
+      - Cors__AllowedOrigins__0=https://localhost
+      - Serilog__WriteTo__1__Args__configure__0__Args__serverUrl=${SEQ_URL}
+      - Serilog__WriteTo__1__Args__configure__0__Args__apiKey=${SEQ_API_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - backend
+    networks:
+      - ems-network
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+      args:
+        - VITE_GRAPHQL_URL=/graphql
+        - VITE_GRAPHQL_WS_URL=wss://localhost/graphql
+        - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+        - VITE_API_BASE_URL=
+    container_name: ems-nginx
+    ports:
+      - "443:443"
+    volumes:
+      - ./application/certs:/etc/nginx/certs:ro
+    depends_on:
+      - backend
+      - gateway
+    networks:
+      - ems-network
+    restart: unless-stopped
+
+networks:
+  ems-network:
+    driver: bridge
