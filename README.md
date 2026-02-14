@@ -205,7 +205,7 @@ The system uses a three-tier architecture with GraphQL Gateway and **real-time s
 ### Detailed Architecture Flow
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
+%%{init: {'theme': 'forest'}}%%
 graph TB
     subgraph Client["🖥️ Client Layer"]
         Browser["Web Browser<br/>(React + TypeScript + Vite)"]
@@ -308,7 +308,6 @@ graph TB
 #### 1. GraphQL Query Flow (with Caching)
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant Browser
     participant Gateway as GraphQL Gateway
@@ -341,7 +340,6 @@ sequenceDiagram
 #### 2. Event-Driven Update Flow (Real-time)
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant Browser
     participant Gateway as GraphQL Gateway
@@ -383,7 +381,6 @@ sequenceDiagram
 #### 3. File Upload Flow
 
 ```mermaid
-%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant Browser
     participant Gateway as Gateway REST Proxy
