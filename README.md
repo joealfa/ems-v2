@@ -205,7 +205,6 @@ The system uses a three-tier architecture with GraphQL Gateway and **real-time s
 ### Detailed Architecture Flow
 
 ```mermaid
-%%{init: {'theme': 'forest'}}%%
 graph TB
     subgraph Client["🖥️ Client Layer"]
         Browser["Web Browser<br/>(React + TypeScript + Vite)"]
@@ -286,21 +285,6 @@ graph TB
     API -.->|"Serilog"| Seq
     Services -.->|"Serilog"| Seq
     RabbitConsumer -.->|"Serilog"| Seq
-
-    %% Styling
-    classDef clientStyle fill:#e1f5ff,stroke:#01579b,stroke-width:2px
-    classDef gatewayStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef backendStyle fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
-    classDef dataStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef messagingStyle fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
-    classDef monitorStyle fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-
-    class Browser clientStyle
-    class GQL,Subscriptions,DataLoaders,RestProxy,CacheService,EventBuffer,RabbitConsumer gatewayStyle
-    class API,Controllers,Services,Domain,Infrastructure,RabbitPublisher backendStyle
-    class SQL,Blob,Redis dataStyle
-    class RabbitMQ messagingStyle
-    class Seq monitorStyle
 ```
 
 ### Sequence Diagrams
