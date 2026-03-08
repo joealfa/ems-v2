@@ -323,6 +323,7 @@ try
     _ = app.UseAuthentication();
     _ = app.UseAuthorization();
     _ = app.MapControllers();
+    _ = app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
     Log.Information("Employee Management System API started successfully");
     app.Run();
